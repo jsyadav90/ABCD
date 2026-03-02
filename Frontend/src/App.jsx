@@ -24,7 +24,6 @@ import AddUser from "./pages/users/AddUserPage/AddUser";
 import EditUser from "./pages/users/EditUserPage/EditUser";
 import UserDetails from "./pages/users/UserDetailsPage/UserDetails";
 import Setup from "./pages/Setup/Setup";
-import Assets from "./pages/Assets/Assets";
 
 function App() {
   return (
@@ -106,16 +105,7 @@ function App() {
             }
           />
           
-          <Route
-            path="/assets"
-            element={
-              <ProtectedRoute requiredPermission="assets:access">
-                <MainLayout>
-                  <Assets />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+          {/* Assets route removed as per instruction */}
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
