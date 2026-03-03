@@ -14,7 +14,6 @@
  */
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { isSuperAdmin, canAccessModule } from "../../utils/permissionHelper";
 import { authAPI } from "../../services/api";
@@ -154,7 +153,7 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
             <li>
               <Link to="/users" onClick={handleMenuItemClick}>
                 <span className="material-icons">people</span>
-                <span className="menu-text">User Management</span>
+                <span className="menu-text">User</span>
               </Link>
             </li>
           )}
@@ -164,7 +163,7 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
             <li>
               <Link to="/assets" onClick={handleMenuItemClick}>
                 <span className="material-icons">inventory_2</span>
-                <span className="menu-text">Asset Management</span>
+                <span className="menu-text">Asset</span>
               </Link>
             </li>
           )}
@@ -174,7 +173,7 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
             <li>
               <Link to="/requests" onClick={handleMenuItemClick}>
                 <span className="material-icons">assignment</span>
-                <span className="menu-text">Upgrade Requests</span>
+                <span className="menu-text">Upgrade</span>
               </Link>
             </li>
           )}
@@ -219,10 +218,10 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
           <button
             className="user-toggle"
             onClick={toggleUserPanel}
-            title="User menu"
+            title={user?.name || "User"}
+            aria-label="Account menu"
           >
-            <span className="material-icons">account_circle</span>
-            <span className="menu-text">{user?.name || "User"}</span>
+            <span className="material-icons user-avatar">account_circle</span>
           </button>
 
           <div className="user-panel" onClick={handleUserPanelClick}>
@@ -232,7 +231,8 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
                 setUserOpen(false);
               }}
             >
-              <span className="material-icons">person</span> Profile
+              <span className="material-icons">person</span>
+              <span className="user-panel-text">Profile</span>
             </button>
             <button
               onClick={() => {
@@ -244,23 +244,21 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
                 setUserOpen(false);
               }}
             >
-              <span className="material-icons">lock</span> Change Password
+              <span className="material-icons">lock</span>
+              <span className="user-panel-text">Change Password</span>
             </button>
             <button onClick={handleLogout}>
-              <span className="material-icons">logout</span> Logout
+              <span className="material-icons">logout</span>
+              <span className="user-panel-text">Logout</span>
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Change Password Modal - Rendered at document body level */}
-      {createPortal(
-        <Modal
-          isOpen={changePwdModal.isOpen}
-          onClose={handleCloseChangePwdModal}
-          title="Change Password"
-        >
-          <div className="modal-body">
+          <div className="portal-anchor">
+          <Modal
+            isOpen={changePwdModal.isOpen}
+            onClose={handleCloseChangePwdModal}
+            title="Change Password"
+          >
+            <div className="modal-body">
           <Input
             type="password"
             label="Current Password"
@@ -311,8 +309,8 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
               {changePwdModal.error}
             </div>
           )}
-          </div>
-          <div className="modal-footer" style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+            </div>
+            <div className="modal-footer" style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
             <Button
               variant="secondary"
               onClick={handleCloseChangePwdModal}
@@ -327,9 +325,10 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
             >
               {changePwdModal.isSubmitting ? "Changing..." : "Change Password"}
             </Button>
-          </div>
-        </Modal>,
-        document.body
+            </div>
+          </Modal>
+      </div>
+        </div>
       )}
     </nav>
     </>

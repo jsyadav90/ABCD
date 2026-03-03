@@ -1,0 +1,52 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./asset.css";
+
+const tabs = ["ALL", "FIXED", "CONSUMABLE", "INTANGIBLE"];
+
+const AssetPage = () => {
+  const navigate = useNavigate();
+  const [active, setActive] = useState("ALL");
+
+  const handleTab = (key) => {
+    setActive(key);
+  };
+
+  const goAddItem = () => {
+    navigate("/assets/add/cpu");
+  };
+
+  return (
+    <div className="asset-page">
+      <div className="asset-header">
+        <h1>Assets</h1>
+        <button className="btn btn-primary" aria-label="Add Item" onClick={goAddItem}>
+          Add Item
+        </button>
+      </div>
+      <div className="asset-tabs" role="tablist" aria-label="Asset Categories">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            role="tab"
+            aria-selected={active === t}
+            className={`tab-btn ${active === t ? "active" : ""}`}
+            onClick={() => handleTab(t)}
+          >
+            {t === "ALL" ? "All" : t.charAt(0) + t.slice(1).toLowerCase()}
+          </button>
+        ))}
+      </div>
+      <div className="asset-content" role="region" aria-live="polite">
+        <div className="empty-state">
+          <div className="empty-icon">📦</div>
+          <div className="empty-text">
+            {active === "ALL" ? "No items. Click Add Item to create one." : `No ${active.toLowerCase()} items here.`}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AssetPage;
