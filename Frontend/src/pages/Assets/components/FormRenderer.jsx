@@ -1,6 +1,8 @@
+import { useState } from "react";
 import Input from "../../../components/Input/Input.jsx";
 import Select from "../../../components/Select/Select.jsx";
 import Textarea from "../../../components/Textarea/Textarea.jsx";
+import Button from "../../../components/Button/Button.jsx";
 
 const shouldShow = (field, formData) => {
   if (!field.showIf) return true;
@@ -25,27 +27,102 @@ const Field = ({ def, value, onChange }) => {
   return <Input {...common} type={def.type || "text"} min={def.min} max={def.max} />;
 };
 
-const FormRenderer = ({ sections = [], formData = {}, onChange }) => {
+const TableField = ({ def, value, onChange }) => {
+  const common = {
+    name: def.name,
+    value: value ?? "",
+    onChange: (e) => onChange(def.name, e.target.value),
+    required: !!def.required,
+    readOnly: !!def.readOnly,
+    error: def.error,
+    "aria-label": def.label,
+    maxLength: def.maxLength,
+  };
+  if (def.type === "select") return <Select {...common} options={def.options || []} />;
+  if (def.type === "textarea") return <Textarea {...common} rows={def.rows || 3} />;
+  return <Input {...common} type={def.type || "text"} min={def.min} max={def.max} />;
+};
+
+const FormRenderer = ({ sections = [], formData = {}, onChange, onSubmit, onReset, onCancel, submitting }) => {
   const list = Array.isArray(sections) ? sections : [];
+  const tableSections = ["Processors", "Storage", "Memory"];
+  const [rowCounts, setRowCounts] = useState({});
+
+  const getCount = (title) => {
+    const v = rowCounts[title];
+    return typeof v === "number" && v > 0 ? v : 1;
+  };
+  const addRow = (title) => {
+    const c = getCount(title);
+    setRowCounts((prev) => ({ ...prev, [title]: c + 1 }));
+  };
+  const removeRow = (title, fields) => {
+    const c = getCount(title);
+    if (c <= 1) return;
+    const idx = c - 1;
+    fields.forEach((f) => {
+      const key = `${f.name}_${idx}`;
+      onChange(key, "");
+    });
+    setRowCounts((prev) => ({ ...prev, [title]: c - 1 }));
+  };
   return (
     <div className="fr-container">
       {list.map((sec) => (
-        <section key={sec.sectionTitle} className="fr-card" aria-labelledby={`sec-${sec.sectionTitle}`}>
-          <div id={`sec-${sec.sectionTitle}`} className="fr-title">{sec.sectionTitle}</div>
-          <div className="fr-grid">
-            {sec.fields
-              .filter((f) => shouldShow(f, formData))
-              .map((f) => (
-                <Field
-                  key={f.name}
-                  def={f}
-                  value={formData[f.name]}
-                  onChange={onChange}
-                />
+        (() => {
+          const filtered = (sec.fields || []).filter((f) => shouldShow(f, formData));
+          const isTable = tableSections.includes(String(sec.sectionTitle));
+          if (!isTable) {
+            return (
+              <section key={sec.sectionTitle} className="fr-card" aria-labelledby={`sec-${sec.sectionTitle}`}>
+                <div id={`sec-${sec.sectionTitle}`} className="fr-title">{sec.sectionTitle}</div>
+                <div className="fr-grid">
+                  {filtered.map((f) => (
+                    <Field key={f.name} def={f} value={formData[f.name]} onChange={onChange} />
+                  ))}
+                </div>
+              </section>
+            );
+          }
+          const cols = Math.max(filtered.length, 1);
+          const count = getCount(sec.sectionTitle);
+          return (
+            <section key={sec.sectionTitle} className="fr-card fr-table-section" aria-labelledby={`sec-${sec.sectionTitle}`}>
+              <div id={`sec-${sec.sectionTitle}`} className="fr-title">{sec.sectionTitle}</div>
+              <div className="fr-table-head" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr)) auto` }}>
+                {filtered.map((f) => (
+                  <div key={`${f.name}-h`} className="fr-table-head-cell">{f.label}</div>
+                ))}
+                <div className="fr-table-head-cell"></div>
+              </div>
+              {Array.from({ length: count }).map((_, idx) => (
+                <div key={`row-${sec.sectionTitle}-${idx}`} className="fr-table-row" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr)) auto` }}>
+                  {filtered.map((f) => (
+                    <div key={`${f.name}-c-${idx}`} className="fr-table-row-cell">
+                      <TableField def={f} value={formData[`${f.name}_${idx}`]} onChange={(name, val) => onChange(`${name}_${idx}`, val)} />
+                    </div>
+                  ))}
+                  <div className="fr-table-actions">
+                    {idx === count - 1 && (
+                      <>
+                        <Button variant="outline" onClick={() => addRow(sec.sectionTitle)} aria-label="Add row">+</Button>
+                        <Button variant="outline" onClick={() => removeRow(sec.sectionTitle, filtered)} aria-label="Remove row">−</Button>
+                      </>
+                    )}
+                  </div>
+                </div>
               ))}
-          </div>
-        </section>
+            </section>
+          );
+        })()
       ))}
+      {list.length > 0 && (
+        <div className="form-actions">
+          <Button variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Button>
+          <Button variant="outline" onClick={onReset} disabled={submitting}>Reset</Button>
+          <Button variant="primary" onClick={onSubmit} disabled={submitting}>{submitting ? "Saving..." : "Save"}</Button>
+        </div>
+      )}
     </div>
   );
 };

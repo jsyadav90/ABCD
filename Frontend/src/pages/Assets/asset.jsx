@@ -13,7 +13,7 @@ const AssetPage = () => {
   };
 
   const goAddItem = () => {
-    navigate("/assets/add/cpu");
+    navigate("/assets/add");
   };
 
   return (

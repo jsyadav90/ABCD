@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./AddItem.css";
 import Button from "../../components/Button/Button.jsx";
 import FormRenderer from "./components/FormRenderer.jsx";
 import { ITEM_FIELD_CONFIG, CATEGORY_ITEMS } from "./config/itemFieldConfig.js";
-import { apiService } from "./services/apiService.js";
 
 const CATEGORIES = [
   { value: "fixed", label: "Fixed" },
@@ -30,32 +29,22 @@ const REGISTRY = ITEM_FIELD_CONFIG;
 const AddItemPage = () => {
   const navigate = useNavigate();
   const { type } = useParams();
-  const itemType = String(type || "cpu").toLowerCase();
+  const itemType = String(type || "").toLowerCase();
   const [category, setCategory] = useState("");
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [showAlert, setShowAlert] = useState(true);
-  const [assetCode, setAssetCode] = useState("");
 
   const sections = useMemo(() => {
+    if (!category || !itemType) return [];
     return REGISTRY[itemType]?.sections || [];
-  }, [itemType]);
+  }, [category, itemType]);
 
   const updateField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Auto fetch asset code when item type changes
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const code = await apiService.generateAssetCode(itemType);
-      if (mounted) setAssetCode(code);
-    })();
-    return () => { mounted = false; };
-  }, [itemType]);
 
   const validate = () => {
     const req = [];
@@ -112,6 +101,7 @@ const AddItemPage = () => {
 
   const onItemTypeChange = (e) => {
     const v = String(e.target.value);
+    if (!v) return;
     setForm({});
     setErrors({});
     navigate(`/assets/add/${v}`);
@@ -120,21 +110,30 @@ const AddItemPage = () => {
   const onCategoryChange = (e) => {
     const v = String(e.target.value);
     setCategory(v);
+    setForm({});
+    setErrors({});
+    navigate("/assets/add");
   };
 
   const itemsForCategory = category ? CATEGORY_ITEMS[category] || [] : [];
+  const itemTitle = (() => {
+    if (!itemType) return "Add Item";
+    const categories = Object.values(CATEGORY_ITEMS || {});
+    for (const arr of categories) {
+      const f = arr.find((i) => i.value === itemType);
+      if (f) return `New ${f.label}`;
+    }
+    return `New ${itemType}`;
+  })();
 
   return (
     <div className="add-item-page">
-      <div className="banner">
+      <div className="page-header">
         <button aria-label="Back" className="back-btn" onClick={() => navigate(-1)}>←</button>
-        <div className="banner-image" aria-hidden="true"></div>
+        <span className="page-title">{itemTitle}</span>
       </div>
       <div className="sticky-header" role="toolbar">
         <div className="sticky-row">
-          <div className="sticky-left">
-            <span className="asset-code" aria-label="Asset Code">{assetCode}</span>
-          </div>
           <div className="sticky-controls">
             <label className="control">
               <span>Category</span>
@@ -146,7 +145,7 @@ const AddItemPage = () => {
             <label className="control">
               <span>Select Item</span>
               <select aria-label="Item Type" value={itemType} onChange={onItemTypeChange} disabled={!category}>
-                {(!category) && <option value={itemType}>{itemType}</option>}
+                <option value="">Select item</option>
                 {itemsForCategory.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
               </select>
             </label>
@@ -160,12 +159,15 @@ const AddItemPage = () => {
         </div>
       )} */}
       <div className="form-body">
-        <FormRenderer sections={sections} formData={form} onChange={updateField} />
-        <div className="form-actions">
-          <Button variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Button>
-          <Button variant="outline" onClick={() => setForm({})} disabled={submitting}>Reset</Button>
-          <Button variant="primary" onClick={submit} disabled={submitting}>{submitting ? "Saving..." : "Save"}</Button>
-        </div>
+        <FormRenderer
+          sections={sections}
+          formData={form}
+          onChange={updateField}
+          onSubmit={submit}
+          onReset={() => setForm({})}
+          onCancel={onCancel}
+          submitting={submitting}
+        />
       </div>
     </div>
   );

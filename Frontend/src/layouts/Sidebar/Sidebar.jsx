@@ -141,12 +141,12 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
     <>
       <nav className={`menu-bar ${isOpen ? "open" : ""}`}>
         <ul className="menu">
-          <li>
+          {/* <li>
             <Link to="/dashboard" onClick={handleMenuItemClick}>
               <span className="material-icons">dashboard</span>
               <span className="menu-text">Dashboard</span>
             </Link>
-          </li>
+          </li> */}
 
           {/* User Management Module */}
           {(isSuperAdmin() || canAccessModule("users")) && (

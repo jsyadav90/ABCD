@@ -117,6 +117,16 @@ function App() {
             }
           />
           <Route
+            path="/assets/add"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <AddItemPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assets/add/:type"
             element={
               <ProtectedRoute>
