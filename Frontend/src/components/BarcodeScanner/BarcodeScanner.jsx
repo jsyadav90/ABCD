@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { useZxing } from "react-zxing";
+import { BrowserMultiFormatReader, BarcodeFormat, DecodeHintType } from "@zxing/library";
 
 const overlayStyle = {
   position: "fixed",
@@ -46,36 +46,126 @@ const titleStyle = {
 
 const BarcodeScanner = ({ open, onClose, onDetected }) => {
   const videoRef = useRef(null);
-  const { ref } = useZxing({
-    onDecodeResult(result) {
-      const text = result.getText();
+  const readerRef = useRef(null);
+  const controlsRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!open || !videoRef.current) return;
+
+    const start = async () => {
+      try {
+        const hints = new Map();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.QR_CODE,
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.CODE_39,
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.ITF,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+        ]);
+        hints.set(DecodeHintType.TRY_HARDER, true);
+
+        const reader = new BrowserMultiFormatReader(hints);
+        readerRef.current = reader;
+        reader.timeBetweenDecodingAttempts = 200;
+
+        const constraints = {
+          video: {
+            facingMode: { ideal: "environment" },
+          },
+        };
+
+        const controls = await reader.decodeFromConstraints(
+          constraints,
+          videoRef.current,
+          (result) => {
+            if (result) {
+              const text = result.getText();
+              if (text) {
+                onDetected(text);
+                onClose();
+              }
+            }
+          }
+        );
+        controlsRef.current = controls;
+      } catch (e) {
+        console.error("Scanner start failed", e);
+      }
+    };
+
+    start();
+
+    return () => {
+      const v = videoRef.current;
+      try {
+        if (readerRef.current) {
+          readerRef.current.reset();
+          readerRef.current = null;
+        }
+        if (controlsRef.current) {
+          controlsRef.current.stop();
+          controlsRef.current = null;
+        }
+        if (v) {
+          v.srcObject = null;
+          v.pause?.();
+        }
+      } catch {
+        // ignore cleanup errors
+      }
+    };
+  }, [open, onClose, onDetected]);
+
+  if (!open) return null;
+
+  const onPickImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    try {
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.ITF,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      const reader = new BrowserMultiFormatReader(hints);
+      const result = await reader.decodeFromImageUrl(url);
+      const text = result?.getText?.();
       if (text) {
         onDetected(text);
         onClose();
       }
-    },
-    constraints: {
-      video: {
-        facingMode: { ideal: "environment" },
-      },
-    },
-    timeBetweenDecodingAttempts: 200,
-  });
-
-  useEffect(() => {
-    if (open && videoRef.current) {
-      ref.current = videoRef.current;
+    } catch (err) {
+      console.error("Image decode failed", err);
+    } finally {
+      URL.revokeObjectURL(url);
+      e.target.value = "";
     }
-  }, [open, ref]);
-
-  if (!open) return null;
+  };
 
   return (
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-label="Scan Barcode">
       <div style={titleStyle}>Camera चालू है • Barcode/QR को क्षेत्र में लाएं</div>
-      <video ref={videoRef} style={videoStyle} />
+      <video id="scanner-video" ref={videoRef} style={videoStyle} />
       <div style={controlsStyle}>
         <button style={btnStyle} onClick={onClose} aria-label="Close Scanner">Close</button>
+        <button style={btnStyle} onClick={onPickImage} aria-label="Decode From Image">From Image</button>
+        <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={onFileChange} aria-hidden="true" />
       </div>
     </div>
   );

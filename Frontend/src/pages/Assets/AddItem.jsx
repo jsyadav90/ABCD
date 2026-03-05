@@ -3,24 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./AddItem.css";
 import Button from "../../components/Button/Button.jsx";
 import FormRenderer from "./components/FormRenderer.jsx";
+import { apiService } from "./services/apiService.js";
 import { ITEM_FIELD_CONFIG, CATEGORY_ITEMS } from "./config/itemFieldConfig.js";
 
 const CATEGORIES = [
   { value: "fixed", label: "Fixed" },
+  { value: "peripheral", label: "Peripheral" },
   { value: "consumable", label: "Consumable" },
   { value: "intangible", label: "Intangible" },
 ];
-
-// const MOCK = {
-//   vendors: ["Dell", "HP", "Lenovo", "Acer", "ASUS"].map((v) => ({ value: v, label: v })),
-//   domains: ["corp.local", "hq.local"].map((v) => ({ value: v, label: v })),
-//   users: ["John Doe", "Jane Doe"].map((v) => ({ value: v, label: v })),
-//   departments: ["IT", "Operations", "Finance"].map((v) => ({ value: v, label: v })),
-//   status: ["In Stock", "Assigned", "Under Repair", "Retired"].map((v) => ({ value: v, label: v })),
-//   nicTypes: ["Ethernet", "Wi-Fi"].map((v) => ({ value: v, label: v })),
-//   networks: ["Office LAN", "Guest Wi-Fi"].map((v) => ({ value: v, label: v })),
-//   types: ["Static", "DHCP"].map((v) => ({ value: v, label: v })),
-// };
 
 
 
@@ -97,14 +88,22 @@ const AddItemPage = () => {
     return Object.keys(newErr).length === 0;
   };
 
-  const submit = () => {
-    if (!validate()) return;
+  const submit = async () => {
+    if (!validate()) {
+      alert("Please fill required fields");
+      return;
+    }
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      alert("Item saved successfully (mock).");
+    try {
+      const payload = { itemType, ...form };
+      await apiService.createAsset(payload);
+      alert("Item saved successfully.");
       navigate("/assets");
-    }, 600);
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to save item");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const onCancel = () => {
@@ -178,6 +177,7 @@ const AddItemPage = () => {
         <FormRenderer
           sections={sections}
           formData={form}
+          errors={errors}
           onChange={updateField}
           onSubmit={submit}
           onReset={() => setForm({})}

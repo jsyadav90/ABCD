@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./asset.css";
 
-const tabs = ["ALL", "FIXED", "CONSUMABLE", "INTANGIBLE"];
+const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 
 const AssetPage = () => {
   const navigate = useNavigate();

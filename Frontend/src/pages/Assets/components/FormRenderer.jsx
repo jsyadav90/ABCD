@@ -11,7 +11,7 @@ const shouldShow = (field, formData) => {
   return String(formData[dep] ?? "") === String(equals ?? "");
 };
 
-const Field = ({ def, value, onChange, onScan }) => {
+const Field = ({ def, value, onChange, onScan, error }) => {
   const common = {
     name: def.name,
     label: def.label,
@@ -19,7 +19,7 @@ const Field = ({ def, value, onChange, onScan }) => {
     onChange: (e) => onChange(def.name, e.target.value),
     required: !!def.required,
     readOnly: !!def.readOnly,
-    error: def.error,
+    error: error ?? def.error,
     "aria-label": def.label,
     maxLength: def.maxLength,
   };
@@ -38,14 +38,14 @@ const Field = ({ def, value, onChange, onScan }) => {
   );
 };
 
-const TableField = ({ def, value, onChange }) => {
+const TableField = ({ def, value, onChange, error }) => {
   const common = {
     name: def.name,
     value: value ?? "",
     onChange: (e) => onChange(def.name, e.target.value),
     required: !!def.required,
     readOnly: !!def.readOnly,
-    error: def.error,
+    error: error ?? def.error,
     "aria-label": def.label,
     maxLength: def.maxLength,
   };
@@ -54,7 +54,7 @@ const TableField = ({ def, value, onChange }) => {
   return <Input {...common} type={def.type || "text"} min={def.min} max={def.max} />;
 };
 
-const FormRenderer = ({ sections = [], formData = {}, onChange, onSubmit, onReset, onCancel, submitting }) => {
+const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onSubmit, onReset, onCancel, submitting }) => {
   const list = Array.isArray(sections) ? sections : [];
   const tableSections = ["Processors", "Storage", "Memory"];
   const [rowCounts, setRowCounts] = useState({});
@@ -94,6 +94,7 @@ const FormRenderer = ({ sections = [], formData = {}, onChange, onSubmit, onRese
                       key={f.name}
                       def={f}
                       value={formData[f.name]}
+                      error={errors?.[f.name]}
                       onChange={onChange}
                       onScan={(name) => openScan((text) => onChange(name, text))}
                     />
@@ -117,7 +118,7 @@ const FormRenderer = ({ sections = [], formData = {}, onChange, onSubmit, onRese
                 <div key={`row-${sec.sectionTitle}-${idx}`} className="fr-table-row" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr)) auto` }}>
                   {filtered.map((f) => (
                     <div key={`${f.name}-c-${idx}`} className="fr-table-row-cell">
-                      <TableField def={f} value={formData[`${f.name}_${idx}`]} onChange={(name, val) => onChange(`${name}_${idx}`, val)} />
+                      <TableField def={f} value={formData[`${f.name}_${idx}`]} error={errors?.[`${f.name}_${idx}`]} onChange={(name, val) => onChange(`${name}_${idx}`, val)} />
                     </div>
                   ))}
                   <div className="fr-table-actions">

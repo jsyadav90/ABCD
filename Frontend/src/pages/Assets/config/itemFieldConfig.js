@@ -16,13 +16,15 @@ export const CATEGORY_ITEMS = {
     { value: "tablet", label: "Tablet" },
     { value: "nasStorage", label: "NAS Storage" },
   ],
-  consumable: [
-    { value: "toner", label: "Toner" },
-    { value: "cable", label: "Cable" },
+  peripheral: [
     { value: "keyboard", label: "Keyboard" },
     { value: "webcam", label: "Webcam" },
     { value: "mouse", label: "Mouse" },
     { value: "headphone", label: "Headphone" },
+  ],
+  consumable: [
+    { value: "toner", label: "Toner" },
+    { value: "cable", label: "Cable" },
   ],
   intangible: [
     { value: "software_license", label: "Software License" },
@@ -47,7 +49,7 @@ cpu: {
       sectionTitle: "Basic Information",
       fields: [
         { name: "assetName", label: "Asset Name", type: "text", required: true, maxLength: 120 },
-        { name: "assetCategory", label: "Asset Category", type: "select", options: common.assetCategories, required: true },
+        { name: "assetCategory", label: "Asset Category", type: "select", options: common.assetCategories },
         { name: "manufacturer", label: "Manufacturer", type: "text", required: true, maxLength: 100 },
         { name: "model", label: "Model", type: "text", required: true, maxLength: 100 },
         { name: "deviceType", label: "Device Type", type: "select", options: common.deviceTypes }, 

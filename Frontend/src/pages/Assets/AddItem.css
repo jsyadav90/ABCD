@@ -216,10 +216,10 @@
   gap: 12px;
   justify-content: flex-end;
   padding: 12px 22px;
-  background: rgba(248, 250, 252, 0.96);
-  position: sticky;
-  bottom: 0;
-  box-shadow: 0 -12px 32px rgba(15, 23, 42, 0.08);
+  background: transparent;
+  position: static;
+  bottom: auto;
+  box-shadow: none;
 }
 
 @media (max-width: 900px) {
