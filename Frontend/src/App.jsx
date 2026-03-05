@@ -11,6 +11,7 @@
  */
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import ScanningProvider from "./components/BarcodeScanner/ScanningProvider.jsx";
 import MainLayout from "./layouts/MainLayout";
 import { ProtectedRoute } from "./components";
 
@@ -31,6 +32,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
+        <ScanningProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -140,6 +142,7 @@ function App() {
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ScanningProvider>
       </AuthProvider>
     </Router>
   );

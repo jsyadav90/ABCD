@@ -84,9 +84,9 @@
 
 /* Form Section */
 .form-section {
-  margin-bottom: 24px;
+  /* margin-bottom: 24px; */
   padding: 16px 16px 18px 16px;
-  border-radius: 12px;
+  /* border-radius: 12px; */
   background: rgba(248, 250, 252, 0.85);
   border: 1px solid rgba(226, 232, 240, 0.95);
 }

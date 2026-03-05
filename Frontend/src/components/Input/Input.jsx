@@ -13,11 +13,14 @@ const Input = ({
   required = false,
   disabled = false,
   className = '',
+  scanable = false,
+  onScan,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordField = type === 'password';
   const inputType = isPasswordField && showPassword ? 'text' : type;
+  const hasAction = isPasswordField || !!scanable;
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -31,7 +34,7 @@ const Input = ({
           {required && <span className="input-required">*</span>}
         </label>
       )}
-      <div className={`input-container ${isPasswordField ? 'password-input' : ''}`}>
+      <div className={`input-container ${isPasswordField ? 'password-input' : ''} ${hasAction ? 'has-action' : ''}`}>
         <input
           type={inputType}
           id={name}
@@ -66,6 +69,23 @@ const Input = ({
                 <line x1="1" y1="1" x2="23" y2="23"></line>
               </svg>
             )}
+          </button>
+        )}
+        {!isPasswordField && scanable && (
+          <button
+            type="button"
+            className="input-action-btn"
+            onClick={onScan}
+            disabled={disabled}
+            title="Scan"
+            aria-label="Scan"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+              <path d="M14 14h7v7h-7z M16 16h3v3h-3z"></path>
+            </svg>
           </button>
         )}
       </div>

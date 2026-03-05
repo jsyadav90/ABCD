@@ -25,6 +25,9 @@
 .input-container.password-input .input-field {
   padding-right: 2.5rem;
 }
+.input-container.has-action .input-field {
+  padding-right: 2.5rem;
+}
 
 .input-field {
   padding: 0.625rem 0.75rem;
@@ -89,6 +92,33 @@
 }
 
 .password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.input-action-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+.input-action-btn:hover:not(:disabled) {
+  color: #007bff;
+}
+.input-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.input-action-btn svg {
   width: 20px;
   height: 20px;
 }

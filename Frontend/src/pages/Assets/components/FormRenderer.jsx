@@ -3,6 +3,7 @@ import Input from "../../../components/Input/Input.jsx";
 import Select from "../../../components/Select/Select.jsx";
 import Textarea from "../../../components/Textarea/Textarea.jsx";
 import Button from "../../../components/Button/Button.jsx";
+import { useScanning } from "../../../components/BarcodeScanner/useScanning.js";
 
 const shouldShow = (field, formData) => {
   if (!field.showIf) return true;
@@ -10,7 +11,7 @@ const shouldShow = (field, formData) => {
   return String(formData[dep] ?? "") === String(equals ?? "");
 };
 
-const Field = ({ def, value, onChange }) => {
+const Field = ({ def, value, onChange, onScan }) => {
   const common = {
     name: def.name,
     label: def.label,
@@ -24,7 +25,17 @@ const Field = ({ def, value, onChange }) => {
   };
   if (def.type === "select") return <Select {...common} options={def.options || []} />;
   if (def.type === "textarea") return <Textarea {...common} rows={def.rows || 3} />;
-  return <Input {...common} type={def.type || "text"} min={def.min} max={def.max} />;
+  const enableScan = String(def.name) === "serialNumber" || !!def.scan;
+  return (
+    <Input
+      {...common}
+      type={def.type || "text"}
+      min={def.min}
+      max={def.max}
+      scanable={enableScan}
+      onScan={() => onScan(def.name)}
+    />
+  );
 };
 
 const TableField = ({ def, value, onChange }) => {
@@ -47,6 +58,7 @@ const FormRenderer = ({ sections = [], formData = {}, onChange, onSubmit, onRese
   const list = Array.isArray(sections) ? sections : [];
   const tableSections = ["Processors", "Storage", "Memory"];
   const [rowCounts, setRowCounts] = useState({});
+  const { openScan } = useScanning();
 
   const getCount = (title) => {
     const v = rowCounts[title];
@@ -78,7 +90,13 @@ const FormRenderer = ({ sections = [], formData = {}, onChange, onSubmit, onRese
                 <div id={`sec-${sec.sectionTitle}`} className="fr-title">{sec.sectionTitle}</div>
                 <div className="fr-grid">
                   {filtered.map((f) => (
-                    <Field key={f.name} def={f} value={formData[f.name]} onChange={onChange} />
+                    <Field
+                      key={f.name}
+                      def={f}
+                      value={formData[f.name]}
+                      onChange={onChange}
+                      onScan={(name) => openScan((text) => onChange(name, text))}
+                    />
                   ))}
                 </div>
               </section>

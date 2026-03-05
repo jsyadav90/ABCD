@@ -29,7 +29,23 @@ const REGISTRY = ITEM_FIELD_CONFIG;
 const AddItemPage = () => {
   const navigate = useNavigate();
   const { type } = useParams();
-  const itemType = String(type || "").toLowerCase();
+  const allItems = useMemo(() => Object.values(CATEGORY_ITEMS || {}).flat(), []);
+  const resolveType = (raw) => {
+    const t = String(raw || "");
+    const lc = t.toLowerCase();
+    const byValue = allItems.find((i) => String(i.value || "").toLowerCase() === lc);
+    if (byValue) return byValue.value;
+    const byLabelExact = allItems.find((i) => String(i.label || "").toLowerCase() === lc);
+    if (byLabelExact) return byLabelExact.value;
+    const byLabelNoSpaces = allItems.find(
+      (i) =>
+        String(i.label || "").replace(/\s+/g, "").toLowerCase() ===
+        lc.replace(/\s+/g, "")
+    );
+    if (byLabelNoSpaces) return byLabelNoSpaces.value;
+    return lc;
+  };
+  const itemType = resolveType(type);
   const [category, setCategory] = useState("");
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
