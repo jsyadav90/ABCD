@@ -5,12 +5,12 @@ import './MainLayout.css'
 
 const MainLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 992)
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 992)
 
   // Handle window resize to detect screen size
   React.useEffect(() => {
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 992)
+      setIsDesktop(window.innerWidth > 992)
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)

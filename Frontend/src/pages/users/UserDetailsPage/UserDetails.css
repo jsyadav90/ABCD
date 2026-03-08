@@ -50,13 +50,16 @@
   margin: 5px 0 0;
 }
 
-/* Menu */
-.menu {
+/* Menu (scoped for User Details) */
+.ud-menu {
   margin-top: 20px;
+  gap: 0.5rem;
 }
 
-.menu-item {
-  width: 100%;
+.ud-menu-item {
+  width: fit-content;
+  align-self: flex-start;
+  display: inline-flex;
   padding: 14px 20px;
   background: none;
   border: none;
@@ -68,12 +71,12 @@
   transition: all 0.3s ease;
 }
 
-.menu-item:hover {
+.ud-menu-item:hover {
   background: #374151;
   color: #fff;
 }
 
-.menu-item.active {
+.ud-menu-item.active {
   background: #374151;
   border-left-color: #2563eb;
   color: #fff;
@@ -360,7 +363,7 @@ td {
     font-size: 13px;
   }
 
-  .menu {
+  .ud-menu {
     display: flex;
     overflow-x: auto;
     margin-top: 10px;
@@ -368,7 +371,7 @@ td {
     -webkit-overflow-scrolling: touch;
   }
 
-  .menu-item {
+  .ud-menu-item {
     white-space: nowrap;
     flex: 0 0 auto;
     padding: 12px 16px;
@@ -470,11 +473,11 @@ td {
     font-size: 11px;
   }
 
-  .menu {
+  .ud-menu {
     margin-top: 8px;
   }
 
-  .menu-item {
+  .ud-menu-item {
     padding: 10px 12px;
     font-size: 12px;
   }
@@ -533,7 +536,7 @@ td {
     font-size: 12px;
   }
 
-  .menu {
+  .ud-menu {
     display: flex;
     overflow-x: auto;
     margin-top: 10px;
@@ -541,7 +544,7 @@ td {
     -webkit-overflow-scrolling: touch;
   }
 
-  .menu-item {
+  .ud-menu-item {
     white-space: nowrap;
     flex: 0 0 auto;
     padding: 10px 14px;
@@ -579,14 +582,14 @@ td {
     font-size: 13px;
   }
 
-  table {
+  .user-details-view table {
     font-size: 11px;
     display: block;
     overflow-x: auto;
   }
 
-  th,
-  td {
+  .user-details-view th,
+  .user-details-view td {
     padding: 9px;
     font-size: 11px;
   }
@@ -641,7 +644,7 @@ td {
     margin: 3px 0 0;
   }
 
-  .menu {
+  .ud-menu {
     display: flex;
     overflow-x: auto;
     margin-top: 8px;
@@ -650,7 +653,7 @@ td {
     -webkit-overflow-scrolling: touch;
   }
 
-  .menu-item {
+  .ud-menu-item {
     white-space: nowrap;
     flex: 0 0 auto;
     padding: 9px 12px;
@@ -658,7 +661,7 @@ td {
     border-left: 3px solid transparent;
   }
 
-  .menu-item.active {
+  .ud-menu-item.active {
     border-left-color: #2563eb;
   }
 
@@ -695,18 +698,18 @@ td {
     font-size: 12px;
   }
 
-  table {
+  .user-details-view table {
     font-size: 10px;
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  thead {
+  .user-details-view thead {
     display: none;
   }
 
-  tr {
+  .user-details-view tr {
     display: block;
     margin-bottom: 12px;
     border: 1px solid #e5e7eb;
@@ -714,14 +717,14 @@ td {
     overflow: hidden;
   }
 
-  td {
+  .user-details-view td {
     display: block;
     padding: 8px 10px;
     font-size: 11px;
     text-align: left;
   }
 
-  td::before {
+  .user-details-view td::before {
     content: attr(data-label);
     font-weight: 600;
     color: #374151;
@@ -797,7 +800,7 @@ td {
     margin: 2px 0 0;
   }
 
-  .menu {
+  .ud-menu {
     display: flex;
     overflow-x: auto;
     margin-top: 6px;
@@ -806,25 +809,25 @@ td {
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
   }
-  .menu button {
+  .ud-menu button {
     flex: 1 0 auto;
     display: inline-block;
   }
 
-  .menu::-webkit-scrollbar {
+  .ud-menu::-webkit-scrollbar {
     height: 4px;
   }
 
-  .menu::-webkit-scrollbar-track {
+  .ud-menu::-webkit-scrollbar-track {
     background: #e5e7eb;
   }
 
-  .menu::-webkit-scrollbar-thumb {
+  .ud-menu::-webkit-scrollbar-thumb {
     background: #9ca3af;
     border-radius: 3px;
   }
 
-  .menu-item {
+  .ud-menu-item {
     white-space: nowrap;
     flex: 0 0 auto;
     padding: 8px 10px;
@@ -833,11 +836,11 @@ td {
     margin: 0;
   }
 
-  .menu-item:hover {
+  .ud-menu-item:hover {
     background: #374151;
   }
 
-  .menu-item.active {
+  .ud-menu-item.active {
     background: #374151;
     border-left-color: #2563eb;
   }
@@ -889,7 +892,7 @@ td {
     border-radius: 4px;
   }
 
-  table {
+  .user-details-view table {
     font-size: 9px;
     display: block;
     width: 100%;
@@ -898,15 +901,15 @@ td {
     border-radius: 4px;
   }
 
-  thead {
+  .user-details-view thead {
     display: none;
   }
 
-  tbody {
+  .user-details-view tbody {
     display: block;
   }
 
-  tr {
+  .user-details-view tr {
     display: block;
     margin-bottom: 10px;
     border: 1px solid #e2e8f0;
@@ -915,11 +918,11 @@ td {
     padding: 0;
   }
 
-  tr:last-child {
+  .user-details-view tr:last-child {
     margin-bottom: 0;
   }
 
-  td {
+  .user-details-view td {
     display: block;
     padding: 6px 8px;
     font-size: 10px;
@@ -927,7 +930,7 @@ td {
     border: none;
   }
 
-  td::before {
+  .user-details-view td::before {
     content: attr(data-label);
     font-weight: 600;
     color: #4b5563;

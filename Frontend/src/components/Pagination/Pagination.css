@@ -26,8 +26,8 @@
 
 @media (max-width: 520px) {
   .pagination {
-    flex-direction: column;
-    align-items: stretch;
+    /* flex-direction: column; */
+    align-items: center;
     gap: 0.5rem;
   }
   .pagination-controls {

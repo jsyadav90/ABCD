@@ -14,6 +14,7 @@
  */
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { isSuperAdmin, canAccessModule } from "../../utils/permissionHelper";
 import { authAPI } from "../../services/api";
@@ -25,6 +26,13 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
   const navigate = useNavigate();
   const [userOpen, setUserOpen] = useState(false);
   const userRef = useRef(null);
+  const toggleRef = useRef(null);
+  const [flyoutTop, setFlyoutTop] = useState(0);
+  const [flyoutLeft, setFlyoutLeft] = useState(0);
+  const [flyoutBottom, setFlyoutBottom] = useState(null);
+  const [arrowTop, setArrowTop] = useState(24);
+  const [flyoutWidth, setFlyoutWidth] = useState(260);
+  const flyoutRef = useRef(null);
 
   
 
@@ -41,6 +49,8 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
   // Handle click outside user panel
   useEffect(() => {
     const handleClickOutside = (event) => {
+      const inFlyout = event.target.closest?.(".user-flyout");
+      if (inFlyout) return;
       if (userRef.current && !userRef.current.contains(event.target)) {
         setUserOpen(false);
       }
@@ -83,9 +93,51 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
   // Toggle User Panel
   const toggleUserPanel = (e) => {
     e.stopPropagation();
-    setUserOpen(!userOpen);
+    if (toggleRef.current) {
+      const r = toggleRef.current.getBoundingClientRect();
+      const GAP = 8;
+      const menuBar = document.querySelector('.menu-bar');
+      const menuRight = menuBar?.getBoundingClientRect?.().right ?? r.right;
+      const availableWidth = Math.max(0, window.innerWidth - menuRight - GAP - 8);
+      const MIN_W = 140;
+      const MAX_W = 260;
+      const width =
+        availableWidth <= MIN_W
+          ? Math.max(120, availableWidth)
+          : Math.min(MAX_W, availableWidth);
+      setFlyoutWidth(width);
+      const leftCandidate = menuRight + GAP;
+      const maxLeft = Math.max(0, window.innerWidth - width - 8);
+      const leftClamped = Math.max(leftCandidate, Math.min(leftCandidate, maxLeft));
+      const bottomOffset = Math.max(8, window.innerHeight - r.bottom);
+      setFlyoutBottom(bottomOffset);
+      setFlyoutLeft(leftClamped);
+      const centerY = r.top + r.height / 2;
+      setFlyoutTop(Math.max(8, centerY - 90));
+      setArrowTop(24); // will correct after render
+    }
+    setUserOpen((prev) => !prev);
   };
   
+  // After open, align arrow to toggle center and adjust if overflowing
+  useEffect(() => {
+    if (!userOpen || !toggleRef.current || !flyoutRef.current) return;
+    const r = toggleRef.current.getBoundingClientRect();
+    const fr = flyoutRef.current.getBoundingClientRect();
+    const centerY = r.top + r.height / 2;
+    const relativeTop = centerY - fr.top;
+    setArrowTop(Math.max(12, Math.min(relativeTop, fr.height - 12)));
+    // If flyout top is out of viewport, nudge bottom to keep it in view
+    if (fr.top < 8) {
+      const diff = 8 - fr.top;
+      setFlyoutBottom((prev) => (prev !== null ? Math.max(8, prev - diff) : prev));
+    }
+    if (fr.bottom > window.innerHeight - 8) {
+      const diff = fr.bottom - (window.innerHeight - 8);
+      setFlyoutBottom((prev) => (prev !== null ? prev + diff : prev));
+    }
+  }, [userOpen]);
+
 
   const handleCloseChangePwdModal = () => {
     setChangePwdModal({
@@ -139,7 +191,7 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
 
   return (
     <>
-      <nav className={`menu-bar ${isOpen ? "open" : ""}`}>
+      <nav className="menu-bar">
         <ul className="menu">
           {/* <li>
             <Link to="/dashboard" onClick={handleMenuItemClick}>
@@ -217,41 +269,65 @@ const Sidebar = ({ isOpen, onCloseSidebar }) => {
         >
           <button
             className="user-toggle"
+            ref={toggleRef}
             onClick={toggleUserPanel}
             title={user?.name || "User"}
             aria-label="Account menu"
           >
             <span className="material-icons user-avatar">account_circle</span>
+            <span className="user-name">{user?.name || "User"}</span>
           </button>
 
-          <div className="user-panel" onClick={handleUserPanelClick}>
-            <button
-              onClick={() => {
-                navigate("/profile");
-                setUserOpen(false);
-              }}
-            >
-              <span className="material-icons">person</span>
-              <span className="user-panel-text">Profile</span>
-            </button>
-            <button
-              onClick={() => {
-                setChangePwdModal((prev) => ({
-                  ...prev,
-                  isOpen: true,
-                  error: "",
-                }));
-                setUserOpen(false);
-              }}
-            >
-              <span className="material-icons">lock</span>
-              <span className="user-panel-text">Change Password</span>
-            </button>
-            <button onClick={handleLogout}>
-              <span className="material-icons">logout</span>
-              <span className="user-panel-text">Logout</span>
-            </button>
-          </div>
+          <div className="user-panel" onClick={handleUserPanelClick}></div>
+          {userOpen &&
+            createPortal(
+              <div
+                className="user-flyout"
+                ref={flyoutRef}
+                style={{
+                  left: `${Math.round(flyoutLeft)}px`,
+                  width: `${Math.round(flyoutWidth)}px`,
+                  ...(flyoutBottom !== null
+                    ? { bottom: `${Math.round(flyoutBottom)}px` }
+                    : { top: `${Math.round(flyoutTop)}px` }),
+                  ['--arrow-top']: `${Math.round(arrowTop)}px`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => {
+                    navigate("/profile");
+                    setUserOpen(false);
+                  }}
+                >
+                  <span className="material-icons">person</span>
+                  <span className="user-panel-text">Profile</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setChangePwdModal((prev) => ({
+                      ...prev,
+                      isOpen: true,
+                      error: "",
+                    }));
+                    setUserOpen(false);
+                  }}
+                >
+                  <span className="material-icons">lock</span>
+                  <span className="user-panel-text">Change Password</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setUserOpen(false);
+                  }}
+                >
+                  <span className="material-icons">logout</span>
+                  <span className="user-panel-text">Logout</span>
+                </button>
+              </div>,
+              document.body
+            )}
           <div className="portal-anchor">
           <Modal
             isOpen={changePwdModal.isOpen}

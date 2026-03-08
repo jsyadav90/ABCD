@@ -152,8 +152,19 @@ const AddItemPage = () => {
     });
     const newErr = {};
     reqKeys.forEach((k) => {
-      if (!String(form[k] || "").trim()) newErr[k] = "Required";
+      // Allow 0 as valid for numbers, but check empty string/null for others
+      const val = form[k];
+      if (val === undefined || val === null || String(val).trim() === "") {
+        newErr[k] = "Required";
+      }
     });
+    
+    // Log validation errors for debugging
+    if (Object.keys(newErr).length > 0) {
+      console.log("Validation Errors:", newErr);
+      console.log("Current Form Data:", form);
+    }
+    
     sections.forEach((sec) => {
       const isTable = tableSections.includes(String(sec.sectionTitle));
       (sec.fields || []).forEach((f) => {
@@ -184,7 +195,7 @@ const AddItemPage = () => {
 
   const submit = async () => {
     if (!validate()) {
-      alert("Please fill required fields");
+      alert("Please fill required fields (Check console for details)");
       return;
     }
     setSubmitting(true);
@@ -268,6 +279,11 @@ const AddItemPage = () => {
         itemType,
         // @ts-ignore
         assetCategory: category || form.assetCategory || null,
+        // Ensure required basicInfo fields are mapped if missing
+        // @ts-ignore
+        manufacturer: form.manufacturer || form.cpuManufacturer,
+        // @ts-ignore
+        model: form.model || form.cpuModel,
         memory,
         storage,
         sections: sectionsPayload,

@@ -7,16 +7,17 @@
   top: var(--header-height);
   left: 0;
   width: var(--nav-width);
-  height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height)); /* Fallback */
+  height: calc(100dvh - var(--header-height)); /* Modern mobile fix */
   background-color: #1e40af;
   border-right: 1px solid var(--border-color);
   z-index: 999;
-  padding-bottom: 1rem;
+  padding-bottom: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   transition: width 0.6s ease-in-out, transform 0.3s ease;
-  overflow: visible;
+  overflow: visible; /* Ensure popups are visible */
 }
 
 /* ============================================
@@ -29,11 +30,12 @@
   flex-direction: column;
   gap: 0.25rem;
   margin: 0;
-  padding: 0 0 4rem 0;
+  padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: calc(100vh - var(--header-height) - 10rem);
   flex: 1;
+  /* Ensure menu doesn't push user details off screen */
+  min-height: 0; 
 }
 
 .menu li {
@@ -116,89 +118,85 @@
   color: #FFA718;
 }
 
-/* ============================================
-   DROPDOWN ARROW
-   ============================================ */
-
-.dropdown-arrow {
-  margin-left: auto;
-  font-size: 0.7rem;
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  line-height: 1;
+.user-toggle .user-name {
+  display: none;
 }
 
-.dropdown:hover .dropdown-arrow {
-  transform: rotate(-90deg);
+/* Mobile responsive sidebar styles */
+@media (max-width: 992px) {
+  .menu-bar {
+    width: 12rem !important;
+    background-color: #1f2937;
+    height: auto !important;
+    position: fixed;
+    top: var(--header-height);
+    bottom: 0;
+    overflow: visible;
+  }
+
+  .menu {
+    padding-top: 1rem;
+  }
+
+  .menu a,
+  .menu button,
+  .user-toggle {
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 1rem 1.5rem 1rem 0.4rem;
+    gap: 1rem;
+    text-align: left;
+    height: auto;
+  }
+
+  .user-toggle .user-name {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .menu .material-icons {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .menu-text {
+    font-size: 1rem;
+    white-space: normal;
+    opacity: 1;
+    width: auto;
+    overflow: visible;
+  }
+  
+
+  .user-toggle {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    padding: 1rem 1.5rem !important;
+    width: 100%;
+  }
+  
+  .user-details {
+    width: 100%;
+    padding: 0;
+    padding-bottom: 2rem; /* Add more padding for safety */
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+    position: relative; /* Ensure relative positioning for absolute child */
+    z-index: 1001; /* Higher z-index than menu */
+    background-color: #1f2937; /* Ensure background covers content behind */
+  }
+
+  .user-panel { display: none; }
 }
 
-/* ============================================
-   DROPDOWN MENU
-   ============================================ */
-
-.dropdown {
-  position: relative;
-  overflow: visible;
-  z-index: 1;
-}
-
-.dropdown-menu {
-  list-style: none;
-  position: fixed;
-  flex-direction: column;
-  gap: 0;
-  background-color: #2d3e50;
-  margin: 0;
-  padding: 0.5rem 0;
-  min-width: 15rem;
-  max-width: calc(100vw - var(--nav-width) - 2rem);
-  border-radius: 0 .5rem .5rem 0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  z-index: 10000;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  -webkit-border-radius: 0 .5rem .5rem 0;
-  -moz-border-radius: 0 .5rem .5rem 0;
-  -ms-border-radius: 0 .5rem .5rem 0;
-  -o-border-radius: 0 .5rem .5rem 0;
-}
-
-.dropdown-menu li {
-  margin: 0;
-  list-style: none;
-}
-
-.dropdown-menu li a {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 1rem;
-  font-size: 0.85rem;
-  background-color: transparent;
-  color: #e5e7eb;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.dropdown-menu li a:hover {
-  background: var(--menu-hover-color);
-  color: #FFA718;
-}
-
-.dropdown-menu li a .material-icons {
-  font-size: 1.1rem;
-}
-
-/* Dropdown menu is controlled by React state, no CSS hover needed */
-
-/* ============================================
-   USER DETAILS SECTION
-   ============================================ */
+   /* ============================================ */
 
 .user-details {
   position: relative;
@@ -206,8 +204,10 @@
   padding: 0;
   margin-top: auto;
   transition: all 0.3s ease;
+  overflow-x: hidden; /* Force hide horizontal scroll */
 }
 
+/* Hide horizontal scrollbar from user toggle */
 .user-toggle {
   display: flex;
   flex-direction: column;
@@ -225,6 +225,7 @@
   width: 100%;
   transition: background 0.3s ease, color 0.3s ease;
   position: relative;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .user-toggle:hover {
@@ -243,300 +244,101 @@
 }
 
 
-/* ============================================
-   USER PANEL - DROPDOWN MENU
-   ============================================ */
+.user-panel { display: none; }
 
-.user-panel {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  background: #374151;
-  border-top: 1px solid #2d3748;
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-  display: none;
-  flex-direction: column;
-  gap: 0;
-  margin-bottom: 0;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-  z-index: 1100;
-  min-width: 100%;
+.user-details.active {
+  overflow: visible; /* Allow popup to show outside */
 }
 
-.user-panel button {
+/* Ensure no horizontal scrollbars appear on the sidebar itself */
+.menu-bar {
+  overflow-x: visible;
+}
+
+/* Portal flyout rendered to body */
+.user-flyout {
+  position: fixed;
+  left: 0;
+  top: auto;   /* prevent full-height when bottom is set dynamically */
+  bottom: auto;
+  background: #374151;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
   display: flex;
   flex-direction: column;
+  /* min-width: max-content; */
+  /* max-width: calc(100vw - 16px); */
+  z-index: 10050;
+  pointer-events: auto;
+}
+
+.user-flyout::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: var(--arrow-top, 24px);
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid #374151;
+}
+
+.user-flyout button {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  width: 100%;
-  padding: 0.6rem 0.3rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   background: none;
   border: none;
   color: #e5e7eb;
-  text-align: center;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: background 0.3s ease, color 0.3s ease;
+  font-size: 0.85rem;
   border-bottom: 1px solid #2d3748;
+  cursor: pointer;
 }
 
-.user-panel button:last-child {
+.user-flyout button:last-child {
   border-bottom: none;
 }
 
-.user-panel button:hover {
+.user-flyout button:hover {
   background: rgba(255, 167, 24, 0.15);
   color: #FFA718;
 }
 
-.user-panel .material-icons {
-  font-size: 1.25rem;
+.user-flyout .material-icons {
+  font-size: 1.1rem;
   color: #9ca3af;
-  flex-shrink: 0;
 }
 
-.user-panel button:hover .material-icons {
+.user-flyout button:hover .material-icons {
   color: #FFA718;
 }
 
-.user-panel .user-panel-text {
-  line-height: 1.1;
-}
-
-/* Show panel when active */
+/* Hide old in-flow panel when active; portal handles it */
 .user-details.active .user-panel {
-  display: flex;
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+  display: none !important;
 }
 
 /* ============================================
    RESPONSIVE ADJUSTMENTS - TABLET
    ============================================ */
 
-@media (max-width: 992px) {
-  .menu-bar {
-    width: 70px;
-  }
-
-  .menu a,
-  .menu button,
-  .user-toggle {
-    padding: 0.65rem 0.4rem;
-    font-size: 0.8rem;
-  }
-
-  .menu .material-icons {
-    font-size: 1.3rem;
-  }
-
-  .dropdown-menu li a {
-    padding: 0.55rem 1rem;
-    font-size: 0.8rem;
-  }
-}
 
 /* ============================================
-   RESPONSIVE ADJUSTMENTS - MOBILE LANDSCAPE
+   DESKTOP (>= 993px): USER PANEL AS SUBMENU FLYOUT
    ============================================ */
-
-@media (max-width: 768px) {
-  .menu-bar {
-    width: 64px;
-  }
-
-  .menu {
-    padding: 0 0 3rem 0;
-  }
-
-  .menu a,
-  .menu button,
-  .user-toggle {
-    padding: 0.6rem 0.35rem;
-    font-size: 0.78rem;
-    flex-wrap: nowrap;
-    min-width: 0;
-  }
-
-  .menu .material-icons {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-  }
-
-  .menu-text {
-    flex-shrink: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .dropdown-menu li a {
-    padding: 0.5rem 0.9rem;
-    font-size: 0.75rem;
-  }
-
-  .dropdown-arrow {
-    font-size: 0.65rem;
-    flex-shrink: 0;
-    margin-left: auto;
-    align-self: center;
-    line-height: 1;
-  }
-  
-  .menu-btn {
-    flex-wrap: nowrap !important;
-  }
-
-  /* On small screens, dropdown menu responsive adjustments */
-  .dropdown-menu {
-    min-width: 12rem;
-    max-width: calc(100vw - var(--nav-width) - 1rem);
-    font-size: 0.85rem;
-    padding: 0.4rem 0;
-  }
-  
-  .dropdown-menu li a {
-    padding: 0.5rem 0.9rem;
-    font-size: 0.75rem;
-  }
-}
-
-/* ============================================
-   RESPONSIVE ADJUSTMENTS - MOBILE SMALL
-   ============================================ */
-
-@media (max-width: 576px) {
-  .menu-bar {
-    width: 60px;
-  }
-
-  .menu a,
-  .menu button,
-  .user-toggle {
-    padding: 0.55rem 0.3rem;
-    font-size: 0.75rem;
-    gap: 0.35rem;
-    flex-wrap: nowrap;
-    min-width: 0;
-  }
-
-  .menu .material-icons {
-    font-size: 1.2rem;
-    flex-shrink: 0;
-  }
-
-  .menu-text {
-    flex-shrink: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .dropdown-menu {
-    min-width: 11rem;
-    max-width: calc(100vw - var(--nav-width) - 0.5rem);
-    padding: 0.35rem 0;
-  }
-  
-  .dropdown-menu li a {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.72rem;
-  }
-  
-  .dropdown-arrow {
-    flex-shrink: 0;
-    margin-left: auto;
-    align-self: center;
-    line-height: 1;
-  }
-  
-  .menu-btn {
-    flex-wrap: nowrap !important;
-  }
-
+@media (min-width: 993px) {
   .user-details {
-    padding: 0.75rem;
+    overflow-x: hidden;
   }
 
-  .user-toggle {
-    padding: 0.4rem 0;
+  .user-details.active {
+    overflow: visible;
   }
 }
 
-/* ============================================
-   RESPONSIVE ADJUSTMENTS - EXTRA SMALL
-   ============================================ */
-
-@media (max-width: 480px) {
-  .menu-bar {
-    width: 56px;
-  }
-
-  .menu {
-    gap: 0.15rem;
-    padding: 0 0 2.5rem 0;
-  }
-
-  .menu a,
-  .menu button,
-  .user-toggle {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.72rem;
-    gap: 0.3rem;
-    flex-wrap: nowrap;
-    min-width: 0;
-  }
-
-  .menu .material-icons {
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  .menu-text {
-    flex-shrink: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .dropdown-menu {
-    min-width: 10rem;
-    max-width: calc(100vw - var(--nav-width) - 0.5rem);
-    padding: 0.3rem 0;
-  }
-  
-  .dropdown-menu li a {
-    padding: 0.45rem 0.7rem;
-    font-size: 0.7rem;
-  }
-
-  .dropdown-arrow {
-    font-size: 0.6rem;
-    flex-shrink: 0;
-    margin-left: auto;
-    align-self: center;
-    line-height: 1;
-  }
-  
-  .menu-btn {
-    flex-wrap: nowrap !important;
-  }
-
-  .user-details {
-    padding: 0.6rem;
-  }
-
-  .user-toggle {
-    font-size: 0.75rem;
-  }
-}
 
 /* ============================================
    SCROLLBAR STYLING - MENU LIST

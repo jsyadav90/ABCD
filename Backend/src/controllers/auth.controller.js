@@ -78,6 +78,15 @@ export const loginController = asyncHandler(async (req, res) => {
   const refreshTokenCookieOptions = getRefreshTokenCookieOptions();
   res.cookie("refreshToken", result.refreshToken, refreshTokenCookieOptions);
 
+  // Set access token in httpOnly cookie (for easier Postman/dev usage)
+  // This is optional for SPA (which uses header) but helps in scenarios like Postman
+  // Reuse same security options as refresh token but shorter expiry (session or short lived)
+  res.cookie("accessToken", result.accessToken, {
+    ...refreshTokenCookieOptions,
+    // Typically accessToken is short lived, but cookie can match its expiry or be session
+    // We'll use same secure settings.
+  });
+
   return res.status(200).json(
     new apiResponse(200, {
       user: result.user,
@@ -123,6 +132,10 @@ export const logoutController = asyncHandler(async (req, res) => {
   res.cookie("refreshToken", "", clearOpts);
   // Also clear with SameSite=Lax (browsers may have stored with different SameSite)
   res.cookie("refreshToken", "", { ...clearOpts, sameSite: "lax" });
+  
+  // Clear access token cookie too
+  res.cookie("accessToken", "", clearOpts);
+  res.cookie("accessToken", "", { ...clearOpts, sameSite: "lax" });
 
   return res.status(200).json(new apiResponse(200, null, result.message));
 });
@@ -158,6 +171,10 @@ export const logoutAllDevicesController = asyncHandler(async (req, res) => {
   const clearOpts = getClearRefreshTokenCookieOptions();
   res.cookie("refreshToken", "", clearOpts);
   res.cookie("refreshToken", "", { ...clearOpts, sameSite: "lax" });
+  
+  // Clear access token cookie too
+  res.cookie("accessToken", "", clearOpts);
+  res.cookie("accessToken", "", { ...clearOpts, sameSite: "lax" });
 
   return res.status(200).json(new apiResponse(200, null, result.message));
 });
@@ -179,6 +196,11 @@ export const refreshTokenController = asyncHandler(async (req, res) => {
   // Set new refresh token in cookie
   const refreshTokenCookieOptions = getRefreshTokenCookieOptions();
   res.cookie("refreshToken", result.refreshToken, refreshTokenCookieOptions);
+
+  // Set new access token in cookie
+  res.cookie("accessToken", result.accessToken, {
+    ...refreshTokenCookieOptions,
+  });
 
   return res.status(200).json(new apiResponse(200, {
     accessToken: result.accessToken,

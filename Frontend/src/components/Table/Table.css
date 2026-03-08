@@ -33,6 +33,7 @@
 	width: 100%;
 	border-collapse: collapse;
 	min-width: 800px;
+	border: 1px solid #ddd;
 }
 
 .table__data th,
@@ -41,6 +42,8 @@
 	border: 1px solid #ddd;
 	text-align: left;
 }
+
+
 
 .table__data thead th {
 	background: #f3f3f3;

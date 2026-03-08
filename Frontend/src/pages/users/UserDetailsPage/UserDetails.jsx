@@ -100,7 +100,7 @@ const UserDetails = () => {
   return (
     <>
       <SetPageTitle title={user ? `${user.name} | User Details` : "User Details"} />
-      <div className="wrapper">
+      <div className="user-details-view wrapper">
         {/* Sidebar */}
         <div className="sidebar">
           <div className="profile-box">
@@ -115,27 +115,27 @@ const UserDetails = () => {
             </div>
           </div>
 
-          <div className="menu">
+          <div className="ud-menu">
             <button
-              className={`menu-item ${activeSection === "basic" ? "active" : ""}`}
+              className={`ud-menu-item ${activeSection === "basic" ? "active" : ""}`}
               onClick={() => setActiveSection("basic")}
             >
               Basic Information
             </button>
             <button
-              className={`menu-item ${activeSection === "items" ? "active" : ""}`}
+              className={`ud-menu-item ${activeSection === "items" ? "active" : ""}`}
               onClick={() => setActiveSection("items")}
             >
               Assigned Items
             </button>
             <button
-              className={`menu-item ${activeSection === "timeline" ? "active" : ""}`}
+              className={`ud-menu-item ${activeSection === "timeline" ? "active" : ""}`}
               onClick={() => setActiveSection("timeline")}
             >
               User Timeline
             </button>
             <button
-              className={`menu-item ${activeSection === "audit" ? "active" : ""}`}
+              className={`ud-menu-item ${activeSection === "audit" ? "active" : ""}`}
               onClick={() => setActiveSection("audit")}
             >
               Audit & Login
