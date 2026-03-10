@@ -4,6 +4,7 @@ import Select from "../../../components/Select/Select.jsx";
 import Textarea from "../../../components/Textarea/Textarea.jsx";
 import Button from "../../../components/Button/Button.jsx";
 import { useScanning } from "../../../components/BarcodeScanner/useScanning.js";
+import Radio from "../../../components/Radio/Radio.jsx";
 
 const evaluateShowIf = (cond, getValue) => {
   // Support verbose form: { field: 'purchaseType', equals: 'PO' }
@@ -74,6 +75,7 @@ const Field = ({ def, value, onChange, onScan, error, formData }) => {
     label: def.label,
     value: value ?? "",
     onChange: (e) => onChange(def.name, e.target.value),
+    placeholder: def.placeholder,
     required: !!def.required,
     readOnly: !!def.readOnly,
     disabled: !!def.disabled || (def.type === "select" && !!def.readOnly),
@@ -82,6 +84,28 @@ const Field = ({ def, value, onChange, onScan, error, formData }) => {
     maxLength: def.maxLength,
   };
   if (def.type === "select") return <Select onBlur={undefined} {...common} options={selectOptions} />;
+  if (def.type === "radio") {
+    return (
+      <div className="input-wrapper">
+        {def.label && <label className="input-label">{def.label}{common.required ? <span className="input-required">*</span> : null}</label>}
+        <div className="fr-radio-group">
+          {selectOptions.map((opt) => (
+            <Radio
+              key={opt.value}
+              name={def.name}
+              label={opt.label}
+              value={opt.value}
+              checked={String(common.value) === String(opt.value)}
+              onChange={(e) => common.onChange(e)}
+              disabled={common.disabled}
+              error={common.error}
+            />
+          ))}
+        </div>
+        {common.error ? <div className="input-error-text">{common.error}</div> : null}
+      </div>
+    );
+  }
   if (def.type === "textarea") return <Textarea onBlur={undefined} {...common} rows={def.rows || 3} />;
   const enableScan = String(def.name) === "serialNumber" || !!def.scan;
   return (
@@ -113,6 +137,7 @@ const TableField = ({ def, value, onChange, error, formData, rowIndex }) => {
     name: def.name,
     value: value ?? "",
     onChange: (e) => onChange(def.name, e.target.value),
+    placeholder: def.placeholder,
     required: !!def.required,
     readOnly: !!def.readOnly,
     disabled: !!def.disabled || (def.type === "select" && !!def.readOnly),
@@ -181,14 +206,21 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
           return (
             <section key={sec.sectionTitle} className="fr-card fr-table-section" aria-labelledby={`sec-${sec.sectionTitle}`}>
               <div id={`sec-${sec.sectionTitle}`} className="fr-title">{sec.sectionTitle}</div>
-              <div className="fr-table-head" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr)) auto` }}>
+              <div
+                className="fr-table-head"
+                style={{ gridTemplateColumns: `repeat(${cols}, minmax(180px, 1fr)) 80px` }}
+              >
                 {filtered.map((f) => (
                   <div key={`${f.name}-h`} className="fr-table-head-cell">{f.label}</div>
                 ))}
                 <div className="fr-table-head-cell"></div>
               </div>
               {Array.from({ length: count }).map((_, idx) => (
-                <div key={`row-${sec.sectionTitle}-${idx}`} className="fr-table-row" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr)) auto` }}>
+                <div
+                  key={`row-${sec.sectionTitle}-${idx}`}
+                  className="fr-table-row"
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(180px, 1fr)) 80px` }}
+                >
                   {filtered.map((f) => (
                     <div key={`${f.name}-c-${idx}`} className="fr-table-row-cell">
                       <TableField

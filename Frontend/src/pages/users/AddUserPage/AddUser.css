@@ -173,9 +173,9 @@
     gap: 16px;
   }
 
-  .form-actions {
+  /* .form-actions {
     flex-direction: column;
-  }
+  } */
 
   .form-actions button {
     width: 100%;

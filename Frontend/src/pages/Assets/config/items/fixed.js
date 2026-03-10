@@ -123,7 +123,7 @@ export const fixedConfigs = {
       {
         sectionTitle: "BIOS & Hardware",
         fields: [
-          { name: "biosVersion", label: "BIOS Version", type: "text", maxLength: 80 },
+          { name: "biosVersion", label: "BIOS Version", type: "text", placeholder:"Enter BIOS Version", maxLength: 80 },
           { name: "biosDate", label: "BIOS Release Date", type: "date" },
           { name: "motherboardSerial", label: "Motherboard Serial Number", type: "text", maxLength: 120 },
           { name: "hardwareUUID", label: "Hardware UUID", type: "text", maxLength: 120 },
@@ -150,17 +150,14 @@ export const fixedConfigs = {
   },
   monitor: {
     sections: [
-      {
-        sectionTitle: "Basic Information",
-        fields: [
-          { name: "assetName", label: "Asset Name", type: "text", required: true, maxLength: 120 },
-          { name: "assetCategory", label: "Asset Category", type: "select", options: common.assetCategories, required: true },
-          { name: "manufacturer", label: "Manufacturer", type: "text", required: true, maxLength: 100 },
-          { name: "model", label: "Model", type: "text", required: true, maxLength: 100 },
-          { name: "monitorType", label: "Monitor Type", type: "select", options: common.monitorTypes },
-          { name: "usageType", label: "Usage Type", type: "select", options: common.usageTypes },
-        ],
-      },
+       //! Basic Information
+      fromGeneric("Basic Information", {
+        // Example: hide description field coming from generic
+        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        // overrideFields: [{},{},{}  ],
+        // addFields: [{},{},{}],
+      }),
+      //! Display Specifications
       {
         sectionTitle: "Display Specifications",
         fields: [
@@ -174,6 +171,7 @@ export const fixedConfigs = {
           { name: "curved", label: "Curved Display", type: "select", options: common.booleanOptions },
         ],
       },
+      //! Ports & Connectivity
       {
         sectionTitle: "Ports & Connectivity",
         fields: [
@@ -185,16 +183,7 @@ export const fixedConfigs = {
           { name: "builtInSpeakers", label: "Built-in Speakers", type: "select", options: common.booleanOptions },
         ],
       },
-      {
-        sectionTitle: "Physical & Mounting",
-        fields: [
-          { name: "color", label: "Color", type: "text", maxLength: 40 },
-          { name: "weightKg", label: "Weight (Kg)", type: "number", min: 0, max: 100 },
-          { name: "vesaMountSupported", label: "VESA Mount Supported", type: "select", options: common.booleanOptions },
-          { name: "standAdjustable", label: "Height Adjustable Stand", type: "select", options: common.booleanOptions },
-          { name: "wallMounted", label: "Wall Mounted", type: "select", options: common.booleanOptions },
-        ],
-      },
+      //! Power & Energy
       {
         sectionTitle: "Power & Energy",
         fields: [
@@ -203,42 +192,21 @@ export const fixedConfigs = {
           { name: "voltageRange", label: "Voltage Range", type: "text", maxLength: 40 },
         ],
       },
-      {
-        sectionTitle: "Asset Financial Details",
-        fields: [
-          { name: "assetTag", label: "Asset Tag", type: "text", required: true, maxLength: 80 },
-          { name: "serialNumber", label: "Serial Number", type: "text", required: true, maxLength: 120 },
-          { name: "vendor", label: "Vendor", type: "select", options: common.vendors },
-          { name: "barcode", label: "Barcode / QR Code", type: "text", maxLength: 120 },
-          { name: "purchaseCost", label: "Purchase Cost", type: "number", min: 0, max: 5000000 },
-          { name: "acquisitionDate", label: "Acquisition Date", type: "date" },
-          { name: "warrantyExpiryDate", label: "Warranty Expiry Date", type: "date" },
-          { name: "depreciationMethod", label: "Depreciation Method", type: "select", options: common.depreciationMethods },
-          { name: "usefulLifeYears", label: "Useful Life (Years)", type: "number", min: 1, max: 15 },
-          { name: "residualValue", label: "Residual Value", type: "number", min: 0, max: 1000000 },
-        ],
-      },
-      {
-        sectionTitle: "Location Information",
-        fields: [
-          { name: "branch", label: "Branch", type: "select", options: common.branches },
-          { name: "building", label: "Building", type: "text", maxLength: 100 },
-          { name: "floor", label: "Floor", type: "text", maxLength: 40 },
-          { name: "room", label: "Room", type: "text", maxLength: 80 },
-          { name: "assignedTo", label: "Assigned To (User ID)", type: "text", maxLength: 80 },
-          { name: "assignmentDate", label: "Assignment Date", type: "date" },
-        ],
-      },
-      {
-        sectionTitle: "Asset Lifecycle Status",
-        fields: [
-          { name: "lifecycleStatus", label: "Lifecycle Status", type: "select", options: common.lifecycleStatus },
-          { name: "operationalStatus", label: "Operational Status", type: "select", options: common.operationalStatus },
-          { name: "lastAuditDate", label: "Last Physical Audit Date", type: "date" },
-          { name: "condition", label: "Physical Condition", type: "select", options: common.conditionStatus },
-          { name: "remarks", label: "Remarks", type: "textarea", maxLength: 500 },
-        ],
-      },
+      
+       //! Purchase Information
+      fromGeneric("Purchase Information",{
+         omitFields: ["taxAmount","totalAmount","currency"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+      //! Purchase Information
+      fromGeneric("Asset State",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+      
+      
     ],
   },
   printer: {

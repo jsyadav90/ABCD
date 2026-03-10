@@ -208,22 +208,21 @@
   font-size: 1.2rem;
 }
 
-.page-title {
-  position: fixed;
-  top: 2.2rem;
-  left: -1px;
+.user-details-page .page-title {
+ 
   z-index: 1000;
   display: flex;
-  justify-content: center;
+  margin-bottom: 1rem;
+  /* justify-content: center; */
   width: 100vw;
 }
 
 .page-title h2 {
   margin: 0;
   font-size: 1.5rem;
-  font-weight: 600;
-  /* color: var(--page-title-color); */
-    color: #FFA718;
+  font-weight: 900;
+  color: var(--page-title-color);
+    /* color: #FFA718; */
 
 }
 

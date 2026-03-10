@@ -14,15 +14,16 @@
   background: #ffffff;
 }
 
-.page-title {
-  font-size: 14px;
+.page-header .page-title {
+  font-size: 1.8rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--page-title-color)
 }
 
 .back-btn {
   background: #ffffff;
   color: #1e3a8a;
+  font-size: 1.7rem;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 6px 10px;
@@ -146,8 +147,8 @@
 
 .fr-title {
   font-size: 16px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #c19211;
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e7eb;
   margin-bottom: 16px;
@@ -158,6 +159,18 @@
   grid-template-columns: repeat(2, 1fr);
   column-gap: 18px;
   row-gap: 14px;
+  padding-left: 25px;
+}
+
+/* Radio group styling to match input/select layout */
+.fr-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.fr-radio-group .radio-wrapper {
+  margin-bottom: 0;
 }
 
 /* Table-style sections (Processors, Storage, Memory) */
@@ -169,26 +182,43 @@
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 25px;
+  align-items: center;
+  /* Allow header width to extend beyond viewport when grid is wide */
+  width: max-content;
+  min-width: 100%;
 }
 .fr-table-head-cell {
   font-size: 13px;
   font-weight: 600;
   color: #4b5563;
-  text-align: left;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
 }
 .fr-table-row {
   display: grid;
   column-gap: 16px;
   row-gap: 0;
-  padding: 10px 0 6px 0;
+  padding: 10px 25px 6px 25px;
   align-items: center;
   border-top: 1px solid #e5e7eb;
+  /* Keep row width in sync with header and allow horizontal scroll */
+  width: max-content;
+  min-width: 100%;
+}
+.fr-table-row-cell {
+  display: flex;
+  justify-content: center;
 }
 .fr-table-row-cell .input-wrapper,
 .fr-table-row-cell .select-wrapper,
 .fr-table-row-cell .textarea-wrapper {
   margin-bottom: 0;
+  width: 100%;
+  max-width: 320px;
 }
 .fr-table-row-cell .input-label,
 .fr-table-row-cell .select-label,
@@ -233,9 +263,20 @@
     flex-wrap: wrap;
   }
   .form-actions {
-    flex-direction: column;
+    /* flex-direction: column; */
   }
   .form-actions button {
     width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .fr-table-row-cell .input-wrapper,
+  .fr-table-row-cell .select-wrapper,
+  .fr-table-row-cell .textarea-wrapper {
+    max-width: 100%;
+  }
+  .fr-table-head-cell {
+    font-size: 12px;
   }
 }

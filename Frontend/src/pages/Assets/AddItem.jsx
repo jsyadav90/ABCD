@@ -490,9 +490,9 @@ const AddItemPage = () => {
     const categories = Object.values(CATEGORY_ITEMS || {});
     for (const arr of categories) {
       const f = arr.find((i) => i.value === itemType);
-      if (f) return `New ${f.label}`;
+      if (f) return `Add ${f.label}`;
     }
-    return `New ${itemType}`;
+    return `Add ${itemType}`;
   })();
 
   return (

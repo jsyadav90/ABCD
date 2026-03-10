@@ -51,7 +51,19 @@ const processQueue = (error, token = null) => {
 // Request interceptor - Add token to every request
 API.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('accessToken')
+    let token = localStorage.getItem('accessToken')
+    // Fallback: support legacy storage format { accessToken } under "authData"
+    if (!token) {
+      try {
+        const authDataStr = localStorage.getItem('authData')
+        if (authDataStr && authDataStr !== 'undefined' && authDataStr !== 'null') {
+          const authData = JSON.parse(authDataStr)
+          if (authData?.accessToken) token = authData.accessToken
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

@@ -621,7 +621,7 @@ const Users = () => {
   // Table handles paging/searching/sorting internally; pass full data and pageSize
 
   return (
-    <div className="user-details-page" style={{ padding: "2rem 1rem" }}>
+    <div className="user-details-page" style={{ padding: "1rem 1rem" }}>
       <div className="users-page">
         <SetPageTitle title="Users | ABCD" />
         {error && (

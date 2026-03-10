@@ -49,8 +49,12 @@ export const genericConfig = {
         { name: "purchaseDate", label: "Purchase Date", type: "date" },
         { name: "vendorId", label: "Vendor", type: "select", options: common.vendors },
 
-        { name: "invoiceNumber", label: "Invoice Number", type: "text", maxLength: 80 },
-        { name: "invoiceDate", label: "Invoice Date", type: "date" },
+        { name: "itemReceivedOn", label: "Item Received On", type: "radio", options: [{ name: "Invoice", value: "invoice" }, { name: "Challan", value: "Challan" }] },
+
+        { name: "invoiceNumber", label: "Invoice Number", type: "text", maxLength: 80, showIf: { itemReceivedOn: "invoice" } },
+        { name: "invoiceDate", label: "Invoice Date", type: "date", showIf: { itemReceivedOn: "invoice" } },
+        { name: "deliveryChallanNumber", label: "Delivery Challan Number", type: "text", showIf: { itemReceivedOn: "Challan" } },
+        { name: "deliveryChallanDate", label: "Challan Date", type: "date", showIf: { itemReceivedOn: "Challan" } },
 
         { name: "purchaseCost", label: "Purchase Cost", type: "number", min: 0, max: 50000000 },
         { name: "taxAmount", label: "Tax Amount", type: "number" },
@@ -58,7 +62,6 @@ export const genericConfig = {
         { name: "currency", label: "Currency", type: "select", options: ["INR", "USD", "EUR"] },
 
         { name: "deliveryDate", label: "Delivery Date", type: "date" },
-        { name: "deliveryChallanNumber", label: "Delivery Challan Number", type: "text" },
         { name: "receivedBy", label: "Received By", type: "text" },
       ],
     },
