@@ -7,7 +7,7 @@ export const genericConfig = {
     {
       sectionTitle: "Basic Information",
       fields: [
-        { name: "assetId", label: "Asset ID", type: "text", readOnly: true },
+        { name: "assetId", label: "Asset ID", type: "text", readOnly: false },
         { name: "assetTag", label: "Asset Tag", type: "text", required: true, maxLength: 80 },
         { name: "barcode", label: "Barcode / QR Code", type: "text", maxLength: 120 },
 
@@ -26,7 +26,7 @@ export const genericConfig = {
         { name: "serialNumber", label: "Serial Number", type: "text", maxLength: 120 },
 
         { name: "assetCondition", label: "Condition", type: "select", options: common.assetCondition },
-        { name: "ownershipType", label: "Ownership Type", type: "select", options: common.ownershipTypes },
+        { name: "ownershipType", label: "Ownership Type", type: "select", options: [{name:"Owned", value:"Owned"}, {name:"Leased", value:"Leased"}, {name:"Rented", value:"Rented"}] },
 
         { name: "manufacturingDate", label: "Manufacturing Date", type: "date" },
         { name: "installationDate", label: "Installation Date", type: "date" },
@@ -43,6 +43,9 @@ export const genericConfig = {
         { name: "poNumber", label: "PO Number", type: "text", maxLength: 80, showIf: { purchaseType: "PO" } },
         { name: "poDate", label: "PO Date", type: "date", showIf: { purchaseType: "PO" } },
         
+        {name:"receiptNumber", label: "Receipt Number", type: "text", maxLength: 80, showIf: { purchaseType: "Direct" } },
+        {name: "receiptDate", label: "Receipt Date", type: "date", showIf: { purchaseType: "Direct" } },
+
         { name: "purchaseDate", label: "Purchase Date", type: "date" },
         { name: "vendorId", label: "Vendor", type: "select", options: common.vendors },
 
@@ -88,25 +91,35 @@ export const genericConfig = {
         { name: "amcCost", label: "AMC Cost", type: "number", showIf: { amcAvailable: "Yes" } },
       ],
     },
+    {
+      sectionTitle: "Asset State",
+      fields: [
+        { name: "assetStatus", label: "Asset Status", type: "select", options: [{name:"Active", value:"active", default:true}, {name:"Inactive", value:"inactive"}, {name:"Retired", value:"retired"}, ] },
+        { name: "assetIsCurrently", label: "Asset is Currently", type: "select", options: [{name:"In Store", value:"inStore", default:true}, {name:"In Repair", value:"inRepair"}, {name:"Disposed", value:"disposed"}, {name:"In Use", value:"inUse"}, {name:"Lost", value:"lost"}, ] },
 
-    // {
-    //   sectionTitle: "Assignment Information",
-    //   fields: [
-    //     { name: "assignmentType", label: "Assignment Type", type: "select", options: ["User", "Department", "Location"] },
+        { name: "user", label: "User", type: "select", options: common.user, showIf: { assetIsCurrently: "inUse" }},
+      ],
+  
+    },
 
-    //     { name: "assignedUserId", label: "Assigned User", type: "text", showIf: { assignmentType: "User" } },
-    //     { name: "assignedDepartment", label: "Department", type: "text", showIf: { assignmentType: "Department" } },
+    {
+      sectionTitle: "Assignment Information",
+      fields: [
+        { name: "assignmentType", label: "Assignment Type", type: "select", options: ["User", "Department", "Location"] },
 
-    //     { name: "assignmentDate", label: "Assignment Date", type: "date" },
-    //     { name: "expectedReturnDate", label: "Expected Return Date", type: "date" },
+        { name: "assignedUserId", label: "Assigned User", type: "text", showIf: { assignmentType: "User" } },
+        { name: "assignedDepartment", label: "Department", type: "text", showIf: { assignmentType: "Department" } },
 
-    //     { name: "assignmentStatus", label: "Assignment Status", type: "select", options: ["Assigned", "Returned", "Lost"] },
+        { name: "assignmentDate", label: "Assignment Date", type: "date" },
+        { name: "expectedReturnDate", label: "Expected Return Date", type: "date" },
 
-    //     { name: "handoverBy", label: "Handover By", type: "text" },
-    //     { name: "receivedBy", label: "Received By", type: "text" },
-    //     { name: "handoverNotes", label: "Handover Notes", type: "textarea" },
-    //   ],
-    // },
+        { name: "assignmentStatus", label: "Assignment Status", type: "select", options: ["Assigned", "Returned", "Lost"] },
+
+        { name: "handoverBy", label: "Handover By", type: "text" },
+        { name: "receivedBy", label: "Received By", type: "text" },
+        { name: "handoverNotes", label: "Handover Notes", type: "textarea" },
+      ],
+    },
 
     //! Location Information
     {

@@ -10,19 +10,20 @@ const toBoolEnabledDisabled = () => [
 export const fixedConfigs = {
   cpu: {
     sections: [
+      //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode"],
-        overrideFields: [
-          { name: "assetCategory", options: common.assetCategories },
-          { name: "manufacturer", required: true },
-          { name: "model", required: true },
-        ],
-        addFields: [
-          { name: "deviceType", label: "Device Type", type: "select", options: common.deviceTypes },
-          { name: "domain", label: "Domain / Workgroup", type: "select", options: common.domains },
-        ],
+        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        // overrideFields: [{},{},{}  ],
+        // addFields: [{},{},{}],
       }),
+      //! Location Information
+      fromGeneric("Location Information",{
+         omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+        }),
+      //! Operating System
       {
         sectionTitle: "Operating System",
         fields: [
@@ -32,8 +33,10 @@ export const fixedConfigs = {
           { name: "buildNumber", label: "Build Number", type: "text", maxLength: 40 },
           { name: "osLicenseKey", label: "OS License Key", type: "text", maxLength: 120 },
           { name: "activationStatus", label: "Activation Status", type: "select", options: common.activationStatus },
+          { name: "domain", label: "Domain / Workgroup", type: "select", options: common.domains },
         ],
       },
+      //! Memory
       {
         sectionTitle: "Memory",
         fields: [
@@ -44,53 +47,51 @@ export const fixedConfigs = {
             name: "ramType",
             label: "Module Type",
             type: "select",
-            options: [
-              { value: "DDR3", label: "DDR3" },
-              { value: "DDR4", label: "DDR4" },
-              { value: "DDR5", label: "DDR5" },
-            ],
+            options: [],
           },
-          { name: "ramSpeedMHz", label: "Speed (MHz)", type: "number", min: 400, max: 10000 },
-          {
-            name: "ramFormFactor",
-            label: "Form Factor",
-            type: "select",
-            options: [
-              { value: "DIMM", label: "DIMM" },
-              { value: "SO-DIMM", label: "SO-DIMM" },
-            ],
-          },
-          { name: "ramSlot", label: "Slot Label", type: "text", maxLength: 40 },
-          { name: "ramChannel", label: "Channel", type: "text", maxLength: 10 },
+          { name: "ramSpeedMHz", label: "Speed (MHz)", type: "number", min: 400, max: 1000000 },
+          
         ],
       },
+      //! Processor
       {
         sectionTitle: "Processor",
         fields: [
-          { name: "cpuModel", label: "Processor Model", type: "text", required: true, maxLength: 120 },
-          { name: "cpuManufacturer", label: "Processor Manufacturer", type: "text", required: true, maxLength: 80 },
-          { name: "cpuSocket", label: "CPU Socket", type: "text", maxLength: 40 },
-          {
-            name: "memoryTypeSupported",
-            label: "Supported Memory Type",
-            type: "select",
+          
+          { 
+            name: "cpuManufacturer", 
+            label: "Processor Manufacturer", 
+            type: "select", 
+            required: true, 
             options: [
-              { value: "DDR3", label: "DDR3" },
-              { value: "DDR4", label: "DDR4" },
-              { value: "DDR5", label: "DDR5" },
-            ],
-          },
-          { name: "maxMemoryCapacityGB", label: "Max Memory Capacity (GB)", type: "number", min: 1, max: 4096 },
-          { name: "maxMemorySpeedMHz", label: "Max Memory Speed (MHz)", type: "number", min: 400, max: 10000 },
-          {
-            name: "pcieGenSupported",
-            label: "PCIe Generation Supported",
-            type: "select",
-            options: [
-              { value: "Gen3", label: "Gen3" },
-              { value: "Gen4", label: "Gen4" },
-              { value: "Gen5", label: "Gen5" },
-            ],
+              { value: "intel", label: "Intel" },
+              { value: "amd", label: "AMD" },
+              { value: "apple", label: "Apple" },
+
+            ] },
+
+            { 
+            name: "cpuModel", 
+            label: "Processor Model", 
+            type: "select", 
+            required: true, 
+            options:[
+              { value: "i9", label: "Intel Core i9", showIf: { cpuManufacturer: "intel" } },
+              { value: "i7", label: "Intel Core i7", showIf: { cpuManufacturer: "intel" } },
+              { value: "i5", label: "Intel Core i5", showIf: { cpuManufacturer: "intel" } },
+              { value: "i3", label: "Intel Core i3", showIf: { cpuManufacturer: "intel" } },
+
+              { value: "ryzen9", label: "AMD Ryzen 9", showIf: { cpuManufacturer: "amd" } },
+              { value: "ryzen7", label: "AMD Ryzen 7", showIf: { cpuManufacturer: "amd" } },
+              { value: "ryzen5", label: "AMD Ryzen 5", showIf: { cpuManufacturer: "amd" } },
+              { value: "ryzen3", label: "AMD Ryzen 3", showIf: { cpuManufacturer: "amd" } },
+
+              { value: "m3", label: "Apple M3", showIf: { cpuManufacturer: "apple" } },
+              { value: "m2", label: "Apple M2", showIf: { cpuManufacturer: "apple" } },
+              { value: "m1", label: "Apple M1", showIf: { cpuManufacturer: "apple" } },
+              
+            ] 
+          
           },
           { name: "clockSpeedGHz", label: "Clock Speed (GHz)", type: "number", min: 0, max: 10 },
           { name: "cores", label: "Number of Cores", type: "number", min: 1, max: 256 },
@@ -98,55 +99,27 @@ export const fixedConfigs = {
           { name: "virtualizationEnabled", label: "Virtualization Enabled", type: "select", options: common.booleanOptions },
         ],
       },
+      //! Storage
       {
         sectionTitle: "Storage",
         fields: [
           { name: "driveManufacturer", label: "Drive Manufacturer", type: "text", maxLength: 80 },
           { name: "driveModelNumber", label: "Drive Model Number", type: "text", maxLength: 120 },
+          { name: "serialNumber", label: "Serial Number", type: "text", maxLength: 120 },
           { name: "driveCapacityGB", label: "Capacity (GB)", type: "number", min: 1, max: 200000 },
           {
             name: "driveType",
             label: "Drive Type",
             type: "select",
-            options: [
-              { value: "SSD (SATA)", label: "SSD (SATA)" },
-              { value: 'HDD 3.5"', label: 'HDD 3.5"' },
-              { value: 'HDD 2.5"', label: 'HDD 2.5"' },
-              { value: "M.2 SATA", label: "M.2 SATA" },
-              { value: "M.2 NVMe", label: "M.2 NVMe" },
-              { value: "PCIe NVMe", label: "PCIe NVMe" },
-              { value: "Hybrid", label: "Hybrid" },
-            ],
-          },
-          {
-            name: "driveFormFactor",
-            label: "Form Factor",
-            type: "select",
-            options: [
-              { value: '2.5"', label: '2.5"' },
-              { value: '3.5"', label: '3.5"' },
-              { value: "M.2 2280", label: "M.2 2280" },
-              { value: "AIC", label: "Add-in Card" },
-            ],
-          },
-          {
-            name: "driveInterface",
-            label: "Interface",
-            type: "select",
-            options: [
-              { value: "SATA", label: "SATA" },
-              { value: "SATA III", label: "SATA III" },
-              { value: "PCIe", label: "PCIe" },
-              { value: "NVMe", label: "NVMe" },
-            ],
+            options: [],
           },
           { name: "driveInterfaceSpeed", label: "Interface Speed", type: "text", maxLength: 40 },
-          { name: "driveSerial", label: "Drive Serial", type: "text", maxLength: 100 },
-          { name: "driveSlot", label: "Slot Label", type: "text", maxLength: 40 },
+          // { name: "driveSlot", label: "Slot Label", type: "text", maxLength: 40 },
           { name: "raidConfigured", label: "RAID Configured", type: "select", options: common.booleanOptions },
           { name: "encryptionEnabled", label: "Disk Encryption Enabled", type: "select", options: common.booleanOptions },
         ],
       },
+      //! BIOS & Hardware
       {
         sectionTitle: "BIOS & Hardware",
         fields: [
@@ -160,16 +133,19 @@ export const fixedConfigs = {
       },
 
       //! Purchase Information
-      fromGeneric("Purchase Information"),
+      fromGeneric("Purchase Information",{
+         omitFields: ["taxAmount","totalAmount","currency"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+      //! Purchase Information
+      fromGeneric("Asset State",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
       
-      //! Location Information
-      fromGeneric("Location Information",{
-         omitFields: ["organization","rackNumber","rackUnit"],
-      } ),
       
-      
-      //! Network Details
-      fromGeneric("Network Details"),
     ],
   },
   monitor: {

@@ -1,35 +1,74 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Input from "../../../components/Input/Input.jsx";
 import Select from "../../../components/Select/Select.jsx";
 import Textarea from "../../../components/Textarea/Textarea.jsx";
 import Button from "../../../components/Button/Button.jsx";
 import { useScanning } from "../../../components/BarcodeScanner/useScanning.js";
 
-const normalizeOptions = (options) => {
-  if (!Array.isArray(options)) return [];
-  return options.map((opt) => {
-    if (opt && typeof opt === "object" && "value" in opt && "label" in opt) return opt;
-    return { value: String(opt), label: String(opt) };
-  });
-};
-
-const shouldShow = (field, formData) => {
-  if (!field.showIf) return true;
-  const cond = field.showIf;
+const evaluateShowIf = (cond, getValue) => {
   // Support verbose form: { field: 'purchaseType', equals: 'PO' }
   if (typeof cond === "object" && "field" in cond) {
-    return String(formData[cond.field] ?? "") === String(cond.equals ?? "");
+    return String(getValue(cond.field) ?? "") === String(cond.equals ?? "");
   }
   // Support shorthand form: { purchaseType: 'PO', other: 'X' }
   if (typeof cond === "object") {
     return Object.entries(cond).every(
-      ([k, v]) => String(formData[k] ?? "") === String(v ?? "")
+      ([k, v]) => String(getValue(k) ?? "") === String(v ?? "")
     );
   }
   return true;
 };
 
-const Field = ({ def, value, onChange, onScan, error }) => {
+const shouldShow = (field, getValue) => {
+  if (!field.showIf) return true;
+  return evaluateShowIf(field.showIf, getValue);
+};
+
+const normalizeOptions = (options, getValue) => {
+  if (!Array.isArray(options)) return [];
+  const mapped = options
+    .filter((opt) => {
+      if (opt && typeof opt === "object" && "showIf" in opt) {
+        return evaluateShowIf(opt.showIf, getValue);
+      }
+      return true;
+    })
+    .map((opt) => {
+      if (opt && typeof opt === "object") {
+        const v =
+          opt.value ??
+          opt.code ??
+          opt._id ??
+          opt.id ??
+          opt.name ??
+          opt.label ??
+          "";
+        const l = opt.label ?? opt.name ?? opt.value ?? opt.code ?? String(v);
+        return { value: String(v), label: String(l) };
+      }
+      return { value: String(opt), label: String(opt) };
+    });
+  const seen = new Set();
+  return mapped.filter((o) => {
+    const k = String(o?.value ?? "");
+    if (!k) return false;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+};
+
+const Field = ({ def, value, onChange, onScan, error, formData }) => {
+  const getValue = useMemo(() => (k) => formData?.[k], [formData]);
+  const selectOptions = useMemo(() => normalizeOptions(def.options, getValue), [def.options, getValue]);
+
+  useEffect(() => {
+    if (def.type !== "select") return;
+    if (value == null || String(value).trim() === "") return;
+    const exists = selectOptions.some((o) => String(o.value) === String(value));
+    if (!exists) onChange(def.name, "");
+  }, [def.type, def.name, onChange, selectOptions, value]);
+
   const common = {
     name: def.name,
     label: def.label,
@@ -42,7 +81,7 @@ const Field = ({ def, value, onChange, onScan, error }) => {
     "aria-label": def.label,
     maxLength: def.maxLength,
   };
-  if (def.type === "select") return <Select onBlur={undefined} {...common} options={normalizeOptions(def.options)} />;
+  if (def.type === "select") return <Select onBlur={undefined} {...common} options={selectOptions} />;
   if (def.type === "textarea") return <Textarea onBlur={undefined} {...common} rows={def.rows || 3} />;
   const enableScan = String(def.name) === "serialNumber" || !!def.scan;
   return (
@@ -56,7 +95,20 @@ const Field = ({ def, value, onChange, onScan, error }) => {
   );
 };
 
-const TableField = ({ def, value, onChange, error }) => {
+const TableField = ({ def, value, onChange, error, formData, rowIndex }) => {
+  const getValue = useMemo(
+    () => (k) => (formData?.[`${k}_${rowIndex}`] ?? formData?.[k]),
+    [formData, rowIndex]
+  );
+  const selectOptions = useMemo(() => normalizeOptions(def.options, getValue), [def.options, getValue]);
+
+  useEffect(() => {
+    if (def.type !== "select") return;
+    if (value == null || String(value).trim() === "") return;
+    const exists = selectOptions.some((o) => String(o.value) === String(value));
+    if (!exists) onChange(def.name, "");
+  }, [def.type, def.name, onChange, selectOptions, value]);
+
   const common = {
     name: def.name,
     value: value ?? "",
@@ -68,7 +120,7 @@ const TableField = ({ def, value, onChange, error }) => {
     "aria-label": def.label,
     maxLength: def.maxLength,
   };
-  if (def.type === "select") return <Select label={undefined} onBlur={undefined} {...common} options={normalizeOptions(def.options)} />;
+  if (def.type === "select") return <Select label={undefined} onBlur={undefined} {...common} options={selectOptions} />;
   if (def.type === "textarea") return <Textarea label={undefined} onBlur={undefined} {...common} rows={def.rows || 3} />;
   return <Input label={undefined} onBlur={undefined} onScan={undefined} {...common} type={def.type || "text"} min={def.min} max={def.max} />;
 };
@@ -78,6 +130,7 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
   const tableSections = ["Processors", "Storage", "Memory"];
   const [rowCounts, setRowCounts] = useState({});
   const { openScan } = useScanning();
+  const getValue = useMemo(() => (k) => formData?.[k], [formData]);
 
   const getCount = (title) => {
     const v = rowCounts[title];
@@ -101,7 +154,7 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
     <div className="fr-container">
       {list.map((sec) => (
         (() => {
-          const filtered = (sec.fields || []).filter((f) => shouldShow(f, formData));
+          const filtered = (sec.fields || []).filter((f) => shouldShow(f, getValue));
           const isTable = tableSections.includes(String(sec.sectionTitle));
           if (!isTable) {
             return (
@@ -116,6 +169,7 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
                       error={errors?.[f.name]}
                       onChange={onChange}
                       onScan={(name) => openScan((text) => onChange(name, text))}
+                      formData={formData}
                     />
                   ))}
                 </div>
@@ -137,7 +191,14 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
                 <div key={`row-${sec.sectionTitle}-${idx}`} className="fr-table-row" style={{ gridTemplateColumns: `repeat(${cols}, minmax(160px, 1fr)) auto` }}>
                   {filtered.map((f) => (
                     <div key={`${f.name}-c-${idx}`} className="fr-table-row-cell">
-                      <TableField def={f} value={formData[`${f.name}_${idx}`]} error={errors?.[`${f.name}_${idx}`]} onChange={(name, val) => onChange(`${name}_${idx}`, val)} />
+                      <TableField
+                        def={f}
+                        value={formData[`${f.name}_${idx}`]}
+                        error={errors?.[`${f.name}_${idx}`]}
+                        onChange={(name, val) => onChange(`${name}_${idx}`, val)}
+                        formData={formData}
+                        rowIndex={idx}
+                      />
                     </div>
                   ))}
                   <div className="fr-table-actions">

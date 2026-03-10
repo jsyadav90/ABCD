@@ -34,17 +34,30 @@ const collectIndexed = (body, fieldMap) => {
 };
 
 const create = async (req) => {
+  const manufacturer = v(req.body.manufacturer) || v(req.body.cpuManufacturer);
+  const model = v(req.body.model) || v(req.body.cpuModel);
+  const assetName =
+    v(req.body.assetName) ||
+    v(req.body.cpuModel) ||
+    [manufacturer, model].filter(Boolean).join(" ") ||
+    "CPU";
+  const assetTag =
+    v(req.body.assetTag) ||
+    v(req.body.assetId) ||
+    v(req.body.deviceTag) ||
+    `CPU-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
   const cpuPayload = {
     itemType: "cpu",
     basicInfo: {
-      assetName: v(req.body.assetName),
+      assetName,
       assetCategory: v(req.body.assetCategory || req.body.category),
-      manufacturer: v(req.body.manufacturer),
-      model: v(req.body.model),
+      manufacturer,
+      model,
       deviceType: v(req.body.deviceType),
-      assetTag: v(req.body.assetTag),
+      assetTag,
       serialNumber: v(req.body.serialNumber),
-      description: v(req.body.remarks),
+      description: v(req.body.assetDescription) || v(req.body.remarks),
     },
     operatingSystem: {
       osName: v(req.body.osName),
@@ -89,10 +102,10 @@ const create = async (req) => {
     lifecycle: {
       status: v(req.body.lifecycleStatus),
       operationalStatus: v(req.body.operationalStatus),
-      acquisitionDate: req.body.acquisitionDate || null,
-      warrantyExpiryDate: req.body.warrantyExpiryDate || null,
+      acquisitionDate: req.body.acquisitionDate || req.body.purchaseDate || null,
+      warrantyExpiryDate: req.body.warrantyExpiryDate || req.body.warrantyEndDate || null,
       purchaseCost: toNum(req.body.purchaseCost),
-      vendor: v(req.body.vendor),
+      vendor: v(req.body.vendor) || v(req.body.vendorId),
       depreciationMethod: v(req.body.depreciationMethod),
       usefulLifeYears: toNum(req.body.usefulLifeYears),
       residualValue: toNum(req.body.residualValue),

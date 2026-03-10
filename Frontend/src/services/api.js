@@ -214,3 +214,13 @@ export const vendorAPI = {
   remove: (id) => API.delete(`/vendors/${id}`),
   toggleActive: (id) => API.post(`/vendors/${id}/toggle-active`)
 }
+
+// Lookup API endpoints
+export const lookupAPI = {
+  // Fetch lookups by category (e.g., 'ram_type')
+  getByCategory: (category) => API.get('/lookups/category', { params: { category } }),
+  // List all lookups (paginated)
+  getAll: (params = {}) => API.get('/lookups', { params }),
+  // Search available categories (autocomplete)
+  searchCategories: (search = '') => API.get('/lookups/categories/search', { params: { search } }),
+}

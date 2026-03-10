@@ -11,7 +11,7 @@ import { authAPI } from "../../services/api.js";
 import { getSelectedBranch } from "../../utils/scope.js";
 //@ts-ignore
 import { CATEGORY_ITEMS, getItemFieldConfig } from "./config/itemFieldConfig.js";
-import { vendorAPI } from "../../services/api.js";
+import { vendorAPI, lookupAPI } from "../../services/api.js";
 
 const CATEGORIES = [
   { value: "fixed", label: "Fixed" },
@@ -51,6 +51,10 @@ const AddItemPage = () => {
   const [_loadingBranches, setLoadingBranches] = useState(true);
   const [vendorOptions, setVendorOptions] = useState([]);
   const [_loadingVendors, setLoadingVendors] = useState(true);
+  const [ramTypeOptions, setRamTypeOptions] = useState([]);
+  const [_loadingRamTypes, setLoadingRamTypes] = useState(true);
+  const [driveTypeOptions, setDriveTypeOptions] = useState([]);
+  const [_loadingDriveTypes, setLoadingDriveTypes] = useState(true);
 
   useEffect(() => {
     const initBranch = async () => {
@@ -154,6 +158,67 @@ const AddItemPage = () => {
     };
   }, []);
 
+  // Load RAM Types via Lookup (category: 'ram_type')
+  useEffect(() => {
+    let cancelled = false;
+    const loadRamTypes = async () => {
+      try {
+        setLoadingRamTypes(true);
+        // Scope to CPU type
+        if (itemType !== "cpu") {
+          if (!cancelled) setRamTypeOptions([]);
+          return;
+        }
+        const res = await lookupAPI.getByCategory("ram_type");
+        const items = res.data?.data?.items || res.data?.data || res.data || [];
+        const opts = items.map((i) => ({
+          value: i.code || i.name,
+          label: i.name,
+        }));
+        if (!cancelled) setRamTypeOptions(opts);
+      } catch (e) {
+        console.warn("Failed to load RAM types:", e?.response?.data?.message || e.message);
+        if (!cancelled) setRamTypeOptions([]);
+      } finally {
+        if (!cancelled) setLoadingRamTypes(false);
+      }
+    };
+    loadRamTypes();
+    return () => {
+      cancelled = true;
+    };
+  }, [itemType]);
+
+  // Load Drive Types via Lookup (category: 'drive_type')
+  useEffect(() => {
+    let cancelled = false;
+    const loadDriveTypes = async () => {
+      try {
+        setLoadingDriveTypes(true);
+        if (itemType !== "cpu") {
+          if (!cancelled) setDriveTypeOptions([]);
+          return;
+        }
+        const res = await lookupAPI.getByCategory("storage_type");
+        const items = res.data?.data?.items || res.data?.data || res.data || [];
+        const opts = items.map((i) => ({
+          value: i.code || i.name,
+          label: i.name,
+        }));
+        if (!cancelled) setDriveTypeOptions(opts);
+      } catch (e) {
+        console.warn("Failed to load Drive types:", e?.response?.data?.message || e.message);
+        if (!cancelled) setDriveTypeOptions([]);
+      } finally {
+        if (!cancelled) setLoadingDriveTypes(false);
+      }
+    };
+    loadDriveTypes();
+    return () => {
+      cancelled = true;
+    };
+  }, [itemType]);
+
   const sections = useMemo(() => {
     if (!category || !itemType) return [];
     const baseSections = itemConfig?.sections || [];
@@ -176,7 +241,37 @@ const AddItemPage = () => {
           })
         };
       }
-      // Inject vendor dropdown into "Purchase Information" -> vendorId field
+      // Inject RAM Type options into "Memory" -> "ramType"
+      if (sec.sectionTitle === "Memory") {
+        return {
+          ...sec,
+          fields: sec.fields.map(f => {
+            if (f.name === "ramType" && ramTypeOptions.length > 0) {
+              return {
+                ...f,
+                options: ramTypeOptions,
+              };
+            }
+            return f;
+          })
+        };
+      }
+      // Inject Drive Type options into "Storage" -> "driveType"
+      if (sec.sectionTitle === "Storage") {
+        return {
+          ...sec,
+          fields: sec.fields.map(f => {
+            if (f.name === "driveType" && driveTypeOptions.length > 0) {
+              return {
+                ...f,
+                options: driveTypeOptions,
+              };
+            }
+            return f;
+          })
+        };
+      }
+      // Inject vendor dropdown into "Purchase Information" -> "vendorId" field
       if (sec.sectionTitle === "Purchase Information") {
         return {
           ...sec,
@@ -193,7 +288,7 @@ const AddItemPage = () => {
       }
       return sec;
     });
-  }, [category, itemType, branchOptions, vendorOptions, itemConfig]);
+  }, [category, itemType, branchOptions, vendorOptions, ramTypeOptions, driveTypeOptions, itemConfig]);
 
   const updateField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
