@@ -1,3 +1,7 @@
+/**
+ * Model: CPU Asset
+ * Description: CPU specific fields + summary for fast list views. Collections: asset_cpu
+ */
 import mongoose from "mongoose";
 
 const assetSchema = new mongoose.Schema(

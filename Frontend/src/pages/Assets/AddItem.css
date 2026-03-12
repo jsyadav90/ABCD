@@ -69,7 +69,7 @@
 }
 
 .form-body {
-  padding: 18px 22px 0 22px;
+  padding: 18px 12px 0 12px;
   overflow-y: auto;
   background: linear-gradient(180deg, #f9fafb 0%, #ffffff 40%);
 }

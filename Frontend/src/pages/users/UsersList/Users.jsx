@@ -1,3 +1,10 @@
+/**
+ * Page: Users List
+ * Description: Users ka paginated list, branch filter, aur bulk/user actions manage karta hai.
+ * Major Logics:
+ * - All users fetch + selected branch ke hisaab se client-side filter
+ * - Role change, manager assign, enable/disable, password change ke modals
+ */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth.js";

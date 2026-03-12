@@ -1,3 +1,10 @@
+/**
+ * Page: Setup
+ * Description: Organization, Roles & Rights, aur Branches configuration manage karta hai (permissions ke hisaab se tabs visible).
+ * Major Logics:
+ * - Allowed tabs ko user permissions ke basis par filter karna
+ * - Toast notifications dikhana aur auto-hide
+ */
 import { useState, useEffect, useMemo } from "react";
 import { Alert } from "../../components";
 import RoleRightsTab from "./components/RoleRightsTab";
@@ -97,10 +104,12 @@ const Setup = () => {
       )}
    
       {effectiveActiveTab === "roles" && allowedTabs.some(t => t.key === "roles") && (
+        // @ts-ignore
         <RoleRightsTab toast={toast} setToast={setToast} />
       )}
 
       {effectiveActiveTab === "branches" && allowedTabs.some(t => t.key === "branches") && (
+        // @ts-ignore
         <BranchesTab toast={toast} setToast={setToast} />
       )}
     </div>

@@ -29,3 +29,5 @@ export const common = {
   branches: [],
 };
 
+export const TABLE_SECTION_TITLES = ["Processors", "Storage", "Memory", "Network Details"];
+

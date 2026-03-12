@@ -1,3 +1,10 @@
+/**
+ * Asset Routes
+ * Description: Assets ke create/list/get endpoints. Auth + permission guards applied.
+ * - POST /api/v1/assets       -> create (itemType ke hisaab se handler)
+ * - GET  /api/v1/assets       -> list (optional ?itemType=cpu/monitor)
+ * - GET  /api/v1/assets/:id   -> get by id (try-all if type missing)
+ */
 import express from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyPermission } from "../middlewares/permission.middleware.js";

@@ -1,3 +1,7 @@
+/**
+ * Page: NotFound (404)
+ * Description: Jab URL match nahi hota, yeh page user ko dashboard pe wapas le jaane ka option deta hai.
+ */
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from '../../components'

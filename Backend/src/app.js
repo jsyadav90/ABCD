@@ -11,6 +11,7 @@ import assetRoutes from "./routes/asset.routes.js";
 import { apiError } from "./utils/apiError.js";
 import lookupRoutes from "./routes/lookup.routes.js";
 import vendorRoutes from "./routes/vendor.routes.js";
+import { setSecurityHeaders, issueCsrfToken, csrfGuard } from "./middlewares/security.middleware.js";
 
 // Load environment variables
 dotenv.config();
@@ -21,24 +22,33 @@ const app = express();
 /* ===============================
    Global Middlewares
 ================================ */
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
-const corsOptions = {
-  origin: corsOrigin === '*' 
-    ? true  // Allow all origins when CORS_ORIGIN is * (no credentials)
-    : corsOrigin.split(',').map(origin => origin.trim()),
-  credentials: true, // Always allow credentials for cookie-based auth
+const rawCors = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = rawCors === '*' ? ['*'] : rawCors.split(',').map(o => o.trim());
+const allowAll = allowedOrigins.includes('*');
+const isDev = process.env.NODE_ENV !== 'production';
+app.use(cors({
+  origin: (origin, callback) => {
+    if (allowAll || !origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isDev && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+  credentials: !allowAll, // Do not allow credentials when wildcard
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 3600 // Cache preflight for 1 hour
-};
-
-app.use(cors(corsOptions));
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
+  maxAge: 3600
+}));
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
+app.use(setSecurityHeaders);
+app.use(issueCsrfToken);
+app.use(csrfGuard);
 
 /* ===============================
    Health Check

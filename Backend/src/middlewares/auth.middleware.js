@@ -3,7 +3,9 @@ import { User } from "../models/user.model.js";
 import { UserLogin } from "../models/userLogin.model.js";
 
 /**
- * Auth Middleware - Verify JWT token and attach user to request
+ * Auth Middleware
+ * Description: JWT verify karta hai, user load karta hai (role/branches ke saath), device-scoped invalidation check karta hai.
+ * Fast path: headers me token -> verify -> req.user hydrate -> next()
  */
 
 export const verifyJWT = async (req, res, next) => {
@@ -18,9 +20,9 @@ export const verifyJWT = async (req, res, next) => {
         : authHeader;
     }
     
-    // Fallback: check cookies and body
+    // Fallback: check cookies
     if (!token) {
-      token = req.cookies?.accessToken || req.body?.accessToken;
+      token = req.cookies?.accessToken;
     }
 
     if (!token) {

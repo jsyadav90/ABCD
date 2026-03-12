@@ -1,3 +1,7 @@
+/**
+ * MongoDB Connection
+ * Description: Multiple URI candidates try karta hai (primary/direct/fallback). Fast DNS resolvers set kiye hue.
+ */
 import mongoose from "mongoose";
 import dns from "dns";
 
@@ -33,7 +37,7 @@ const connectDB = async () => {
     console.log(`MongoDB connected: ${conn.connection.host}`);
     return conn;
   } catch (error) {
- 
+    // Fatal: bina DB ke API boot nahi hoga
     console.error("MongoDB connection failed", error);
     process.exit(1);
   }

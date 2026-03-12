@@ -1,3 +1,10 @@
+/**
+ * Page: Login
+ * Description: User ko credentials se sign-in karata hai. Agar pehle se authenticated ho to dashboard par bhejta hai.
+ * Major Logics:
+ * - Basic validation (empty fields, min password length)
+ * - Auth context se login() call aur error handling
+ */
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'

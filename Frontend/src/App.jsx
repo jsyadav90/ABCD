@@ -10,29 +10,34 @@
  *   Root redirects to /dashboard.
  */
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import ScanningProvider from "./components/BarcodeScanner/ScanningProvider.jsx";
 import MainLayout from "./layouts/MainLayout";
 import { ProtectedRoute } from "./components";
+import Loading from "./components/Loading/Loading.jsx";
 
-// Pages
-import Dashboard from "./pages/Dashboard/Dashboard";
-import NotFound from "./pages/NotFound/NotFound";
-import Login from "./pages/Login/Login";
-import Register from "./pages/Register/Register";
-import Users from "./pages/users/UsersList/Users";
-import AddUser from "./pages/users/AddUserPage/AddUser";
-import EditUser from "./pages/users/EditUserPage/EditUser";
-import UserDetails from "./pages/users/UserDetailsPage/UserDetails";
-import Setup from "./pages/Setup/Setup";
-import AssetPage from "./pages/assets/asset";
-import AddItemPage from "./pages/assets/AddItem";
+// Pages: lazy loaded for faster first paint on slow networks
+const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
+const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
+const Login = lazy(() => import("./pages/Login/Login"));
+const Register = lazy(() => import("./pages/Register/Register"));
+const Users = lazy(() => import("./pages/users/UsersList/Users"));
+const AddUser = lazy(() => import("./pages/users/AddUserPage/AddUser"));
+const EditUser = lazy(() => import("./pages/users/EditUserPage/EditUser"));
+const UserDetails = lazy(() => import("./pages/users/UserDetailsPage/UserDetails"));
+const Setup = lazy(() => import("./pages/Setup/Setup"));
+// @ts-ignore
+const AssetPage = lazy(() => import("./pages/assets/asset"));
+// @ts-ignore
+const AddItemPage = lazy(() => import("./pages/assets/AddItem"));
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <ScanningProvider>
+        <Suspense fallback={<Loading fullScreen text="Loading..." />}>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
@@ -46,7 +51,9 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute 
+// @ts-ignore
+              children={undefined} requiredPermission={undefined}>
                 <MainLayout>
                   <Dashboard />
                 </MainLayout>
@@ -111,7 +118,9 @@ function App() {
           <Route
             path="/assets"
             element={
-              <ProtectedRoute>
+              <
+// @ts-ignore
+              ProtectedRoute>
                 <MainLayout>
                   <AssetPage />
                 </MainLayout>
@@ -121,7 +130,9 @@ function App() {
           <Route
             path="/assets/add"
             element={
-              <ProtectedRoute>
+              <
+// @ts-ignore
+              ProtectedRoute>
                 <MainLayout>
                   <AddItemPage />
                 </MainLayout>
@@ -131,7 +142,9 @@ function App() {
           <Route
             path="/assets/add/:type"
             element={
-              <ProtectedRoute>
+              <
+// @ts-ignore
+              ProtectedRoute>
                 <MainLayout>
                   <AddItemPage />
                 </MainLayout>
@@ -142,6 +155,7 @@ function App() {
           {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
         </ScanningProvider>
       </AuthProvider>
     </Router>

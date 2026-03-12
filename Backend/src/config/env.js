@@ -1,3 +1,7 @@
+/**
+ * Env Utilities
+ * Description: .env load + validation + parsed config helpers (CORS origin parsing etc.)
+ */
 import dotenv from 'dotenv';
 
 // Load environment variables

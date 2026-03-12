@@ -1,4 +1,5 @@
 import express from "express";
+import { createRateLimiter } from "../middlewares/security.middleware.js";
 import {
   loginController,
   logoutController,
@@ -19,11 +20,13 @@ const router = express.Router();
 //! Public routes
 // Purpose: Authenticate user and return accessToken + set refreshToken cookie
 // POST /login { loginId, password, deviceId? }
-router.post("/login", loginController);
+const useLimiter = process.env.NODE_ENV === "production";
+const authLimiter = createRateLimiter({ windowMs: 60_000, max: 30 });
+router.post("/login", useLimiter ? authLimiter : (req, res, next) => next(), loginController);
 
 // Purpose: Validate refresh token and issue new accessToken (sets new refresh cookie)
 // POST /refresh { refreshToken? (cookie or body), deviceId? }
-router.post("/refresh", refreshTokenController);
+router.post("/refresh", useLimiter ? authLimiter : (req, res, next) => next(), refreshTokenController);
 
 // Purpose: Validate an access token (or token in body) and return decoded payload
 // POST /validate { token? (uses Authorization header if omitted) }

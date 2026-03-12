@@ -3,8 +3,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/role.model.js";
 
 /**
- * Middleware to verify user permissions based on role
- * @param {string} requiredPermission - The permission key required to access the route
+ * Permission Middleware
+ * Description: Role aur user-specific permission keys merge karke authorize karta hai.
+ * @param {string} requiredPermission - jis key ka access chahiye (e.g., "assets:inventory:view")
  */
 export const verifyPermission = (requiredPermission) => {
   return asyncHandler(async (req, res, next) => {

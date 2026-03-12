@@ -1,7 +1,15 @@
+/**
+ * Page: AddItem
+ * Description: Is page par different asset items (CPU/Monitor/others) add kiye jaate hain.
+ * Major Logics:
+ * - URL se item type read karke sahi fields/config load karna
+ * - Branch, Vendor, RAM types, Drive types dropdowns load karna
+ * - Dynamic sections render + table sections (Memory/Storage/Network) ke rows manage karna
+ * - Frontend form ko backend payload me convert karke /assets par submit karna
+ */
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./AddItem.css";
-import Button from "../../components/Button/Button.jsx";
 // @ts-ignore
 import FormRenderer from "./components/FormRenderer.jsx";
 // @ts-ignore
@@ -9,9 +17,11 @@ import { apiService } from "./services/apiService.js";
 import { fetchBranchesForDropdown } from "../../services/userApi.js";
 import { authAPI } from "../../services/api.js";
 import { getSelectedBranch } from "../../utils/scope.js";
-//@ts-ignore
+// @ts-ignore
 import { CATEGORY_ITEMS, getItemFieldConfig } from "./config/itemFieldConfig.js";
 import { vendorAPI, lookupAPI } from "../../services/api.js";
+import { TABLE_SECTION_TITLES } from "./config/common.js";
+import Select from "../../components/Select/Select.jsx";
 
 const CATEGORIES = [
   { value: "fixed", label: "Fixed" },
@@ -55,66 +65,50 @@ const AddItemPage = () => {
   const [itemConfig, setItemConfig] = useState(null);
   const [loadingItemConfig, setLoadingItemConfig] = useState(false);
 
-  // Branch Logic
   const [branchOptions, setBranchOptions] = useState([]);
-  const [_loadingBranches, setLoadingBranches] = useState(true);
   const [vendorOptions, setVendorOptions] = useState([]);
-  const [_loadingVendors, setLoadingVendors] = useState(true);
   const [ramTypeOptions, setRamTypeOptions] = useState([]);
-  const [_loadingRamTypes, setLoadingRamTypes] = useState(true);
   const [driveTypeOptions, setDriveTypeOptions] = useState([]);
-  const [_loadingDriveTypes, setLoadingDriveTypes] = useState(true);
 
   useEffect(() => {
     const initBranch = async () => {
       try {
-        setLoadingBranches(true);
-        // 1. Get user profile
         const prof = await authAPI.getProfile();
         const user = prof.data?.data?.user;
         if (!user?.organizationId) return;
 
-        // 2. Fetch all branches
         const branches = await fetchBranchesForDropdown(user.organizationId);
         const opts = branches.map((b) => ({ value: String(b._id), label: b.name }));
-        setBranchOptions(opts);
 
-        // 3. Determine default branch
-        const dashboardBranch = getSelectedBranch(); // From scope/localStorage
-        
-        // Check if user is restricted to specific branches
-        const allowedBranchIds = Array.isArray(user.branchId) 
-          ? user.branchId.map(b => typeof b === 'object' ? String(b._id) : String(b)) 
+        const dashboardBranch = getSelectedBranch();
+
+        const allowedBranchIds = Array.isArray(user.branchId)
+          ? user.branchId.map((b) => (typeof b === "object" ? String(b._id) : String(b)))
           : [];
-        
-        // If user is not super admin (assuming super admin has empty or wildcard branchId, or we check role)
-        // For simplicity, if allowedBranchIds has length > 0, restrict options
+
         let finalOptions = opts;
-        if (allowedBranchIds.length > 0 && user.role !== 'super_admin') {
-           finalOptions = opts.filter(o => allowedBranchIds.includes(o.value));
-           setBranchOptions(finalOptions);
+        if (allowedBranchIds.length > 0 && user.role !== "super_admin") {
+          finalOptions = opts.filter((o) => allowedBranchIds.includes(o.value));
         }
+        setBranchOptions(finalOptions);
 
         let defaultBranch = "";
-        
-        // A. If dashboard has a specific valid selection, use it
-        if (dashboardBranch && dashboardBranch !== "__ALL__" && finalOptions.some(o => o.value === dashboardBranch)) {
+
+        if (
+          dashboardBranch &&
+          dashboardBranch !== "__ALL__" &&
+          finalOptions.some((o) => o.value === dashboardBranch)
+        ) {
           defaultBranch = dashboardBranch;
-        } 
-        // B. Else if user has only 1 available branch, enforce it
-        else if (finalOptions.length === 1) {
+        } else if (finalOptions.length === 1) {
           defaultBranch = finalOptions[0].value;
         }
-        
-        // Update form if we have a default
-        if (defaultBranch) {
-          setForm(prev => ({ ...prev, branch: defaultBranch }));
-        }
 
+        if (defaultBranch) {
+          setForm((prev) => ({ ...prev, branch: defaultBranch }));
+        }
       } catch (err) {
-        console.error("Failed to load branches", err);
-      } finally {
-        setLoadingBranches(false);
+        console.warn("Failed to load branches:", err?.response?.data?.message || err?.message || err);
       }
     };
     initBranch();
@@ -152,7 +146,6 @@ const AddItemPage = () => {
     let cancelled = false;
     const loadVendors = async () => {
       try {
-        setLoadingVendors(true);
         const res = await vendorAPI.getDropdown();
         const items = res.data?.data || res.data || [];
         const opts = items.map((v) => ({
@@ -163,8 +156,6 @@ const AddItemPage = () => {
       } catch (e) {
         console.warn("Failed to load vendors dropdown:", e?.response?.data?.message || e.message);
         if (!cancelled) setVendorOptions([]);
-      } finally {
-        if (!cancelled) setLoadingVendors(false);
       }
     };
     loadVendors();
@@ -173,13 +164,10 @@ const AddItemPage = () => {
     };
   }, []);
 
-  // Load RAM Types via Lookup (category: 'ram_type')
   useEffect(() => {
     let cancelled = false;
     const loadRamTypes = async () => {
       try {
-        setLoadingRamTypes(true);
-        // Scope to CPU type
         if (itemType !== "cpu") {
           if (!cancelled) setRamTypeOptions([]);
           return;
@@ -194,8 +182,6 @@ const AddItemPage = () => {
       } catch (e) {
         console.warn("Failed to load RAM types:", e?.response?.data?.message || e.message);
         if (!cancelled) setRamTypeOptions([]);
-      } finally {
-        if (!cancelled) setLoadingRamTypes(false);
       }
     };
     loadRamTypes();
@@ -209,7 +195,6 @@ const AddItemPage = () => {
     let cancelled = false;
     const loadDriveTypes = async () => {
       try {
-        setLoadingDriveTypes(true);
         if (itemType !== "cpu") {
           if (!cancelled) setDriveTypeOptions([]);
           return;
@@ -224,8 +209,6 @@ const AddItemPage = () => {
       } catch (e) {
         console.warn("Failed to load Drive types:", e?.response?.data?.message || e.message);
         if (!cancelled) setDriveTypeOptions([]);
-      } finally {
-        if (!cancelled) setLoadingDriveTypes(false);
       }
     };
     loadDriveTypes();
@@ -237,69 +220,33 @@ const AddItemPage = () => {
   const sections = useMemo(() => {
     if (!category || !itemType) return [];
     const baseSections = itemConfig?.sections || [];
-    
-    // Inject dynamic branch options into the "Location & Assignment" section -> "branch" field
-    return baseSections.map(sec => {
+
+    const updateSectionFields = (sec, fieldUpdates) => {
+      if (!sec?.fields?.length) return sec;
+      return {
+        ...sec,
+        fields: sec.fields.map((f) => (fieldUpdates[f.name] ? { ...f, ...fieldUpdates[f.name] } : f)),
+      };
+    };
+
+    return baseSections.map((sec) => {
       if (sec.sectionTitle === "Location Information") {
-        return {
-          ...sec,
-          fields: sec.fields.map(f => {
-            if (f.name === "branch") {
-              return { 
-                ...f, 
-                options: branchOptions, 
-                required: true,
-                readOnly: false // Keep editable even if only one option, per user request
-              };
-            }
-            return f;
-          })
-        };
+        return updateSectionFields(sec, {
+          branch: { options: branchOptions, required: true, readOnly: false },
+        });
       }
-      // Inject RAM Type options into "Memory" -> "ramType"
       if (sec.sectionTitle === "Memory") {
-        return {
-          ...sec,
-          fields: sec.fields.map(f => {
-            if (f.name === "ramType" && ramTypeOptions.length > 0) {
-              return {
-                ...f,
-                options: ramTypeOptions,
-              };
-            }
-            return f;
-          })
-        };
+        return ramTypeOptions.length
+          ? updateSectionFields(sec, { ramType: { options: ramTypeOptions } })
+          : sec;
       }
-      // Inject Drive Type options into "Storage" -> "driveType"
       if (sec.sectionTitle === "Storage") {
-        return {
-          ...sec,
-          fields: sec.fields.map(f => {
-            if (f.name === "driveType" && driveTypeOptions.length > 0) {
-              return {
-                ...f,
-                options: driveTypeOptions,
-              };
-            }
-            return f;
-          })
-        };
+        return driveTypeOptions.length
+          ? updateSectionFields(sec, { driveType: { options: driveTypeOptions } })
+          : sec;
       }
-      // Inject vendor dropdown into "Purchase Information" -> "vendorId" field
       if (sec.sectionTitle === "Purchase Information") {
-        return {
-          ...sec,
-          fields: sec.fields.map(f => {
-            if (f.name === "vendorId") {
-              return {
-                ...f,
-                options: vendorOptions,
-              };
-            }
-            return f;
-          })
-        };
+        return updateSectionFields(sec, { vendorId: { options: vendorOptions } });
       }
       return sec;
     });
@@ -310,53 +257,56 @@ const AddItemPage = () => {
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-
   const validate = () => {
-    const tableSections = ["Processors", "Storage", "Memory", "Network Details"];
-    const reqKeys = [];
-    sections.forEach((sec) => {
-      const isTable = tableSections.includes(String(sec.sectionTitle));
-      (sec.fields || []).forEach((f) => {
-        if (f.required) {
-          reqKeys.push(isTable ? `${f.name}_0` : f.name);
-        }
-      });
-    });
     const newErr = {};
-    reqKeys.forEach((k) => {
-      // Allow 0 as valid for numbers, but check empty string/null for others
-      const val = form[k];
-      if (val === undefined || val === null || String(val).trim() === "") {
-        newErr[k] = "Required";
-      }
-    });
-    
-    // Log validation errors for debugging
-    if (Object.keys(newErr).length > 0) {
-      console.log("Validation Errors:", newErr);
-      console.log("Current Form Data:", form);
-    }
-    
+
+    const isEmpty = (val) => val === undefined || val === null || String(val).trim() === "";
+    const isPresent = (val) => !isEmpty(val);
+
     sections.forEach((sec) => {
-      const isTable = tableSections.includes(String(sec.sectionTitle));
-      (sec.fields || []).forEach((f) => {
-        const keysToCheck = isTable ? [`${f.name}_0`] : [f.name];
-        keysToCheck.forEach((key) => {
+      const isTable = TABLE_SECTION_TITLES.includes(String(sec.sectionTitle));
+      const fields = Array.isArray(sec.fields) ? sec.fields : [];
+
+      if (!isTable) {
+        fields.forEach((f) => {
+          const key = f.name;
           const val = form[key];
-          if (f.maxLength && String(val || "").length > f.maxLength) {
-            newErr[key] = `Max ${f.maxLength} chars`;
-          }
+          if (f.required && isEmpty(val)) newErr[key] = "Required";
+          if (f.maxLength && String(val || "").length > f.maxLength) newErr[key] = `Max ${f.maxLength} chars`;
           if (f.type === "number") {
-            if (String(val || "").trim() && isNaN(Number(val))) {
-              newErr[key] = "Must be a number";
-            }
+            if (isPresent(val) && isNaN(Number(val))) newErr[key] = "Must be a number";
             const num = Number(val);
-            if (f.min != null && String(val || "").trim() && num < f.min) {
-              newErr[key] = `Min ${f.min}`;
-            }
-            if (f.max != null && String(val || "").trim() && num > f.max) {
-              newErr[key] = `Max ${f.max}`;
-            }
+            if (f.min != null && isPresent(val) && num < f.min) newErr[key] = `Min ${f.min}`;
+            if (f.max != null && isPresent(val) && num > f.max) newErr[key] = `Max ${f.max}`;
+          }
+        });
+        return;
+      }
+
+      const indices = new Set([0]);
+      Object.keys(form).forEach((k) => {
+        const m = k.match(/_(\d+)$/);
+        if (!m) return;
+        const base = k.slice(0, k.lastIndexOf("_"));
+        if (!fields.some((f) => f.name === base)) return;
+        indices.add(Number(m[1]));
+      });
+
+      const sorted = Array.from(indices).sort((a, b) => a - b);
+      sorted.forEach((idx) => {
+        const rowHasAny = fields.some((f) => isPresent(form[`${f.name}_${idx}`]));
+        if (idx !== 0 && !rowHasAny) return;
+
+        fields.forEach((f) => {
+          const key = `${f.name}_${idx}`;
+          const val = form[key];
+          if (f.required && isEmpty(val)) newErr[key] = "Required";
+          if (f.maxLength && String(val || "").length > f.maxLength) newErr[key] = `Max ${f.maxLength} chars`;
+          if (f.type === "number") {
+            if (isPresent(val) && isNaN(Number(val))) newErr[key] = "Must be a number";
+            const num = Number(val);
+            if (f.min != null && isPresent(val) && num < f.min) newErr[key] = `Min ${f.min}`;
+            if (f.max != null && isPresent(val) && num > f.max) newErr[key] = `Max ${f.max}`;
           }
         });
       });
@@ -376,10 +326,8 @@ const AddItemPage = () => {
     }
     setSubmitting(true);
     try {
-      // Build section-based and section-objects payload mirroring UI
-      const tableSections = ["Processors", "Storage", "Memory", "Network Details"];
       const sectionsPayload = (sections || []).map((sec) => {
-        const isTable = tableSections.includes(String(sec.sectionTitle));
+        const isTable = TABLE_SECTION_TITLES.includes(String(sec.sectionTitle));
         if (!isTable) {
           const data = {};
           (sec.fields || []).forEach((f) => {
@@ -458,7 +406,6 @@ const AddItemPage = () => {
         itemType,
         // @ts-ignore
         itemCategory: category || form.itemCategory || null,
-        // Ensure required basicInfo fields are mapped if missing
         // @ts-ignore
         manufacturer: form.manufacturer || form.cpuManufacturer,
         // @ts-ignore
@@ -524,27 +471,32 @@ const AddItemPage = () => {
           <div className="sticky-controls">
             <label className="control">
               <span>Category</span>
-              <select aria-label="Category" value={category} onChange={onCategoryChange}>
-                <option value="">Select Category</option>
-                {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              <
+// @ts-ignore
+              Select
+                name="category"
+                value={category}
+                onChange={onCategoryChange}
+                options={CATEGORIES}
+                placeholder="Select Category"
+              />
             </label>
             <label className="control">
               <span>Select Item</span>
-              <select aria-label="Item Type" value={itemType} onChange={onItemTypeChange} disabled={!category}>
-                <option value="">Select item</option>
-                {itemsForCategory.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
-              </select>
+              <
+// @ts-ignore
+              Select
+                name="itemType"
+                value={itemType}
+                onChange={onItemTypeChange}
+                options={itemsForCategory}
+                disabled={!category}
+                placeholder="Select item"
+              />
             </label>
           </div>
         </div>
       </div>
-      {/* {showAlert && (
-        <div className="alert-row" onClick={() => setShowAlert(false)} role="alert" aria-live="polite">
-          <span className="alert-text">New Computer</span>
-          <span className="alert-icon">✖</span>
-        </div>
-      )} */}
       <div className="form-body">
         <FormRenderer
           sections={sections}

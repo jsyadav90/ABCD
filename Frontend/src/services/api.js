@@ -20,7 +20,11 @@
 
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'
+// Dev: always use relative path to leverage Vite proxy (avoids HTTPS->HTTP mixed-content + CORS).
+// Prod: allow VITE_API_URL override (separate backend domain) else fall back to relative.
+const API_BASE_URL = import.meta.env.DEV
+  ? '/api/v1'
+  : (import.meta.env.VITE_API_URL || '/api/v1')
 
 // Create axios instance
 const API = axios.create({
@@ -48,6 +52,14 @@ const processQueue = (error, token = null) => {
   failedQueue = []
 }
 
+const getCookieValue = (name) => {
+  if (typeof document === 'undefined') return null
+  const parts = String(document.cookie || '').split(';').map(s => s.trim())
+  const match = parts.find(p => p.startsWith(`${name}=`))
+  if (!match) return null
+  return decodeURIComponent(match.slice(name.length + 1))
+}
+
 // Request interceptor - Add token to every request
 API.interceptors.request.use(
   config => {
@@ -66,6 +78,15 @@ API.interceptors.request.use(
     }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+
+    const method = String(config.method || 'get').toLowerCase()
+    const isWrite = method === 'post' || method === 'put' || method === 'patch' || method === 'delete'
+    if (isWrite && config.withCredentials) {
+      const csrf = getCookieValue('csrfToken')
+      if (csrf) {
+        config.headers['x-csrf-token'] = csrf
+      }
     }
     return config
   },

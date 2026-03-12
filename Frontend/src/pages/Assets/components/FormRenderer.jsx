@@ -1,10 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+/**
+ * Component: FormRenderer
+ * Description: Section-based dynamic form renderer. Rows/table sections (Memory/Storage/Network) ko index-suffixed keys se handle karta hai.
+ * Major Logics:
+ * - showIf conditions evaluate karke fields ko hide/show karna
+ * - Select options normalize karna (value/label) with de-duplication
+ * - Table rows add/remove with index shifting
+ */
+import { memo, useEffect, useMemo, useState } from "react";
 import Input from "../../../components/Input/Input.jsx";
 import Select from "../../../components/Select/Select.jsx";
 import Textarea from "../../../components/Textarea/Textarea.jsx";
 import Button from "../../../components/Button/Button.jsx";
 import { useScanning } from "../../../components/BarcodeScanner/useScanning.js";
 import Radio from "../../../components/Radio/Radio.jsx";
+import { TABLE_SECTION_TITLES } from "../config/common.js";
 
 const evaluateShowIf = (cond, getValue) => {
   // Support verbose form: { field: 'purchaseType', equals: 'PO' }
@@ -59,7 +68,7 @@ const normalizeOptions = (options, getValue) => {
   });
 };
 
-const Field = ({ def, value, onChange, onScan, error, formData }) => {
+const Field = memo(({ def, value, onChange, onScan, error, formData }) => {
   const getValue = useMemo(() => (k) => formData?.[k], [formData]);
   const selectOptions = useMemo(() => normalizeOptions(def.options, getValue), [def.options, getValue]);
 
@@ -83,7 +92,7 @@ const Field = ({ def, value, onChange, onScan, error, formData }) => {
     "aria-label": def.label,
     maxLength: def.maxLength,
   };
-  if (def.type === "select") return <Select onBlur={undefined} {...common} options={selectOptions} />;
+  if (def.type === "select") return <Select {...common} options={selectOptions} />;
   if (def.type === "radio") {
     return (
       <div className="input-wrapper">
@@ -106,20 +115,21 @@ const Field = ({ def, value, onChange, onScan, error, formData }) => {
       </div>
     );
   }
-  if (def.type === "textarea") return <Textarea onBlur={undefined} {...common} rows={def.rows || 3} />;
+  if (def.type === "textarea") return <Textarea {...common} rows={def.rows || 3} />;
   const enableScan = String(def.name) === "serialNumber" || !!def.scan;
   return (
     <Input
-    onBlur={undefined} {...common}
-    type={def.type || "text"}
-    min={def.min}
-    max={def.max}
-    scanable={enableScan}
-    onScan={() => onScan(def.name)}    />
+      {...common}
+      type={def.type || "text"}
+      min={def.min}
+      max={def.max}
+      scanable={enableScan}
+      onScan={() => onScan(def.name)}
+    />
   );
-};
+});
 
-const TableField = ({ def, value, onChange, error, formData, rowIndex }) => {
+const TableField = memo(({ def, value, onChange, error, formData, rowIndex }) => {
   const getValue = useMemo(
     () => (k) => (formData?.[`${k}_${rowIndex}`] ?? formData?.[k]),
     [formData, rowIndex]
@@ -145,14 +155,13 @@ const TableField = ({ def, value, onChange, error, formData, rowIndex }) => {
     "aria-label": def.label,
     maxLength: def.maxLength,
   };
-  if (def.type === "select") return <Select label={undefined} onBlur={undefined} {...common} options={selectOptions} />;
-  if (def.type === "textarea") return <Textarea label={undefined} onBlur={undefined} {...common} rows={def.rows || 3} />;
-  return <Input label={undefined} onBlur={undefined} onScan={undefined} {...common} type={def.type || "text"} min={def.min} max={def.max} />;
-};
+  if (def.type === "select") return <Select label={undefined} {...common} options={selectOptions} />;
+  if (def.type === "textarea") return <Textarea label={undefined} {...common} rows={def.rows || 3} />;
+  return <Input label={undefined} onScan={undefined} {...common} type={def.type || "text"} min={def.min} max={def.max} />;
+});
 
 const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onSubmit, onReset, onCancel, submitting }) => {
   const list = Array.isArray(sections) ? sections : [];
-  const tableSections = ["Processors", "Storage", "Memory", "Network Details"];
   const [rowCounts, setRowCounts] = useState({});
   const { openScan } = useScanning();
   const getValue = useMemo(() => (k) => formData?.[k], [formData]);
@@ -206,7 +215,7 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
     <div className="fr-container">
       {list.map((sec) => (
         (() => {
-          const isTable = tableSections.includes(String(sec.sectionTitle));
+          const isTable = TABLE_SECTION_TITLES.includes(String(sec.sectionTitle));
           if (!isTable) {
             const filtered = (sec.fields || []).filter((f) => shouldShow(f, getValue));
             return (

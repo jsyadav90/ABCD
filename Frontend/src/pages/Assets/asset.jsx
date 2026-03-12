@@ -1,6 +1,12 @@
+/**
+ * Page: Assets List (placeholder)
+ * Description: Is page par category tabs aur "Add Item" CTA diya gaya hai.
+ * Abhi data listing empty state dikhata hai; future me yahin inventory list integrate ki ja sakti hai.
+ */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./asset.css";
+import Button from "../../components/Button/Button.jsx";
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 
@@ -20,9 +26,9 @@ const AssetPage = () => {
     <div className="asset-page">
       <div className="asset-header">
         <h1>Assets</h1>
-        <button className="btn btn-primary" aria-label="Add Item" onClick={goAddItem}>
+        <Button variant="primary" aria-label="Add Item" onClick={goAddItem}>
           Add Item
-        </button>
+        </Button>
       </div>
       <div className="asset-tabs" role="tablist" aria-label="Asset Categories">
         {tabs.map((t) => (

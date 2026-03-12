@@ -1,3 +1,10 @@
+/**
+ * Page: Register
+ * Description: Naye user ko basic details se account create karne deta hai.
+ * Major Logics:
+ * - Password/Confirm Password validation
+ * - Auth context se register() call aur error handling
+ */
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'

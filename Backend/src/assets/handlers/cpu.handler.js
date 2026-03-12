@@ -1,6 +1,10 @@
+/**
+ * CPU Asset Handler
+ * Description: CPU-specific create/list/get logics. Frontend AddItem.jsx ke payload ko normalize karke
+ * memory/storage/network summaries banata hai taa ki queries fast aur UI mapping simple rahe.
+ */
 import { CPU } from "../../models/cpu.model.js";
-
-const norm = (val) => (val == null ? "" : String(val).trim());
+import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit } from "../../utils/assetUtils.js";
 
 const create = async (req) => {
   const body = req.body || {};
@@ -16,8 +20,8 @@ const create = async (req) => {
   const networkSection = sections.find(s => norm(s.name).toLowerCase() === "network details" && s.kind === "rows");
   const networkDetails = networkSection?.rows || [];
 
-  // Map branch from form to branchId
-  const branchId = body.branch || body.branchId || null;
+  // Form se branchId map karo
+  const branchId = extractBranchIdFromBody(body);
 
   // Calculate Memory Aggregation
   const validMemoryModules = memoryModules.filter(m => m && (m.ramCapacityGB || m.ramManufacturer || m.ramModelNumber));
@@ -78,9 +82,7 @@ const create = async (req) => {
     memory,
     storage,
     network,
-    organizationId: req.user?.organizationId || null,
-    createdBy: req.user?._id || req.user?.id,
-    updatedBy: null,
+    ...ensureOrgAndAudit(req),
   };
 
   // Remove fields that shouldn't be saved directly or are handled specifically
@@ -95,15 +97,17 @@ const create = async (req) => {
 };
 
 const list = async (req) => {
-  const { isActive, branchId, itemCategory, itemType } = req.query;
-  const filter = { isDeleted: false };
-  if (isActive !== undefined) filter.isActive = String(isActive) === "true";
-  if (branchId) filter.branchId = branchId;
-  if (itemCategory) filter.itemCategory = norm(itemCategory).toLowerCase();
-  if (itemType) filter.itemType = norm(itemType).toLowerCase();
-  if (req.user?.organizationId) filter.organizationId = req.user.organizationId;
+  // Centralized filter builder (isDeleted, isActive, org scope, branch, type/category)
+  const filter = buildAssetListFilter(req);
 
-  const items = await CPU.find(filter).sort({ createdAt: -1 }).lean();
+  const limit = Math.min(Math.max(Number(req.query?.limit) || 20, 1), 100);
+  const page = Math.max(Number(req.query?.page) || 1, 1);
+  const items = await CPU.find(filter)
+    .select("itemId summary manufacturer cpuManufacturer model cpuModel serialNumber itemCategory itemType isActive createdAt branchId organizationId isDeleted")
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .lean();
   
   // Map fields for UI consistency
   const flattenedItems = items.map((item) => ({

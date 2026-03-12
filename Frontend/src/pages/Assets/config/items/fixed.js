@@ -182,6 +182,12 @@ export const fixedConfigs = {
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
+      //! Location Information
+      fromGeneric("Location Information",{
+         omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+        }),
       //! Display Specifications
       {
         sectionTitle: "Display Specifications",

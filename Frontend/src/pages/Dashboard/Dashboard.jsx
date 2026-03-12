@@ -1,3 +1,11 @@
+/**
+ * Page: Dashboard
+ * Description: Organization ki high-level summary dikhata hai (users count, quick actions, alerts).
+ * Major Logics:
+ * - User profile fetch + branches dropdown (scope ke hisaab se)
+ * - "All branches" option manage + users count compute
+ * - Auto sync timer + manual "Sync Now"
+ */
 import React, { useEffect, useState } from "react";
 import { Button, Card, Badge, Table, Select } from "../../components";
 import { authAPI } from "../../services/api";
