@@ -215,6 +215,8 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
     <div className="fr-container">
       {list.map((sec) => (
         (() => {
+          const sectionVisible = !sec?.showIf || evaluateShowIf(sec.showIf, getValue);
+          if (!sectionVisible) return null;
           const isTable = TABLE_SECTION_TITLES.includes(String(sec.sectionTitle));
           if (!isTable) {
             const filtered = (sec.fields || []).filter((f) => shouldShow(f, getValue));

@@ -1,3 +1,4 @@
+// @ts-ignore
 import { genericConfig } from "./items/generic.js";
 
 export const CATEGORY_ITEMS = {
@@ -6,6 +7,8 @@ export const CATEGORY_ITEMS = {
     { value: "monitor", label: "Monitor" },
     { value: "laptop", label: "Laptop" },
     { value: "printer", label: "Printer" },
+    { value: "tablet", label: "Tablet" },
+    { value: "interactivePanel", label: "Interactive Panel" },
     { value: "projector", label: "Projector" },
     { value: "networkSwitch", label: "Network Switch" },
     { value: "router", label: "Router" },
@@ -14,8 +17,6 @@ export const CATEGORY_ITEMS = {
     { value: "barcodeScanner", label: "Barcode Scanner" },
     { value: "scanner", label: "Scanner" },
     { value: "biometricDevice", label: "Biometric Device" },
-    { value: "interactivePanel", label: "Interactive Panel" },
-    { value: "tablet", label: "Tablet" },
     { value: "nasStorage", label: "NAS Storage" },
   ],
   peripheral: [
@@ -47,14 +48,25 @@ const typeToCategory = (() => {
 const loadedCategoryModules = new Map();
 const configCache = new Map();
 
+const normalizeConfigKeys = (cfg) => {
+  const out = {};
+  if (!cfg || typeof cfg !== "object") return out;
+  Object.keys(cfg).forEach((k) => {
+    out[String(k).toLowerCase()] = cfg[k];
+  });
+  return out;
+};
+
 const loadCategoryConfigs = async (category) => {
   const key = String(category || "").toLowerCase();
   if (loadedCategoryModules.has(key)) return loadedCategoryModules.get(key);
   let p;
   if (key === "fixed") {
-    p = import("./items/fixed.js").then((m) => m.fixedConfigs);
+    // @ts-ignore
+    p = import("./items/fixed.js").then((m) => normalizeConfigKeys(m.fixedConfigs));
   } else if (key === "peripheral") {
-    p = import("./items/peripheral.js").then((m) => m.peripheralConfigs);
+    // @ts-ignore
+    p = import("./items/peripheral.js").then((m) => normalizeConfigKeys(m.peripheralConfigs));
   } else {
     p = Promise.resolve({});
   }

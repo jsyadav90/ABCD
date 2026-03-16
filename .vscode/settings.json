@@ -1,3 +1,49 @@
 {
-    "files.autoSave": "afterDelay"
+  "files.autoSave": "afterDelay",
+  
+  "better-comments.tags": [
+    {
+      "tag": "!",
+      "color": "#FFFFFF",
+      "backgroundColor": "#FF2D00",
+      "bold": true
+    },
+    {
+      "tag": "?",
+      "color": "#3498DB",
+      "backgroundColor": "#E7F3FE",
+      "bold": true
+    },
+    {
+      "tag": "TODO",
+      "color": "#FF8C00",
+      "backgroundColor": "#FFD700",
+      "italic": true,
+      "bold": true
+    },
+    {
+      "tag": "*",
+      "color": "#00C853",
+      "backgroundColor": "#E7F3FE",
+      "bold": true
+    },
+    {
+      "tag": "NOTE",
+      "color": "#9B59B6",
+      "backgroundColor": "#E7F3FE",
+      "bold": true
+    },
+    {
+      "tag": "FIXME",
+      "color": "#FFD700",
+      "backgroundColor": "#FF2D00",
+      "bold": true
+    },
+    {
+      "tag": "#",
+      "color": "#FF1493",
+      "backgroundColor": "#FF2D00",
+      "bold": true
+    }
+  ]
 }

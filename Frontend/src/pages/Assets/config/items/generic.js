@@ -4,6 +4,7 @@ import { common } from "../common.js";
 export const genericConfig = {
   sections: [
 
+    //! Basic Information
     {
       sectionTitle: "Basic Information",
       fields: [
@@ -69,30 +70,31 @@ export const genericConfig = {
     {
       sectionTitle: "Warranty Information",
       fields: [
-        { name: "warrantyAvailable", label: "Warranty Available", type: "select", options: ["Yes", "No"] },
+        { name: "warrantyAvailable", label: "Warranty Available", type: "select", options: ["Yes", "No"], defaultValue: "No" },
 
         { name: "warrantyMode", label: "Warranty Mode", type: "select", options: ["Duration", "EndDate"], showIf: { warrantyAvailable: "Yes" } },
 
-        { name: "warrantyDuration", label: "Warranty Duration", type: "number", showIf: { warrantyMode: "Duration" } },
-        { name: "durationUnit", label: "Duration Unit", type: "select", options: ["Year", "Month"], showIf: { warrantyMode: "Duration" } },
+        { name: "inYear", label: "Year", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" } },
+        { name: "inMonth", label: "Month", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" }, defaultValue: 0 },
+        
+        { name: "warrantyStartDate", label: "Warranty Start Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
+        { name: "warrantyEndDate", label: "Warranty End Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
 
-        { name: "warrantyStartDate", label: "Warranty Start Date", type: "date", showIf: { warrantyAvailable: "Yes" } },
-        { name: "warrantyEndDate", label: "Warranty End Date", type: "date", showIf: { warrantyAvailable: "Yes" } },
+        { name: "warrantyProvider", label: "Warranty Provider", type: "select", options: ["Manufacturer", "Vendor", "Extended"], showIf: { warrantyAvailable: "Yes" } },
 
-        { name: "warrantyProvider", label: "Warranty Provider", type: "select", options: ["Manufacturer", "Vendor", "Extended"] },
+        { name: "supportVendor", label: "Support Vendor", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+        { name: "supportPhone", label: "Support Phone", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+        { name: "supportEmail", label: "Support Email", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
 
-        { name: "supportVendor", label: "Support Vendor", type: "text" },
-        { name: "supportPhone", label: "Support Phone", type: "text" },
-        { name: "supportEmail", label: "Support Email", type: "text" },
+        { name: "amcAvailable", label: "AMC Available", defaultValue: "No", type: "select", options: ["Yes", "No"], showIf: { warrantyAvailable: "No" } },
 
-        { name: "amcAvailable", label: "AMC Available", type: "select", options: ["Yes", "No"] },
-
-        { name: "amcVendor", label: "AMC Vendor", type: "text", showIf: { amcAvailable: "Yes" } },
-        { name: "amcStartDate", label: "AMC Start Date", type: "date", showIf: { amcAvailable: "Yes" } },
-        { name: "amcEndDate", label: "AMC End Date", type: "date", showIf: { amcAvailable: "Yes" } },
-        { name: "amcCost", label: "AMC Cost", type: "number", showIf: { amcAvailable: "Yes" } },
+        { name: "amcVendor", label: "AMC Vendor", type: "text", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+        { name: "amcStartDate", label: "AMC Start Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+        { name: "amcEndDate", label: "AMC End Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
       ],
     },
+
+    //! Item State
     {
       sectionTitle: "Item State",
       fields: [
@@ -106,6 +108,7 @@ export const genericConfig = {
   
     },
 
+    //! Assignment Information
     {
       sectionTitle: "Assignment Information",
       fields: [

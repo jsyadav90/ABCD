@@ -252,6 +252,24 @@ const AddItemPage = () => {
     });
   }, [category, itemType, branchOptions, vendorOptions, ramTypeOptions, driveTypeOptions, itemConfig]);
 
+  useEffect(() => {
+    const defaults = {};
+    (sections || []).forEach((sec) => {
+      (sec.fields || []).forEach((f) => {
+        if (f.defaultValue !== undefined) {
+          const key = String(f.name);
+          const cur = form[key];
+          if (cur === undefined || cur === null || String(cur).trim() === "") {
+            defaults[key] = f.defaultValue;
+          }
+        }
+      });
+    });
+    if (Object.keys(defaults).length > 0) {
+      setForm((prev) => ({ ...prev, ...defaults }));
+    }
+  }, [sections, form]);
+
   const updateField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));

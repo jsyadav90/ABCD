@@ -75,6 +75,7 @@ export const fromGeneric = (title, options = {}) => {
   return {
     sectionTitle: options.sectionTitle || base.sectionTitle,
     fields,
+    showIf: options.showIf,
   };
 };
 

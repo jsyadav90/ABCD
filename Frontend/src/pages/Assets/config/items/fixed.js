@@ -159,13 +159,20 @@ export const fixedConfigs = {
         //  overrideFields: [{},{},{},],
         //  addFields:[{},{},{},]
       }),
-      //! Purchase Information
+      //! Warranty Information
+      fromGeneric("Warranty Information",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+
+      //! Item State
       fromGeneric("Item State",{
         //  omitFields: ["","",""],
         //  overrideFields: [{},{},{},],
         //  addFields:[{},{},{},]
       }),
-      
+      //! Network Details
       fromGeneric("Network Details",{
         //  omitFields: ["","",""],
         //  overrideFields: [{},{},{},],
@@ -230,7 +237,14 @@ export const fixedConfigs = {
         //  overrideFields: [{},{},{},],
         //  addFields:[{},{},{},]
       }),
-      //! Purchase Information
+      //! Warranty Information
+      fromGeneric ("Warranty Information",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+
+      //! Item State
       fromGeneric("Item State",{
         //  omitFields: ["","",""],
         //  overrideFields: [{},{},{},],
@@ -240,19 +254,25 @@ export const fixedConfigs = {
       
     ],
   },
+
+  //  Printer Configuration
   printer: {
     sections: [
-      {
-        sectionTitle: "Basic Information",
-        fields: [
-          { name: "itemName", label: "Item Name", type: "text", required: true, maxLength: 120 },
-          { name: "itemCategory", label: "Item Category", type: "select", options: common.itemCategories, required: true },
-          { name: "manufacturer", label: "Manufacturer", type: "text", required: true, maxLength: 100 },
-          { name: "model", label: "Model", type: "text", required: true, maxLength: 100 },
-          { name: "printerType", label: "Printer Type", type: "select", options: common.printerTypes },
-          { name: "functionType", label: "Function Type", type: "select", options: common.printerFunctions },
-        ],
-      },
+      //! Basic Information
+      fromGeneric("Basic Information", {
+        // Example: hide description field coming from generic
+        omitFields: ["itemDescription", "barcode","itemName","itemTag","itemCategory","itemType","brand","itemCondition",],
+        // overrideFields: [{},{},{}  ],
+        // addFields: [{},{},{}],
+      }),
+      //! Location Information
+      fromGeneric("Location Information",{
+         omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+        }),
+
+        //! Print Specifications
       {
         sectionTitle: "Print Specifications",
         fields: [
@@ -263,8 +283,23 @@ export const fixedConfigs = {
           { name: "monthlyDutyCycle", label: "Monthly Duty Cycle (Pages)", type: "number", min: 1000, max: 1000000 },
           { name: "recommendedMonthlyVolume", label: "Recommended Monthly Volume", type: "number", min: 1000, max: 500000 },
           { name: "duplexPrinting", label: "Duplex Printing Supported", type: "select", options: common.booleanOptions },
+          { name: "networkSupport", label: "Network Support", type: "select", options: common.booleanOptions, defaultValue: "No" },
         ],
       },
+      //! Item Lifecycle Status
+       {
+        sectionTitle: "Item Lifecycle Status",
+
+        fields: [
+          { name: "lifecycleStatus", label: "Lifecycle Status", type: "select", options: common.lifecycleStatus },
+          { name: "operationalStatus", label: "Operational Status", type: "select", options: common.operationalStatus },
+          { name: "totalPrintCount", label: "Total Print Count", type: "number", min: 0, max: 100000000 },
+          { name: "lastServiceDate", label: "Last Service Date", type: "date" },
+          { name: "condition", label: "Physical Condition", type: "select", options: common.conditionStatus },
+          
+        ],
+      },
+      //! Scanner & Copier (If MFP)
       {
         sectionTitle: "Scanner & Copier (If MFP)",
         fields: [
@@ -274,6 +309,7 @@ export const fixedConfigs = {
           { name: "copySpeedCPM", label: "Copy Speed (CPM)", type: "number", min: 1, max: 500 },
         ],
       },
+      //! Cartridge / Toner Details
       {
         sectionTitle: "Cartridge / Toner Details",
         fields: [
@@ -283,17 +319,15 @@ export const fixedConfigs = {
           { name: "lastCartridgeChangeDate", label: "Last Cartridge Change Date", type: "date" },
         ],
       },
-      {
-        sectionTitle: "Connectivity & Network",
-        fields: [
-          { name: "connectionType", label: "Connection Type", type: "select", options: common.connectionTypes },
-          { name: "hostname", label: "Hostname", type: "text", maxLength: 120 },
-          { name: "ipAddress", label: "IP Address", type: "text", maxLength: 40 },
-          { name: "macAddress", label: "MAC Address", type: "text", maxLength: 40 },
-          { name: "wifiSupported", label: "WiFi Supported", type: "select", options: common.booleanOptions },
-          { name: "ethernetPort", label: "Ethernet Port Available", type: "select", options: common.booleanOptions },
-        ],
-      },
+      //!Network Details
+      fromGeneric("Network Details",{
+        showIf: { networkSupport: "Yes" },
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+      
+      //! Physical & Power
       {
         sectionTitle: "Physical & Power",
         fields: [
@@ -303,61 +337,43 @@ export const fixedConfigs = {
           { name: "voltageRange", label: "Voltage Range", type: "text", maxLength: 40 },
         ],
       },
-      {
-        sectionTitle: "Item Financial Details",
-        fields: [
-          { name: "itemTag", label: "Item Tag", type: "text", required: true, maxLength: 80 },
-          { name: "serialNumber", label: "Serial Number", type: "text", required: true, maxLength: 120 },
-          { name: "vendor", label: "Vendor", type: "select", options: common.vendors },
-          { name: "barcode", label: "Barcode / QR Code", type: "text", maxLength: 120 },
-          { name: "purchaseCost", label: "Purchase Cost", type: "number", min: 0, max: 10000000 },
-          { name: "acquisitionDate", label: "Acquisition Date", type: "date" },
-          { name: "warrantyExpiryDate", label: "Warranty Expiry Date", type: "date" },
-          { name: "amcAvailable", label: "AMC Available", type: "select", options: common.booleanOptions },
-          { name: "amcExpiryDate", label: "AMC Expiry Date", type: "date" },
-          { name: "depreciationMethod", label: "Depreciation Method", type: "select", options: common.depreciationMethods },
-          { name: "usefulLifeYears", label: "Useful Life (Years)", type: "number", min: 1, max: 15 },
-          { name: "residualValue", label: "Residual Value", type: "number", min: 0, max: 2000000 },
-        ],
-      },
-      {
-        sectionTitle: "Location & Assignment",
-        fields: [
-          { name: "branch", label: "Branch", type: "select", options: common.branches },
-          { name: "building", label: "Building", type: "text", maxLength: 100 },
-          { name: "floor", label: "Floor", type: "text", maxLength: 40 },
-          { name: "room", label: "Room", type: "text", maxLength: 80 },
-          { name: "assignedDepartment", label: "Assigned Department", type: "text", maxLength: 80 },
-          { name: "assignmentDate", label: "Assignment Date", type: "date" },
-        ],
-      },
-      {
-        sectionTitle: "Item Lifecycle Status",
+       //! Purchase Information
+      fromGeneric("Purchase Information",{
+         omitFields: ["taxAmount","totalAmount","currency"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
 
-        fields: [
-          { name: "lifecycleStatus", label: "Lifecycle Status", type: "select", options: common.lifecycleStatus },
-          { name: "operationalStatus", label: "Operational Status", type: "select", options: common.operationalStatus },
-          { name: "totalPrintCount", label: "Total Print Count", type: "number", min: 0, max: 100000000 },
-          { name: "lastServiceDate", label: "Last Service Date", type: "date" },
-          { name: "condition", label: "Physical Condition", type: "select", options: common.conditionStatus },
-          { name: "remarks", label: "Remarks", type: "textarea", maxLength: 500 },
-        ],
-      },
+       //! Warranty Information
+      fromGeneric ("Warranty Information",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+      //! Item State
+      fromGeneric("Item State",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+     
     ],
   },
   laptop: {
     sections: [
-      {
-        sectionTitle: "Basic Information",
-        fields: [
-          { name: "itemName", label: "Item Name", type: "text", required: true, maxLength: 120 },
-          { name: "itemCategory", label: "Item Category", type: "select", options: common.itemCategories, required: true },
-          { name: "manufacturer", label: "Manufacturer", type: "text", required: true, maxLength: 100 },
-          { name: "model", label: "Model", type: "text", required: true, maxLength: 100 },
-          { name: "formFactor", label: "Form Factor (Ultrabook/Notebook)", type: "text", maxLength: 80 },
-          { name: "domain", label: "Domain / Workgroup", type: "select", options: common.domains },
-        ],
-      },
+      //! Basic Information
+      fromGeneric("Basic Information", {
+        // Example: hide description field coming from generic
+        omitFields: ["itemDescription", "barcode","itemName","itemTag","itemCategory","itemType","brand","itemCondition",],
+        // overrideFields: [{},{},{}  ],
+        // addFields: [{},{},{}],
+      }),
+      //! Location Information
+      fromGeneric("Location Information",{
+         omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+        }),
       {
         sectionTitle: "Operating System",
         fields: [
@@ -369,25 +385,91 @@ export const fixedConfigs = {
           { name: "activationStatus", label: "Activation Status", type: "select", options: common.activationStatus },
         ],
       },
+      //! Memory
       {
-        sectionTitle: "Processor & Memory",
+        sectionTitle: "Memory",
         fields: [
-          { name: "cpuModel", label: "Processor Model", type: "text", required: true, maxLength: 120 },
-          { name: "cpuManufacturer", label: "Processor Manufacturer", type: "text", required: true, maxLength: 80 },
-          { name: "clockSpeedGHz", label: "Clock Speed (GHz)", type: "number", min: 0, max: 10 },
-          { name: "cores", label: "Number of Cores", type: "number", min: 1, max: 32 },
-          { name: "threads", label: "Number of Threads", type: "number", min: 1, max: 64 },
-          { name: "totalRamGB", label: "Total RAM (GB)", type: "number", min: 4, max: 128 },
-          { name: "ramType", label: "RAM Type (DDR4/DDR5)", type: "text", maxLength: 40 },
+          { name: "ramManufacturer", label: "Memory Manufacturer", type: "text", maxLength: 80 },
+          { name: "ramModelNumber", label: "Memory Part/Model Number", type: "text", maxLength: 100 },
+          { name: "ramSerialNumber", label: "Memory Serial Number", type: "text", maxLength: 100 },
+          { name: "ramCapacityGB", label: "Memory Capacity (GB)", type: "number", min: 1, max: 512, required: true },
+          {
+            name: "ramType",
+            label: "RAM Type",
+            type: "select",
+            options: [],
+          },
+          { name: "ramSpeedMHz", label: "Speed (MHz)", type: "number", min: 400, max: 1000000 },
+          { name: "ramFormFactor", label: "Form Factor", type: "text", maxLength: 40 },
+          { name: "ramSlot", label: "Memory Slot", type: "text", maxLength: 40 },
+          { name: "ramChannel", label: "Channel", type: "text", maxLength: 40 },
+          
         ],
       },
+      //! Processor
+      {
+        sectionTitle: "Processor",
+        fields: [
+          
+          { 
+            name: "cpuManufacturer", 
+            label: "Processor Manufacturer", 
+            type: "select", 
+            required: true, 
+            options: [
+              { value: "intel", label: "Intel" },
+              { value: "amd", label: "AMD" },
+              { value: "apple", label: "Apple" },
+
+            ] },
+
+            { 
+            name: "cpuModel", 
+            label: "Processor Series", 
+            type: "select", 
+            required: true, 
+            options:[
+              { value: "i9", label: "Intel Core i9", showIf: { cpuManufacturer: "intel" } },
+              { value: "i7", label: "Intel Core i7", showIf: { cpuManufacturer: "intel" } },
+              { value: "i5", label: "Intel Core i5", showIf: { cpuManufacturer: "intel" } },
+              { value: "i3", label: "Intel Core i3", showIf: { cpuManufacturer: "intel" } },
+
+              { value: "ryzen9", label: "AMD Ryzen 9", showIf: { cpuManufacturer: "amd" } },
+              { value: "ryzen7", label: "AMD Ryzen 7", showIf: { cpuManufacturer: "amd" } },
+              { value: "ryzen5", label: "AMD Ryzen 5", showIf: { cpuManufacturer: "amd" } },
+              { value: "ryzen3", label: "AMD Ryzen 3", showIf: { cpuManufacturer: "amd" } },
+
+              { value: "m3", label: "Apple M3", showIf: { cpuManufacturer: "apple" } },
+              { value: "m2", label: "Apple M2", showIf: { cpuManufacturer: "apple" } },
+              { value: "m1", label: "Apple M1", showIf: { cpuManufacturer: "apple" } },
+              
+            ] 
+          
+          },
+          { name: "processorGeneration", label: "Processor Generation", type: "number", min: 0, max: 10 },
+          { name: "processorModel", label: "Processor Model", type: "number", maxLength: 40 },
+          { name: "cores", label: "Number of Cores", type: "number", min: 1, max: 256 },
+          { name: "threads", label: "Number of Threads", type: "number", min: 1, max: 512 },
+          { name: "virtualizationEnabled", label: "Virtualization Enabled", type: "select", options: common.booleanOptions },
+        ],
+      },
+      //! Storage
       {
         sectionTitle: "Storage",
         fields: [
-          { name: "storageType", label: "Storage Type", type: "select", options: common.storageTypes },
-          { name: "diskCapacityGB", label: "Total Capacity (GB)", type: "number", min: 128, max: 8000 },
-          { name: "diskModel", label: "Disk Model", type: "text", maxLength: 100 },
-          { name: "diskSerial", label: "Disk Serial Number", type: "text", maxLength: 100 },
+          { name: "driveManufacturer", label: "Drive Manufacturer", type: "text", maxLength: 80 },
+          { name: "driveModelNumber", label: "Drive Model Number", type: "text", maxLength: 120 },
+          { name: "driveSerial", label: "Serial Number", type: "text", maxLength: 120 },
+          { name: "driveCapacityGB", label: "Capacity (GB)", type: "number", min: 1, max: 200000 },
+          {
+            name: "driveType",
+            label: "Drive Type",
+            type: "select",
+            options: [],
+          },
+          { name: "driveInterfaceSpeed", label: "Interface Speed", type: "text", maxLength: 40 },
+          // { name: "driveSlot", label: "Slot Label", type: "text", maxLength: 40 },
+          { name: "raidConfigured", label: "RAID Configured", type: "select", options: common.booleanOptions },
           { name: "encryptionEnabled", label: "Disk Encryption Enabled", type: "select", options: common.booleanOptions },
         ],
       },
@@ -421,34 +503,18 @@ export const fixedConfigs = {
           { name: "hardwareUUID", label: "Hardware UUID", type: "text", maxLength: 120 },
         ],
       },
-      {
-        sectionTitle: "Item Financial Details",
-        fields: [
-          { name: "itemTag", label: "Item Tag", type: "text", required: true, maxLength: 80 },
-          { name: "serialNumber", label: "Serial Number", type: "text", required: true, maxLength: 120 },
-          { name: "vendor", label: "Vendor", type: "select", options: common.vendors },
-          { name: "barcode", label: "Barcode / QR Code", type: "text", maxLength: 120 },
-          { name: "purchaseCost", label: "Purchase Cost", type: "number", min: 0, max: 5000000 },
-          { name: "acquisitionDate", label: "Acquisition Date", type: "date" },
-          { name: "warrantyExpiryDate", label: "Warranty Expiry Date", type: "date" },
-          { name: "amcAvailable", label: "AMC Available", type: "select", options: common.booleanOptions },
-          { name: "amcExpiryDate", label: "AMC Expiry Date", type: "date" },
-          { name: "depreciationMethod", label: "Depreciation Method", type: "select", options: common.depreciationMethods },
-          { name: "usefulLifeYears", label: "Useful Life (Years)", type: "number", min: 1, max: 10 },
-          { name: "residualValue", label: "Residual Value", type: "number", min: 0, max: 2000000 },
-        ],
-      },
-      {
-        sectionTitle: "Item Location & Assignment",
-        fields: [
-          { name: "branch", label: "Branch", type: "select", options: common.branches },
-          { name: "building", label: "Building", type: "text", maxLength: 100 },
-          { name: "floor", label: "Floor", type: "text", maxLength: 40 },
-          { name: "room", label: "Room", type: "text", maxLength: 80 },
-          { name: "assignedTo", label: "Assigned To (User ID)", type: "text", maxLength: 80 },
-          { name: "assignmentDate", label: "Assignment Date", type: "date" },
-        ],
-      },
+       //! Purchase Information
+      fromGeneric("Purchase Information",{
+         omitFields: ["taxAmount","totalAmount","currency"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+      //! Item State
+      fromGeneric("Item State",{
+        //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
       {
         sectionTitle: "Item Lifecycle Status",
         fields: [
@@ -461,19 +527,24 @@ export const fixedConfigs = {
       },
     ],
   },
+
+  //TODO Interactive Panel
   interactivePanel: {
     sections: [
-      {
-        sectionTitle: "Basic Information",
-        fields: [
-          { name: "itemName", label: "Item Name", type: "text", required: true, maxLength: 120 },
-          { name: "itemCategory", label: "Item Category", type: "select", options: common.itemCategories, required: true },
-          { name: "manufacturer", label: "Manufacturer", type: "text", required: true, maxLength: 100 },
-          { name: "model", label: "Model", type: "text", required: true, maxLength: 100 },
-          { name: "panelType", label: "Panel Type", type: "select", options: common.panelTypes },
-          { name: "screenSize", label: "Screen Size (Inches)", type: "number", min: 32, max: 120 },
-        ],
-      },
+      //! Basic Information
+      fromGeneric("Basic Information", {
+        // Example: hide description field coming from generic
+        omitFields: ["itemDescription", "barcode","itemName","itemTag","itemCategory","itemType","brand","itemCondition",],
+        // overrideFields: [{},{},{}  ],
+        // addFields: [{},{},{}],
+      }),
+      //! Location Information
+      fromGeneric("Location Information",{
+         omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+        }),
+        //! Display Specifications
       {
         sectionTitle: "Display Specifications",
         fields: [
@@ -483,8 +554,10 @@ export const fixedConfigs = {
           { name: "contrastRatio", label: "Contrast Ratio", type: "text", maxLength: 40 },
           { name: "refreshRateHz", label: "Refresh Rate (Hz)", type: "number", min: 30, max: 240 },
           { name: "displayTechnology", label: "Display Technology", type: "select", options: common.displayTechnologies },
+    
         ],
       },
+      //! Touch & Interaction
       {
         sectionTitle: "Touch & Interaction",
         fields: [
@@ -495,6 +568,7 @@ export const fixedConfigs = {
           { name: "responseTimeMs", label: "Touch Response Time (ms)", type: "number", min: 1, max: 50 },
         ],
       },
+      //! Operating System
       {
         sectionTitle: "Operating System",
         fields: [
@@ -505,6 +579,7 @@ export const fixedConfigs = {
           { name: "cpuModel", label: "Processor Model", type: "text", maxLength: 120 },
         ],
       },
+        
       {
         sectionTitle: "Audio & Camera",
         fields: [
