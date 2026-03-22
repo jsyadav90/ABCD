@@ -388,7 +388,9 @@ const Dashboard = () => {
       </Card>
 
       <div className="quick-actions">
-        <Button variant="primary">Add Item</Button>
+        <Button variant="primary" redirect="/assets/add">
+          Add Item
+        </Button>
         <Button variant="secondary">View Reports</Button>
         <Button variant="outline-primary">Export CSV</Button>
       </div>

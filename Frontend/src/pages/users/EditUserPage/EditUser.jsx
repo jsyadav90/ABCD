@@ -13,6 +13,7 @@ import {
   fetchRolesForDropdown,
   fetchBranchesForDropdown,
 } from "../../../services/userApi.js";
+import { getSelectedBranch } from "../../../utils/scope.js";
 import "../AddUserPage/AddUser.css"; // Reuse same CSS
 
 const EditUser = () => {
@@ -124,7 +125,20 @@ const EditUser = () => {
         // console.log('📥 Fetching branches for orgId:', ORGANIZATION_ID);
         const branchesData = await fetchBranchesForDropdown(ORGANIZATION_ID);
         // console.log('✅ Branches received:', branchesData);
-        setBranches(branchesData);
+        
+        // Filter branches based on selected branch (if not "__ALL__")
+        const selectedBranch = getSelectedBranch();
+        let filteredBranches = branchesData;
+        if (selectedBranch && selectedBranch !== "__ALL__") {
+          filteredBranches = branchesData.filter(branch => branch._id === selectedBranch);
+        }
+        
+        setBranches(filteredBranches);
+
+        // For edit user, if specific branch is selected, update the user's branch assignment to only include that branch
+        if (selectedBranch && selectedBranch !== "__ALL__") {
+          setFormData((prev) => ({ ...prev, branchId: [selectedBranch] }));
+        }
       } catch (error) {
         console.error("❌ Failed to load data:", error);
         setErrorMessage(error.message || "Failed to load user data");

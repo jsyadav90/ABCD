@@ -138,7 +138,7 @@ const list = async (req) => {
   const limit = Math.min(Math.max(Number(req.query?.limit) || 20, 1), 100);
   const page = Math.max(Number(req.query?.page) || 1, 1);
   const items = await CPU.find(filter)
-    .select("itemId summary manufacturer cpuManufacturer model cpuModel serialNumber itemCategory itemType isActive createdAt branchId organizationId isDeleted")
+    .select("itemId summary manufacturer cpuManufacturer model cpuModel serialNumber itemCategory itemType isActive createdAt branchId organizationId isDeleted memory storage")
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit)

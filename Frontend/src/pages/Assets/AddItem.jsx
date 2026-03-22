@@ -89,20 +89,26 @@ const AddItemPage = () => {
           : [];
 
         let finalOptions = opts;
-        if (allowedBranchIds.length > 0 && user.role !== "super_admin") {
+        
+        // If a specific branch is selected on dashboard (not "__ALL__"), filter to show only that branch
+        if (dashboardBranch && dashboardBranch !== "__ALL__") {
+          finalOptions = opts.filter((o) => o.value === dashboardBranch);
+        } 
+        // Otherwise, filter based on user's assigned branches (for non-super_admin)
+        else if (allowedBranchIds.length > 0 && user.role !== "super_admin") {
           finalOptions = opts.filter((o) => allowedBranchIds.includes(o.value));
         }
+        
         setBranchOptions(finalOptions);
 
         let defaultBranch = "";
 
-        if (
-          dashboardBranch &&
-          dashboardBranch !== "__ALL__" &&
-          finalOptions.some((o) => o.value === dashboardBranch)
-        ) {
+        // If specific branch is selected on dashboard, auto-select it
+        if (dashboardBranch && dashboardBranch !== "__ALL__") {
           defaultBranch = dashboardBranch;
-        } else if (finalOptions.length === 1) {
+        } 
+        // If only one branch is available, auto-select it
+        else if (finalOptions.length === 1) {
           defaultBranch = finalOptions[0].value;
         }
 
@@ -279,10 +285,25 @@ const AddItemPage = () => {
       };
     };
 
+    // Determine default branch value
+    let defaultBranchValue = "";
+    const dashboardBranch = getSelectedBranch();
+    
+    if (dashboardBranch && dashboardBranch !== "__ALL__") {
+      defaultBranchValue = dashboardBranch;
+    } else if (branchOptions.length === 1) {
+      defaultBranchValue = branchOptions[0].value;
+    }
+
     return baseSections.map((sec) => {
       if (sec.sectionTitle === "Location & Other Information") {
         return updateSectionFields(sec, {
-          branch: { options: branchOptions, required: true, readOnly: false },
+          branch: { 
+            options: branchOptions, 
+            required: true, 
+            readOnly: false,
+            defaultValue: defaultBranchValue
+          },
         });
       }
       if (sec.sectionTitle === "Memory") {
@@ -318,7 +339,7 @@ const AddItemPage = () => {
     if (Object.keys(defaults).length > 0) {
       setForm((prev) => ({ ...prev, ...defaults }));
     }
-  }, [sections, form]);
+  }, [sections]);
 
   const purchaseDateAutoRef = useRef({ value: "", receivedOn: "" });
   const lastItemReceivedOnRef = useRef("");

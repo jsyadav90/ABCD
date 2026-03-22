@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import './Button.css';
 
 const Button = ({
@@ -8,9 +9,21 @@ const Button = ({
   fullWidth = false,
   disabled = false,
   onClick,
+  redirect,
   className = '',
   ...props
 }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = (e) => {
+    if (redirect) {
+      navigate(redirect);
+    }
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   const buttonClass = `btn btn-${variant} btn-${size} ${fullWidth ? 'btn-full' : ''} ${className}`;
 
   return (
@@ -18,7 +31,7 @@ const Button = ({
       type={type}
       className={buttonClass}
       disabled={disabled}
-      onClick={onClick}
+      onClick={handleClick}
       {...props}
     >
       {children}

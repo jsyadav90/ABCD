@@ -25,6 +25,7 @@ import {
   fetchNextUserId,
 } from '../../../services/userApi.js';
 import { authAPI } from '../../../services/api.js';
+import { getSelectedBranch } from '../../../utils/scope.js';
 import './AddUser.css';
 
 const AddUser = () => {
@@ -91,7 +92,27 @@ const AddUser = () => {
 
         // Fetch branches
         const branchesData = await fetchBranchesForDropdown(orgIdFromProfile);
-        setBranches(branchesData);
+        
+        // Filter branches based on selected branch (if not "__ALL__")
+        const selectedBranch = getSelectedBranch();
+        let filteredBranches = branchesData;
+        if (selectedBranch && selectedBranch !== "__ALL__") {
+          filteredBranches = branchesData.filter(branch => branch._id === selectedBranch);
+        }
+        
+        setBranches(filteredBranches);
+
+        // Auto-select branch if only one is available or if specific branch is selected
+        let defaultBranch = [];
+        if (selectedBranch && selectedBranch !== "__ALL__") {
+          defaultBranch = [selectedBranch];
+        } else if (filteredBranches.length === 1) {
+          defaultBranch = [filteredBranches[0]._id];
+        }
+
+        if (defaultBranch.length > 0) {
+          setFormData((prev) => ({ ...prev, branchId: defaultBranch }));
+        }
       } catch (error) {
         console.error('❌ Failed to load dropdown data:', error);
         setErrorMessage(

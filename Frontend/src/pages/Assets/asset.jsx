@@ -15,6 +15,8 @@ import Card from "../../components/Card/Card.jsx";
 import { PageLoader } from "../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../components/ErrorBoundary/ErrorNotification.jsx";
 import { fetchAllAssets } from "../../services/assetApi.js";
+import { fetchAllBranches } from "../../services/branchApi.js";
+import { getBranchName } from "../../utils/branchUtils.js";
 import { getSelectedBranch, onBranchChange } from "../../utils/scope";
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
@@ -27,6 +29,7 @@ const AssetPage = () => {
   const [error, setError] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(getSelectedBranch() || "");
   const [visibleAssets, setVisibleAssets] = useState([]);
+  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     const loadAssets = async () => {
@@ -47,6 +50,19 @@ const AssetPage = () => {
       }
     };
     loadAssets();
+  }, []);
+
+  useEffect(() => {
+    const loadBranches = async () => {
+      try {
+        const data = await fetchAllBranches();
+        setBranches(data);
+      } catch (err) {
+        console.error("Failed to fetch branches", err);
+        // Don't set error for branches, as it's not critical
+      }
+    };
+    loadBranches();
   }, []);
 
   useEffect(() => {
@@ -99,10 +115,41 @@ const AssetPage = () => {
     return assetCategory === active;
   });
 
+  const getTooltipDetails = (row) => {
+    const itemType = row.itemType?.toUpperCase();
+    
+    if (itemType === 'CPU') {
+      const totalRam = Number(row.memory?.totalCapacityGB) || (row.memory?.modules?.reduce((sum, module) => sum + (Number(module.ramCapacityGB) || 0), 0) || 0);
+      const totalStorage = Number(row.storage?.totalCapacityGB) || (row.storage?.devices?.reduce((sum, device) => sum + (Number(device.driveCapacityGB) || 0), 0) || 0);
+      
+      return `Processor: ${row.cpuModel || row.processorModel || 'N/A'}, RAM: ${totalRam || 'N/A'}GB, Storage: ${totalStorage || 'N/A'}GB`;
+    } else if (itemType === 'MONITOR') {
+      return `Size: ${row.screenSizeInches || 'N/A'}" , Resolution: ${row.resolution || 'N/A'}, Panel: ${row.panelType || 'N/A'}, Refresh Rate: ${row.refreshRateHz || 'N/A'}Hz`;
+    }
+    
+    // Default fallback
+    return `Model: ${row.model || 'N/A'}, Serial: ${row.serialNumber || 'N/A'}, Manufacturer: ${row.manufacturer || 'N/A'}`;
+  };
+
   const columns = [
-    { header: "Item ID", key: "itemId", sortable: true },
+    { 
+      header: "Item ID", 
+      key: "itemId", 
+      sortable: true,
+      render: (row) => (
+        <span title={getTooltipDetails(row)}>
+          {row.itemId}
+        </span>
+      )
+    },
     { header: "Type", key: "itemType", sortable: true },
     { header: "Category", key: "itemCategory", sortable: true },
+    { 
+      header: "Branch", 
+      key: "branchId", 
+      sortable: true,
+      render: (row) => getBranchName(row.branchId, branches)
+    },
     { header: "Model", key: "model", sortable: true },
     { header: "Serial Number", key: "serialNumber", sortable: true },
     { header: "Manufacturer", key: "manufacturer", sortable: true },
