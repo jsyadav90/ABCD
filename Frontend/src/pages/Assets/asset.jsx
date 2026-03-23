@@ -141,11 +141,7 @@ const AssetPage = () => {
       header: "Item ID", 
       key: "itemId", 
       sortable: true,
-      render: (row) => (
-        <span title={getTooltipDetails(row)}>
-          {row.itemId}
-        </span>
-      )
+      tooltip: (row) => getTooltipDetails(row)
     },
     { header: "Type", key: "itemType", sortable: true },
     { header: "Category", key: "itemCategory", sortable: true },
@@ -176,7 +172,8 @@ const AssetPage = () => {
 
   return (
     <div className="asset-page">
-      <div className="asset-header">
+      <div className="asset">
+        <div className="asset-header">
         <h1>Assets</h1>
         <Button variant="primary" aria-label="Add Item" onClick={goAddItem}>
           Add Item
@@ -227,6 +224,7 @@ const AssetPage = () => {
             pageSize={20}
           />
         )}
+      </div>
       </div>
     </div>
   );

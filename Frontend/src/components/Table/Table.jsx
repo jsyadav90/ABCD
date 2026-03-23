@@ -62,12 +62,30 @@ const Table = ({
     let tempData = [...data];
 
     if (showSearch && search) {
-      tempData = tempData.filter((row) =>
-        Object.values(row)
+      tempData = tempData.filter((row) => {
+        const searchLower = search.toLowerCase();
+        
+        // Search in raw data
+        const rawDataMatch = Object.values(row)
           .join(" ")
           .toLowerCase()
-          .includes(search.toLowerCase()),
-      );
+          .includes(searchLower);
+
+        // Also search in tooltip if column has tooltip property
+        const tooltipMatch = columns.some(col => {
+          if (col.tooltip && typeof col.tooltip === 'function') {
+            try {
+              const tooltipText = String(col.tooltip(row) || "").toLowerCase();
+              return tooltipText.includes(searchLower);
+            } catch (e) {
+              return false;
+            }
+          }
+          return false;
+        });
+
+        return rawDataMatch || tooltipMatch;
+      });
     }
 
     if (sortConfig.key && sortConfig.direction) {
@@ -256,9 +274,22 @@ const Table = ({
                   />
                 </td>
 
-                {columns.map((col, i) => (
-                  <td key={i}>{col.render ? col.render(row, search) : highlightText(row[col.key ?? col.accessor], search)}</td>
-                ))}
+                {columns.map((col, i) => {
+                  let cellTitle = "";
+                  if (col.tooltip && typeof col.tooltip === 'function') {
+                    try {
+                      cellTitle = col.tooltip(row);
+                    } catch (e) {
+                      cellTitle = "";
+                    }
+                  }
+                  
+                  return (
+                    <td key={i} title={cellTitle}>
+                      {col.render ? col.render(row, search) : highlightText(row[col.key ?? col.accessor], search)}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
