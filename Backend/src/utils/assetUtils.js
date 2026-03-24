@@ -20,7 +20,9 @@ export const toNumberOrNull = (val) => {
 export const buildAssetListFilter = (req) => {
   const q = req?.query || {};
   const filter = { isDeleted: false };
+  // Default to showing only active assets unless caller explicitly requests otherwise
   if (q.isActive !== undefined) filter.isActive = String(q.isActive) === "true";
+  else filter.isActive = true;
   if (q.branchId) filter.branchId = q.branchId;
   if (q.itemCategory) filter.itemCategory = norm(q.itemCategory).toLowerCase();
   if (q.itemType) filter.itemType = norm(q.itemType).toLowerCase();

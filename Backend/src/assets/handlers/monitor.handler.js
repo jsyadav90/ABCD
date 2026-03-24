@@ -115,14 +115,20 @@ const create = async (req) => {
 const list = async (req) => {
   const filter = buildAssetListFilter(req);
 
-  const limit = Math.min(Math.max(Number(req.query?.limit) || 20, 1), 100);
+  // If caller provides a `limit` query param we'll paginate; otherwise return all matching items.
+  const rawLimit = req.query?.limit !== undefined ? Number(req.query.limit) : 0;
+  const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.max(Math.floor(rawLimit), 0) : 0;
   const page = Math.max(Number(req.query?.page) || 1, 1);
-  const items = await Monitor.find(filter)
-    .select("itemId summary manufacturer model serialNumber itemCategory itemType isActive createdAt branchId organizationId isDeleted")
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .lean();
+
+  let query = Monitor.find(filter)
+    .select("-__v")
+    .sort({ createdAt: -1 });
+
+  if (limit > 0) {
+    query = query.skip((page - 1) * limit).limit(limit);
+  }
+
+  const items = await query.lean();
   const flattenedItems = items.map((item) => ({
     ...item,
     itemName: item.itemId || item.summary?.itemName || "N/A",

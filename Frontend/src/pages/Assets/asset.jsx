@@ -42,6 +42,12 @@ const AssetPage = () => {
           self.findIndex(a => a._id === item._id) === index
         );
         setAssets(uniqueData);
+        // Debug: log sample monitor rows so we can verify available fields
+        try {
+          console.debug('Fetched assets sample (first 5 monitors):', uniqueData.filter(a => String(a.itemType || '').toUpperCase() === 'MONITOR').slice(0,5));
+        } catch (e) {
+          console.debug('Fetched assets (first 5):', uniqueData.slice(0,5));
+        }
       } catch (err) {
         console.error("Failed to fetch assets", err);
         setError(err.message || "Failed to load assets");
@@ -116,24 +122,30 @@ const AssetPage = () => {
   });
 
   const getTooltipDetails = (row) => {
+    const safe = (value) => (value || value === 0 ? value : "N/A");
     const itemType = row.itemType?.toUpperCase();
-    
+
+    const totalRam = Number(row.memory?.totalCapacityGB) || (row.memory?.modules?.reduce((sum, module) => sum + (Number(module.ramCapacityGB) || 0), 0) || 0);
+    const totalStorage = Number(row.storage?.totalCapacityGB) || (row.storage?.devices?.reduce((sum, device) => sum + (Number(device.driveCapacityGB) || 0), 0) || 0);
+
     if (itemType === 'CPU') {
-      const totalRam = Number(row.memory?.totalCapacityGB) || (row.memory?.modules?.reduce((sum, module) => sum + (Number(module.ramCapacityGB) || 0), 0) || 0);
-      const totalStorage = Number(row.storage?.totalCapacityGB) || (row.storage?.devices?.reduce((sum, device) => sum + (Number(device.driveCapacityGB) || 0), 0) || 0);
-      
-      return `Model: ${row.model || 'N/A'}, CPU: ${row.processorModel || 'N/A'}, RAM: ${totalRam || 'N/A'}GB, Storage: ${totalStorage || 'N/A'}GB`;
-    } else if (itemType === 'MONITOR') {
-      return `Size: ${row.screenSizeInches || 'N/A'}" , Resolution: ${row.resolution || 'N/A'}, Panel: ${row.panelType || 'N/A'}, Refresh Rate: ${row.refreshRateHz || 'N/A'}Hz`;
+      return `OS: ${safe(row.osName)}, Model: ${safe(row.model)}, CPU: ${safe(row.processorModel)}, RAM: ${totalRam ? `${totalRam}GB` : 'N/A'}, Storage: ${totalStorage ? `${totalStorage}GB` : 'N/A'}`;
     }
-    else if (itemType === 'LAPTOP') {
-      const totalRam = Number(row.memory?.totalCapacityGB) || (row.memory?.modules?.reduce((sum, module) => sum + (Number(module.ramCapacityGB) || 0), 0) || 0);
-      const totalStorage = Number(row.storage?.totalCapacityGB) || (row.storage?.devices?.reduce((sum, device) => sum + (Number(device.driveCapacityGB) || 0), 0) || 0);  
-      return `Model: ${row.model || 'N/A'}, CPU: ${row.processorModel || 'N/A'}, RAM: ${totalRam || 'N/A'}GB, Storage: ${totalStorage || 'N/A'}GB`;
+
+    if (itemType === 'LAPTOP') {
+      return `OS: ${safe(row.osName)}, Model: ${safe(row.model)}, CPU: ${safe(row.processorModel)}, RAM: ${totalRam ? `${totalRam}GB` : 'N/A'}, Storage: ${totalStorage ? `${totalStorage}GB` : 'N/A'}`;
     }
-    
+
+    if (itemType === 'MONITOR') {
+      const size = safe(row.screenSizeInches);
+      const resolution = safe(row.resolution);
+      const panel = safe(row.panelType ?? row.panel_type);
+      const refresh = safe(row.refreshRateHz ?? row.refresh_rate_hz);
+      return `Size: ${size}", Resolution: ${resolution}, Panel: ${panel}, Refresh Rate: ${refresh}Hz`;
+    }
+
     // Default fallback
-    return `Model: ${row.model || 'N/A'}, Serial: ${row.serialNumber || 'N/A'}, Manufacturer: ${row.manufacturer || 'N/A'}`;
+    return `Model: ${safe(row.model)}, Serial: ${safe(row.serialNumber)}, Manufacturer: ${safe(row.manufacturer)}`;
   };
 
   const columns = [

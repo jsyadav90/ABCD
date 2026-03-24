@@ -1,0 +1,162 @@
+{
+  "rawPostmanData": {
+    "instructions": [
+      "Copy the JSON below (from 'readyToSend' section)",
+      "Open Postman → Create New Request",
+      "Set method to POST",
+      "Paste URL: http://localhost:4000/api/v1/assets",
+      "Go to Body tab → Select 'raw' → Set to JSON",
+      "Paste the JSON below",
+      "Go to Headers tab → Add: Authorization: Bearer <your_token>",
+      "Click Send"
+    ],
+    "readyToSend": {
+      "itemType": "laptop",
+      "itemCategory": "fixed",
+      "branch": "REPLACE_WITH_ACTUAL_BRANCH_ID",
+      "itemId": "LAP-DELL-001",
+      "itemTag": "DL-LAP-DEL-2024-001",
+      "serialNumber": "SN123456789",
+      "manufacturer": "Dell",
+      "model": "Latitude 5540",
+      "modelNumber": "5540",
+      "partNumber": "PART-DEL-LAT5540",
+      "itemSubType": "Business Laptop",
+      "ownershipType": "Owned",
+      "manufacturingDate": "2024-01-15",
+      "processorManufacturer": "Intel",
+      "processorModel": "Core i7",
+      "processorGeneration": 13,
+      "processorModelNumber": "i7-1365U",
+      "cores": 10,
+      "threads": 12,
+      "virtualizationEnabled": "Yes",
+      "osName": "Windows",
+      "osEdition": "Pro",
+      "osVersion": "11",
+      "buildNumber": "22621",
+      "osLicenseKey": "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX",
+      "activationStatus": "Activated",
+      "domain": "CORP.LOCAL",
+      "screenSizeInches": 15,
+      "resolution": "1920x1200",
+      "panelType": "IPS",
+      "graphicsType": "Integrated",
+      "graphicsModel": "Intel Iris Xe",
+      "originalCapacitymAh": 6000,
+      "chargerCapacityWatt": 150,
+      "chargerSerial": "CNN123ABC456",
+      "chargerPinType": "USB-C",
+      "fastChargingSupported": "Yes",
+      "tpmVersion": "2.0",
+      "secureBootEnabled": "Yes",
+      "fingerprintScanner": "Yes",
+      "faceRecognition": "Yes",
+      "hardwareUUID": "550e8400-e29b-41d4-a716-446655440000",
+      "lifecycleStatus": "Active",
+      "operationalStatus": "Working",
+      "condition": "Excellent",
+      "remarks": "Recently deployed, in good working condition",
+      "memory": {
+        "ramModules": [
+          {
+            "ramManufacturer": "Corsair",
+            "ramModelNumber": "CMK16GX4M1A2666C16",
+            "ramSerialNumber": "RAM-SN-001",
+            "ramCapacityGB": 16,
+            "ramType": "DDR4",
+            "ramSpeedMHz": 2666,
+            "ramFormFactor": "SODIMM",
+            "ramSlot": "Slot 1",
+            "ramChannel": "Channel 1"
+          },
+          {
+            "ramManufacturer": "Corsair",
+            "ramModelNumber": "CMK16GX4M1A2666C16",
+            "ramSerialNumber": "RAM-SN-002",
+            "ramCapacityGB": 16,
+            "ramType": "DDR4",
+            "ramSpeedMHz": 2666,
+            "ramFormFactor": "SODIMM",
+            "ramSlot": "Slot 2",
+            "ramChannel": "Channel 2"
+          }
+        ]
+      },
+      "storage": {
+        "storageDevices": [
+          {
+            "driveManufacturer": "Samsung",
+            "driveModelNumber": "970 EVO Plus",
+            "driveSerial": "SSD-SN-001",
+            "driveCapacityGB": 512,
+            "driveType": "NVMe SSD",
+            "driveInterfaceSpeed": "3500 MB/s",
+            "raidConfigured": "No",
+            "encryptionEnabled": "Yes"
+          }
+        ]
+      },
+      "itemStatus": "active",
+      "itemIsCurrently": "inStore",
+      "itemUser": "",
+      "AssignDate": null,
+      "purchaseType": "PO",
+      "poNumber": "PO-2024-LAP-001",
+      "poDate": "2024-01-01",
+      "vendorId": "vendor-dell-001",
+      "itemReceivedOn": "invoice",
+      "invoiceNumber": "INV-2024-LAP-001",
+      "invoiceDate": "2024-01-05",
+      "purchaseDate": "2024-01-05",
+      "purchaseCost": 85000,
+      "deliveryDate": "2024-01-15",
+      "receivedBy": "John Smith",
+      "warrantyAvailable": "Yes",
+      "warrantyMode": "Duration",
+      "inYear": 3,
+      "inMonth": 0,
+      "warrantyProvider": "Manufacturer",
+      "supportVendor": "Dell Support",
+      "supportPhone": "+1-800-123-4567",
+      "supportEmail": "support@dell.com"
+    }
+  },
+  "expectedResponse": {
+    "info": "After sending the request, you will receive a 201 response with 3 linked documents",
+    "exampleStructure": {
+      "success": true,
+      "statusCode": 201,
+      "data": {
+        "fixedAsset": {
+          "_id": "507f1f77bcf86cd799439011",
+          "itemType": "laptop",
+          "itemId": "LAP-DELL-001",
+          "manufacturer": "Dell",
+          "model": "Latitude 5540",
+          "processorModel": "Core i7",
+          "memory": {
+            "totalQty": 2,
+            "totalCapacityGB": 32
+          },
+          "storage": {
+            "totalQty": 1,
+            "totalCapacityGB": 512
+          }
+        },
+        "purchase": {
+          "_id": "507f1f77bcf86cd799439012",
+          "assetId": "507f1f77bcf86cd799439011",
+          "poNumber": "PO-2024-LAP-001",
+          "purchaseCost": 85000
+        },
+        "warranty": {
+          "_id": "507f1f77bcf86cd799439013",
+          "assetId": "507f1f77bcf86cd799439011",
+          "warrantyAvailable": "Yes",
+          "inYear": 3
+        }
+      }
+    }
+  }
+}

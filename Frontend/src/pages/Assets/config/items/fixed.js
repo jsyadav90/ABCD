@@ -272,7 +272,7 @@ export const fixedConfigs = {
         // addFields: [{},{},{}],
       }),
       //! Location Information
-      fromGeneric("Location Information",{
+     fromGeneric("Location & Other Information",{
          omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
         //  overrideFields: [{},{},{},],
         //  addFields:[{},{},{},]
