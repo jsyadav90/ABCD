@@ -6,12 +6,13 @@
  * - Tabs se category filter
  * - Table me assets list with actions
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./asset.css";
 import Button from "../../components/Button/Button.jsx";
 import Table from "../../components/Table/Table.jsx";
 import Card from "../../components/Card/Card.jsx";
+import FilterPopup from "../../components/Filter/FilterPopup.jsx";
 import { PageLoader } from "../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../components/ErrorBoundary/ErrorNotification.jsx";
 import { fetchAllAssets } from "../../services/assetApi.js";
@@ -23,13 +24,29 @@ const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 
 const AssetPage = () => {
   const navigate = useNavigate();
-  const [active, setActive] = useState("ALL");
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(getSelectedBranch() || "");
   const [visibleAssets, setVisibleAssets] = useState([]);
   const [branches, setBranches] = useState([]);
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [appliedFilterStatus, setAppliedFilterStatus] = useState("ACTIVE");
+  const [appliedFilterCategory, setAppliedFilterCategory] = useState("ALL");
+  const [appliedFilterType, setAppliedFilterType] = useState("ALL");
+  const [pendingFilterStatus, setPendingFilterStatus] = useState("ACTIVE");
+  const [pendingFilterCategory, setPendingFilterCategory] = useState("ALL");
+  const [pendingFilterType, setPendingFilterType] = useState("ALL");
+  const filterButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (isFilterOpen) {
+      setPendingFilterStatus(appliedFilterStatus);
+      setPendingFilterCategory(appliedFilterCategory);
+      setPendingFilterType(appliedFilterType);
+    }
+  }, [isFilterOpen]);
 
   useEffect(() => {
     const loadAssets = async () => {
@@ -45,7 +62,7 @@ const AssetPage = () => {
         // Debug: log sample monitor rows so we can verify available fields
         try {
           console.debug('Fetched assets sample (first 5 monitors):', uniqueData.filter(a => String(a.itemType || '').toUpperCase() === 'MONITOR').slice(0,5));
-        } catch (e) {
+        } catch {
           console.debug('Fetched assets (first 5):', uniqueData.slice(0,5));
         }
       } catch (err) {
@@ -78,6 +95,7 @@ const AssetPage = () => {
     return off;
   }, []);
 
+
   useEffect(() => {
     if (!selectedBranch || selectedBranch === "__ALL__") {
       setVisibleAssets(assets);
@@ -97,6 +115,43 @@ const AssetPage = () => {
     setVisibleAssets(filtered);
   }, [selectedBranch, assets]);
 
+  const statusOptions = useMemo(() => {
+    return ["ALL", "ACTIVE", "INACTIVE"];
+  }, []);
+
+  const categoryOptions = useMemo(() => {
+    const values = new Set(["FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"]);
+    assets.forEach((a) => {
+      if (a.itemCategory) {
+        const normalized = String(a.itemCategory).trim().toUpperCase();
+        values.add(normalized);
+      }
+    });
+    return ["ALL", ...Array.from(values).sort()];
+  }, [assets]);
+
+  const typeOptions = useMemo(() => {
+    const values = new Set();
+    
+    // Filter assets by pending category first
+    let baseAssets = assets;
+    if (pendingFilterCategory && pendingFilterCategory !== "ALL") {
+      baseAssets = assets.filter((a) => {
+        const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
+        return assetCategory === pendingFilterCategory.trim().toUpperCase();
+      });
+    }
+    
+    // Then get types from filtered assets
+    baseAssets.forEach((a) => {
+      if (a.itemType) {
+        const normalized = String(a.itemType).trim().toUpperCase();
+        values.add(normalized);
+      }
+    });
+    return ["ALL", ...Array.from(values).sort()];
+  }, [assets, pendingFilterCategory]);
+
   const categoryCounts = useMemo(() => {
     const counts = { ALL: visibleAssets.length };
     tabs.slice(1).forEach(cat => {
@@ -108,18 +163,79 @@ const AssetPage = () => {
     return counts;
   }, [visibleAssets]);
 
-  const handleTab = (key) => {
-    setActive(key);
-  };
-
   const goAddItem = () => {
     navigate("/assets/add");
   };
 
-  const filteredAssets = active === "ALL" ? visibleAssets : visibleAssets.filter(a => {
-    const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
-    return assetCategory === active;
-  });
+  const capitalizeText = (str) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const filteredAssets = useMemo(() => {
+    let list = visibleAssets;
+
+    // Filter by Category
+    if (appliedFilterCategory !== "ALL") {
+      list = list.filter((a) => {
+        const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
+        return assetCategory === appliedFilterCategory.trim().toUpperCase();
+      });
+    }
+
+    // Filter by Type
+    if (appliedFilterType !== "ALL") {
+      list = list.filter((a) => {
+        const assetType = String(a.itemType || "").trim().toUpperCase();
+        return assetType === appliedFilterType.trim().toUpperCase();
+      });
+    }
+
+    // Filter by Status (using isActive field)
+    if (appliedFilterStatus !== "ALL") {
+      list = list.filter((a) => {
+        if (appliedFilterStatus === "ACTIVE") {
+          return a.isActive !== false;
+        } else if (appliedFilterStatus === "INACTIVE") {
+          return a.isActive === false;
+        }
+        return true;
+      });
+    }
+
+    return list;
+  }, [visibleAssets, appliedFilterStatus, appliedFilterCategory, appliedFilterType]);
+
+  const filterFields = [
+    {
+      key: 'category',
+      label: 'Category',
+      type: 'select',
+      value: pendingFilterCategory,
+      onChange: (e) => setPendingFilterCategory(e.target.value),
+      options: categoryOptions,
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      type: 'select',
+      value: pendingFilterType,
+      onChange: (e) => setPendingFilterType(e.target.value),
+      options: typeOptions,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      value: pendingFilterStatus,
+      onChange: (e) => setPendingFilterStatus(e.target.value),
+      options: statusOptions,
+    },
+  ];
 
   const getTooltipDetails = (row) => {
     const safe = (value) => (value || value === 0 ? value : "N/A");
@@ -180,17 +296,17 @@ const AssetPage = () => {
   ];
 
   if (loading) return <PageLoader />;
-  if (error) return <ErrorNotification error={error} />;
+  if (error) return <ErrorNotification error={error} onClose={() => setError(null)} />;
 
   return (
     <div className="asset-page">
       <div className="asset">
         <div className="asset-header">
-        <h1>Assets</h1>
-        <Button variant="primary" aria-label="Add Item" onClick={goAddItem}>
-          Add Item
-        </Button>
-      </div>
+          <h1>Assets</h1>
+          <Button variant="primary" aria-label="Add Item" onClick={goAddItem}>
+            Add Item
+          </Button>
+        </div>
 
       {/* Summary Cards */}
       <div className="asset-summary">
@@ -198,6 +314,8 @@ const AssetPage = () => {
           <Card
             key={cat}
             title={cat === "ALL" ? "Total Assets" : cat.charAt(0) + cat.slice(1).toLowerCase()}
+            subtitle=""
+            footer=""
             className="summary-card"
           >
             <div className="count">{categoryCounts[cat] || 0}</div>
@@ -205,18 +323,28 @@ const AssetPage = () => {
         ))}
       </div>
 
-      <div className="asset-tabs" role="tablist" aria-label="Asset Categories">
-        {tabs.map((t) => (
-          <button
-            key={t}
-            role="tab"
-            aria-selected={active === t}
-            className={`tab-btn ${active === t ? "active" : ""}`}
-            onClick={() => handleTab(t)}
-          >
-            {t === "ALL" ? "All" : t.charAt(0) + t.slice(1).toLowerCase()}
-          </button>
-        ))}
+      <div className="asset-tabs" role="region" aria-label="Asset Filters">
+        <Button ref={filterButtonRef} variant="secondary" size="small" onClick={() => setIsFilterOpen((v) => !v)}>
+          Filters
+        </Button>
+
+        <FilterPopup
+          isOpen={isFilterOpen}
+          anchorRef={filterButtonRef}
+          fields={filterFields}
+          onClose={() => setIsFilterOpen(false)}
+          onReset={() => {
+            setPendingFilterStatus(appliedFilterStatus);
+            setPendingFilterCategory(appliedFilterCategory);
+            setPendingFilterType(appliedFilterType);
+          }}
+          onApply={() => {
+            setAppliedFilterStatus(pendingFilterStatus);
+            setAppliedFilterCategory(pendingFilterCategory);
+            setAppliedFilterType(pendingFilterType);
+            setIsFilterOpen(false);
+          }}
+        />
       </div>
 
       <div className="asset-content">
@@ -224,7 +352,7 @@ const AssetPage = () => {
           <div className="empty-state">
             <div className="empty-icon">📦</div>
             <div className="empty-text">
-              {active === "ALL" ? "No items. Click Add Item to create one." : `No ${active.toLowerCase()} items here.`}
+              {appliedFilterCategory === "ALL" ? "No items. Click Add Item to create one." : `No ${capitalizeText(appliedFilterCategory)} items here.`}
             </div>
           </div>
         ) : (
@@ -234,6 +362,9 @@ const AssetPage = () => {
             showSearch={true}
             showPagination={true}
             pageSize={20}
+            onSelectionChange={() => {}}
+            isRowSelectable={() => true}
+            rowClassName=""
           />
         )}
       </div>

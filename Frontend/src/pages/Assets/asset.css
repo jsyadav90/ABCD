@@ -22,10 +22,54 @@
   background: #fff;
   z-index: 40;
 }
+.asset-tabs {
+  position: relative;
+  z-index: 45;
+}
 .asset-header h1 {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
+}
+.asset-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+.filter-popup {
+  width: 270px;
+  background: #1f2937;
+  color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.2);
+  padding: 12px;
+  min-width: 300px;
+}
+.filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.filter-row label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.filter-row select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  color: #0f172a;
+}
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .btn {
   appearance: none;
