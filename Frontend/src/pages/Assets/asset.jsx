@@ -152,16 +152,20 @@ const AssetPage = () => {
     return ["ALL", ...Array.from(values).sort()];
   }, [assets, pendingFilterCategory]);
 
+  const activeVisibleAssets = useMemo(() => {
+    return visibleAssets.filter((a) => a.isActive !== false);
+  }, [visibleAssets]);
+
   const categoryCounts = useMemo(() => {
-    const counts = { ALL: visibleAssets.length };
+    const counts = { ALL: activeVisibleAssets.length };
     tabs.slice(1).forEach(cat => {
-      counts[cat] = visibleAssets.filter(a => {
+      counts[cat] = activeVisibleAssets.filter(a => {
         const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
         return assetCategory === cat;
       }).length;
     });
     return counts;
-  }, [visibleAssets]);
+  }, [activeVisibleAssets]);
 
   const goAddItem = () => {
     navigate("/assets/add");
@@ -179,6 +183,18 @@ const AssetPage = () => {
   const filteredAssets = useMemo(() => {
     let list = visibleAssets;
 
+    // Filter by Status FIRST (using isActive field)
+    if (appliedFilterStatus === "ALL") {
+      // Show both active and inactive
+      list = list; // No filter
+    } else if (appliedFilterStatus === "ACTIVE") {
+      // Show only active - check for true, and treat undefined as active
+      list = list.filter((a) => a.isActive !== false);
+    } else if (appliedFilterStatus === "INACTIVE") {
+      // Show only inactive - must be explicitly false
+      list = list.filter((a) => a.isActive === false);
+    }
+
     // Filter by Category
     if (appliedFilterCategory !== "ALL") {
       list = list.filter((a) => {
@@ -192,18 +208,6 @@ const AssetPage = () => {
       list = list.filter((a) => {
         const assetType = String(a.itemType || "").trim().toUpperCase();
         return assetType === appliedFilterType.trim().toUpperCase();
-      });
-    }
-
-    // Filter by Status (using isActive field)
-    if (appliedFilterStatus !== "ALL") {
-      list = list.filter((a) => {
-        if (appliedFilterStatus === "ACTIVE") {
-          return a.isActive !== false;
-        } else if (appliedFilterStatus === "INACTIVE") {
-          return a.isActive === false;
-        }
-        return true;
       });
     }
 
@@ -334,11 +338,13 @@ const AssetPage = () => {
           fields={filterFields}
           onClose={() => setIsFilterOpen(false)}
           onReset={() => {
+            // Reset pending filters to currently applied filters
             setPendingFilterStatus(appliedFilterStatus);
             setPendingFilterCategory(appliedFilterCategory);
             setPendingFilterType(appliedFilterType);
           }}
           onApply={() => {
+            // Apply pending filters and close popup
             setAppliedFilterStatus(pendingFilterStatus);
             setAppliedFilterCategory(pendingFilterCategory);
             setAppliedFilterType(pendingFilterType);

@@ -61,30 +61,44 @@ const Table = ({
   const processedData = useMemo(() => {
     let tempData = [...data];
 
-    if (showSearch && search) {
-      tempData = tempData.filter((row) => {
-        const searchLower = search.toLowerCase();
-        
-        // Search in raw data
-        const rawDataMatch = Object.values(row)
-          .join(" ")
-          .toLowerCase()
-          .includes(searchLower);
+    if (showSearch && search && search.trim()) {
+      const searchLower = search.toLowerCase().trim();
 
-        // Also search in tooltip if column has tooltip property
-        const tooltipMatch = columns.some(col => {
-          if (col.tooltip && typeof col.tooltip === 'function') {
+      tempData = tempData.filter((row) => {
+        // Search in visible columns only
+        const columnMatch = columns.some(col => {
+          const fieldKey = col.key ?? col.accessor;
+          if (!fieldKey) return false;
+
+          // Check raw field value
+          const fieldValue = row[fieldKey];
+          const fieldText = String(fieldValue || "").toLowerCase();
+          if (fieldText.includes(searchLower)) return true;
+
+          // Also check rendered value if render function exists and doesn't return JSX
+          if (col.render) {
             try {
-              const tooltipText = String(col.tooltip(row) || "").toLowerCase();
-              return tooltipText.includes(searchLower);
+              const renderedValue = col.render(row);
+              // Skip if it's a React element or object
+              if (renderedValue && typeof renderedValue === 'object' && renderedValue.$$typeof) {
+                // It's a React element, skip
+              } else {
+                const renderedText = String(renderedValue || "").toLowerCase();
+                if (renderedText.includes(searchLower)) return true;
+              }
             } catch (e) {
-              return false;
+              // Ignore render errors
             }
           }
+
           return false;
         });
 
-        return rawDataMatch || tooltipMatch;
+        if (columnMatch) return true;
+
+        // Do not use tooltip text for search matching to avoid false positives
+        // (e.g. tooltip label includes 'CPU' for non-CPU rows)
+        return false;
       });
     }
 
@@ -113,13 +127,18 @@ const Table = ({
     onSelectionChange?.(selectedRows);
   }, [selectedRows, onSelectionChange]);
 
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
   const highlightText = (text, searchValue) => {
     if (!searchValue) return text;
-    const regex = new RegExp(`(${searchValue})`, "gi");
+    const normalizedSearch = searchValue.trim();
+    if (!normalizedSearch) return text;
+
+    const regex = new RegExp(`(${escapeRegExp(normalizedSearch)})`, "gi");
     return String(text)
       .split(regex)
       .map((part, index) =>
-        part.toLowerCase() === searchValue.toLowerCase() ? (
+        part.toLowerCase() === normalizedSearch.toLowerCase() ? (
           <span key={index} className="highlight">
             {part}
           </span>

@@ -20,9 +20,19 @@ export const toNumberOrNull = (val) => {
 export const buildAssetListFilter = (req) => {
   const q = req?.query || {};
   const filter = { isDeleted: false };
-  // Default to showing only active assets unless caller explicitly requests otherwise
-  if (q.isActive !== undefined) filter.isActive = String(q.isActive) === "true";
-  else filter.isActive = true;
+
+  // Handle fetchAll parameter - if true, don't filter by isActive
+  if (q.fetchAll !== "true") {
+    // Only filter by isActive if explicitly requested by frontend and fetchAll is not true
+    if (q.isActive !== undefined) {
+      filter.isActive = String(q.isActive) === "true";
+    } else {
+      // Default to active only if fetchAll is not specified
+      filter.isActive = true;
+    }
+  }
+  // If fetchAll=true, don't add isActive filter at all
+
   if (q.branchId) filter.branchId = q.branchId;
   if (q.itemCategory) filter.itemCategory = norm(q.itemCategory).toLowerCase();
   if (q.itemType) filter.itemType = norm(q.itemType).toLowerCase();

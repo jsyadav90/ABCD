@@ -21,7 +21,8 @@ export const fetchAssetsCount = async (branchId = "__ALL__") => {
 
 export const fetchAllAssets = async (limit = 1000) => {
   try {
-    const response = await API.get(`/assets?limit=${limit}`)
+    // Fetch all assets (both active and inactive) to allow frontend filtering
+    const response = await API.get(`/assets?limit=${limit}&fetchAll=true`)
     return response.data?.data?.items || []
   } catch (error) {
     console.error('Failed to fetch assets:', error)
