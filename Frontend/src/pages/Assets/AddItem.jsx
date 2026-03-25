@@ -25,12 +25,6 @@ import Select from "../../components/Select/Select.jsx";
 // @ts-ignore
 import { calculateWarrantyTillDate, calculateWarrantyStatus } from "./utils/warrantyCalculations.js";
 
-const CATEGORIES = [
-  { value: "fixed", label: "Fixed" },
-  { value: "peripheral", label: "Peripheral" },
-  { value: "consumable", label: "Consumable" },
-  { value: "intangible", label: "Intangible" },
-];
 const AddItemPage = () => {
   const navigate = useNavigate();
   const { type } = useParams();
@@ -61,6 +55,8 @@ const AddItemPage = () => {
   };
   const itemType = resolveType(type);
   const [category, setCategory] = useState("");
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [itemTypeOptions, setItemTypeOptions] = useState([]);
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -121,6 +117,56 @@ const AddItemPage = () => {
     };
     initBranch();
   }, []);
+
+  // Load asset categories
+  useEffect(() => {
+    let cancelled = false;
+    const loadCategories = async () => {
+      try {
+        const res = await authAPI.get("/assetcategories/active/list");
+        const items = res.data?.data?.items || [];
+        const opts = items.map((c) => ({
+          value: c._id,
+          label: c.name,
+        }));
+        if (!cancelled) setCategoryOptions(opts);
+      } catch (err) {
+        console.error("Failed to load categories:", err?.response?.data?.message || err?.message || err);
+        if (!cancelled) setCategoryOptions([]);
+      }
+    };
+    loadCategories();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Load item types when category changes
+  useEffect(() => {
+    let cancelled = false;
+    const loadItemTypes = async () => {
+      if (!category) {
+        if (!cancelled) setItemTypeOptions([]);
+        return;
+      }
+      try {
+        const res = await authAPI.get(`/itemtypes/category/${category}`);
+        const items = res.data?.data?.items || [];
+        const opts = items.map((i) => ({
+          value: i.name,
+          label: i.name,
+        }));
+        if (!cancelled) setItemTypeOptions(opts);
+      } catch (err) {
+        console.error("Failed to load item types:", err?.response?.data?.message || err?.message || err);
+        if (!cancelled) setItemTypeOptions([]);
+      }
+    };
+    loadItemTypes();
+    return () => {
+      cancelled = true;
+    };
+  }, [category]);
 
   useEffect(() => {
     let cancelled = false;
@@ -655,7 +701,7 @@ const AddItemPage = () => {
     navigate("/assets/add");
   };
 
-  const itemsForCategory = category ? CATEGORY_ITEMS[category] || [] : [];
+  const itemsForCategory = itemTypeOptions;
   const itemTitle = (() => {
     if (!itemType) return "Add Item";
     const categories = Object.values(CATEGORY_ITEMS || {});
@@ -685,7 +731,7 @@ const AddItemPage = () => {
                   name="category"
                   value={category}
                   onChange={onCategoryChange}
-                  options={CATEGORIES}
+                  options={categoryOptions}
                   placeholder="Select Category"
                 />
               </div>

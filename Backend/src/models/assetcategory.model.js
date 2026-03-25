@@ -49,7 +49,4 @@ const assetCategorySchema = new mongoose.Schema(
   }
 );
 
-// Ensure code index with sparse option
-assetCategorySchema.index({ code: 1 }, { unique: true, sparse: true });
-
 export const AssetCategory = mongoose.model("AssetCategory", assetCategorySchema);

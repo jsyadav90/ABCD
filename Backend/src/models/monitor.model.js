@@ -6,7 +6,11 @@ import mongoose from "mongoose";
 
 const monitorSchema = new mongoose.Schema(
   {
-    itemCategory: { type: String, required: true, trim: true },
+    itemCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AssetCategory",
+      required: true
+    },
     itemType: { type: String, required: true, trim: true },
 
     itemId: { type: String, trim: true },

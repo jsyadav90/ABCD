@@ -12,7 +12,7 @@ import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit 
 const create = async (req) => {
   const body = req.body || {};
   const itemType = norm(body.itemType).toLowerCase();
-  const itemCategory = norm(body.itemCategory || body.assetCategory || body.category).toLowerCase();
+  const itemCategory = body.itemCategory; // Now it's ObjectId, no need to normalize to string
   
   // Extract tables from payload prepared by AddItem.jsx
   const memoryModules = body.memory?.ramModules || [];

@@ -6,7 +6,11 @@ import mongoose from "mongoose";
 
 const laptopSchema = new mongoose.Schema(
   {
-    itemCategory: { type: String, required: true, trim: true },
+    itemCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AssetCategory",
+      required: true
+    },
     itemType: { type: String, required: true, trim: true },
 
     // Basic Information

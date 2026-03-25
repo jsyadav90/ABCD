@@ -13,6 +13,8 @@ import { Monitor } from "../models/monitor.model.js";
 import { handlers } from "../assets/handlers/index.js";
 import { Purchase } from "../models/purchase.model.js";
 import { Warranty } from "../models/warranty.model.js";
+import { AssetCategory } from "../models/assetcategory.model.js";
+import { ItemType } from "../models/itemtype.model.js";
 
 const normKey = (val) => String(val || "").trim().toLowerCase();
 
@@ -29,6 +31,36 @@ export const createAsset = asyncHandler(async (req, res) => {
   if (!itemCategory || !String(itemCategory).trim()) {
     throw new apiError(400, "itemCategory is required");
   }
+
+  // Validate itemCategory exists
+  const category = await AssetCategory.findOne({
+    _id: itemCategory,
+    isDeleted: false,
+    isActive: true,
+  });
+
+  if (!category) {
+    throw new apiError(400, "Invalid itemCategory - category not found or inactive");
+  }
+
+  // Create or update ItemType
+  await ItemType.findOneAndUpdate(
+    {
+      name: { $regex: `^${itemType.trim()}$`, $options: "i" },
+      category: itemCategory,
+      isDeleted: false,
+    },
+    {
+      name: itemType.trim(),
+      category: itemCategory,
+      isActive: true,
+    },
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    }
+  );
 
   const handler = getHandler(itemType);
   const { doc, message } = await handler.create(req);

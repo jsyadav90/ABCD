@@ -11,7 +11,7 @@ import { norm, toNumberOrNull, buildAssetListFilter, extractBranchIdFromBody, en
 const create = async (req) => {
   const body = req.body || {};
   const itemType = norm(body.itemType).toLowerCase();
-  const itemCategory = norm(body.itemCategory || body.assetCategory || body.category).toLowerCase();
+  const itemCategory = body.itemCategory; // Now it's ObjectId, no need to normalize to string
 
   const branchId = extractBranchIdFromBody(body);
 

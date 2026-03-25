@@ -63,7 +63,7 @@ export const upsertPurchaseByAsset = asyncHandler(async (req, res) => {
     assetId,
     organizationId: orgId,
     branchId: base.branchId || base.branch || null,
-    itemCategory: base.itemCategory ? lc(base.itemCategory) : undefined,
+    itemCategory: base.itemCategory || undefined,
     itemType: base.itemType ? lc(base.itemType) : undefined,
     updatedBy: req.user?._id || req.user?.id,
   };

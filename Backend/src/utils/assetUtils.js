@@ -34,7 +34,7 @@ export const buildAssetListFilter = (req) => {
   // If fetchAll=true, don't add isActive filter at all
 
   if (q.branchId) filter.branchId = q.branchId;
-  if (q.itemCategory) filter.itemCategory = norm(q.itemCategory).toLowerCase();
+  if (q.itemCategory) filter.itemCategory = q.itemCategory; // Now it's ObjectId, no need to normalize
   if (q.itemType) filter.itemType = norm(q.itemType).toLowerCase();
   if (req?.user?.organizationId) filter.organizationId = req.user.organizationId;
   return filter;

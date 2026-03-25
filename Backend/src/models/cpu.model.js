@@ -7,7 +7,11 @@ import mongoose from "mongoose";
 const assetSchema = new mongoose.Schema(
   {
     // Mandatory first fields
-    itemCategory: { type: String, required: true, trim: true },
+    itemCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AssetCategory",
+      required: true
+    },
     itemType: { type: String, required: true, trim: true },
 
     // Basic Information (matching frontend fields after omit)
