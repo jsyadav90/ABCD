@@ -20,40 +20,40 @@ const assetSchema = new mongoose.Schema(
     },
 
     // Basic Information (matching frontend fields after omit)
-    itemId: { type: String, trim: true },
-    itemTag: { type: String, trim: true },
-    barcode: { type: String, trim: true },
-    itemSubType: { type: String, trim: true },
-    manufacturer: { type: String, trim: true },
-    model: { type: String, trim: true },
-    modelNumber: { type: String, trim: true },
-    partNumber: { type: String, trim: true },
-    serialNumber: { type: String, trim: true },
-    ownershipType: { type: String, trim: true },
+    itemId: { type: String, trim: true, default: null },
+    itemTag: { type: String, trim: true, default: null },
+    barcode: { type: String, trim: true, default: null },
+    itemSubType: { type: String, trim: true, default: null },
+    manufacturer: { type: String, trim: true, default: null },
+    model: { type: String, trim: true, default: null },
+    modelNumber: { type: String, trim: true, default: null },
+    partNumber: { type: String, trim: true, default: null },
+    serialNumber: { type: String, trim: true, default: null },
+    ownershipType: { type: String, trim: true, default: null },
     manufacturingDate: { type: Date, default: null }, 
 
     // Operating System
-    osName: { type: String, trim: true },
-    osEdition: { type: String, trim: true },
-    osVersion: { type: String, trim: true },
-    buildNumber: { type: String, trim: true },
-    osLicenseKey: { type: String, trim: true },
-    activationStatus: { type: String, trim: true },
-    domain: { type: String, trim: true },
+    osName: { type: String, trim: true, default: null },
+    osEdition: { type: String, trim: true, default: null },
+    osVersion: { type: String, trim: true, default: null },
+    buildNumber: { type: String, trim: true, default: null },
+    osLicenseKey: { type: String, trim: true, default: null },
+    activationStatus: { type: String, trim: true, default: null },
+    domain: { type: String, trim: true, default: null },
 
     // Memory (Table in frontend - Multiple RAM sticks)
     memory: {
       modules: [
         {
-          ramManufacturer: { type: String, trim: true },
-          ramModelNumber: { type: String, trim: true },
-          ramSerialNumber: { type: String, trim: true },
+          ramManufacturer: { type: String, trim: true, default: null },
+          ramModelNumber: { type: String, trim: true, default: null },
+          ramSerialNumber: { type: String, trim: true, default: null },
           ramCapacityGB: { type: Number, default: null },
-          ramType: { type: String, trim: true },
+          ramType: { type: String, trim: true, default: null },
           ramSpeedMHz: { type: Number, default: null },
-          ramFormFactor: { type: String, trim: true },
-          ramSlot: { type: String, trim: true },
-          ramChannel: { type: String, trim: true },
+          ramFormFactor: { type: String, trim: true, default: null },
+          ramSlot: { type: String, trim: true, default: null },
+          ramChannel: { type: String, trim: true, default: null },
         },
       ],
       totalQty: { type: Number, default: 0 },
@@ -61,26 +61,26 @@ const assetSchema = new mongoose.Schema(
     },
 
     // Processor
-    processorManufacturer: { type: String, trim: true },
-    processorModel: { type: String, trim: true },
+    processorManufacturer: { type: String, trim: true, default: null },
+    processorModel: { type: String, trim: true, default: null },
     processorGeneration: { type: Number, default: null },
-    processorModelNumber: { type: String, trim: true },
+    processorModelNumber: { type: String, trim: true, default: null },
     cores: { type: Number, default: null },
     threads: { type: Number, default: null },
-    virtualizationEnabled: { type: String, trim: true },
+    virtualizationEnabled: { type: String, trim: true, default: null },
 
     // Storage (Table in frontend - Multiple Drives)
     storage: {
       devices: [
         {
-          driveManufacturer: { type: String, trim: true },
-          driveModelNumber: { type: String, trim: true },
-          driveSerial: { type: String, trim: true },
+          driveManufacturer: { type: String, trim: true, default: null },
+          driveModelNumber: { type: String, trim: true, default: null },
+          driveSerial: { type: String, trim: true, default: null },
           driveCapacityGB: { type: Number, default: null },
-          driveType: { type: String, trim: true },
-          driveInterfaceSpeed: { type: String, trim: true },
-          raidConfigured: { type: String, trim: true },
-          encryptionEnabled: { type: String, trim: true },
+          driveType: { type: String, trim: true, default: null },
+          driveInterfaceSpeed: { type: String, trim: true, default: null },
+          raidConfigured: { type: String, trim: true, default: null },
+          encryptionEnabled: { type: String, trim: true, default: null },
         },
       ],
       totalQty: { type: Number, default: 0 },
@@ -95,53 +95,53 @@ const assetSchema = new mongoose.Schema(
     },
 
     // BIOS & Hardware
-    biosVersion: { type: String, trim: true },
+    biosVersion: { type: String, trim: true, default: null },
     biosDate: { type: Date, default: null },
-    motherboardSerial: { type: String, trim: true },
-    hardwareUUID: { type: String, trim: true },
-    tpmVersion: { type: String, trim: true },
-    secureBootEnabled: { type: String, trim: true },
+    motherboardSerial: { type: String, trim: true, default: null },
+    hardwareUUID: { type: String, trim: true, default: null },
+    tpmVersion: { type: String, trim: true, default: null },
+    secureBootEnabled: { type: String, trim: true, default: null },
 
     // Graphics Card
-    gpuManufacturer: { type: String, trim: true },
-    gpuModelNumber: { type: String, trim: true },
-    gpuSerialNumber: { type: String, trim: true },
+    gpuManufacturer: { type: String, trim: true, default: null },
+    gpuModelNumber: { type: String, trim: true, default: null },
+    gpuSerialNumber: { type: String, trim: true, default: null },
     gpuCapacityGB: { type: Number, default: null },
-    gpuType: { type: String, trim: true },
-    gpuInterfaceSpeed: { type: String, trim: true },
+    gpuType: { type: String, trim: true, default: null },
+    gpuInterfaceSpeed: { type: String, trim: true, default: null },
 
     // Item State
     itemStatus: { type: String, trim: true, default: "active" },
     itemIsCurrently: { type: String, trim: true, default: "inStore" },
-    itemUser: { type: String, trim: true },
+    itemUser: { type: String, trim: true, default: null },
     AssignDate: { type: Date, default: null },
 
     // Network (Table in frontend)
     network: {
       interfaces: [
         {
-          hostname: { type: String, trim: true },
-          nicType: { type: String, trim: true },
-          ipv4Address: { type: String, trim: true },
-          ipv6Address: { type: String, trim: true },
-          macAddress: { type: String, trim: true },
-          subnet: { type: String, trim: true },
-          defaultGateway: { type: String, trim: true },
-          dhcpEnabled: { type: String, trim: true },
-          dhcpServer: { type: String, trim: true },
-          dnsHostname: { type: String, trim: true },
-          ethernetPort: { type: String, trim: true },
-          switchPort: { type: String, trim: true },
+          hostname: { type: String, trim: true, default: null },
+          nicType: { type: String, trim: true, default: null },
+          ipv4Address: { type: String, trim: true, default: null },
+          ipv6Address: { type: String, trim: true, default: null },
+          macAddress: { type: String, trim: true, default: null },
+          subnet: { type: String, trim: true, default: null },
+          defaultGateway: { type: String, trim: true, default: null },
+          dhcpEnabled: { type: String, trim: true, default: null },
+          dhcpServer: { type: String, trim: true, default: null },
+          dnsHostname: { type: String, trim: true, default: null },
+          ethernetPort: { type: String, trim: true, default: null },
+          switchPort: { type: String, trim: true, default: null },
           linkSpeedMbps: { type: Number, default: null },
-          wifiSSID: { type: String, trim: true },
-          wifiSecurity: { type: String, trim: true },
-          wifiBand: { type: String, trim: true },
+          wifiSSID: { type: String, trim: true, default: null },
+          wifiSecurity: { type: String, trim: true, default: null },
+          wifiBand: { type: String, trim: true, default: null },
         },
       ],
       totalQty: { type: Number, default: 0 },
       typeBreakdown: [
         {
-          nicType: { type: String, trim: true },
+          nicType: { type: String, trim: true, default: null },
           qty: { type: Number, default: 0 }
         }
       ]
@@ -159,11 +159,11 @@ const assetSchema = new mongoose.Schema(
 
     // Summary field for quick listing (Industrial standard to avoid deep object lookup)
     summary: {
-      itemName: { type: String, trim: true },
-      itemTag: { type: String, trim: true },
-      serialNumber: { type: String, trim: true },
-      manufacturer: { type: String, trim: true },
-      model: { type: String, trim: true },
+      itemName: { type: String, trim: true, default: null },
+      itemTag: { type: String, trim: true, default: null },
+      serialNumber: { type: String, trim: true, default: null },
+      manufacturer: { type: String, trim: true, default: null },
+      model: { type: String, trim: true, default: null },
     }
   },
   { timestamps: true, collection: "asset_fixed" }

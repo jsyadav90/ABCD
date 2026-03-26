@@ -59,3 +59,38 @@ export const createAsset = async (assetData) => {
     throw new Error(error.response?.data?.message || 'Failed to create asset')
   }
 }
+
+export const fetchLookupsByCategory = async (category) => {
+  try {
+    if (!category) return [];
+    const safeCat = String(category).trim().toLowerCase();
+    const fallbackCategoryMap = {
+      ram_type: 'ram',
+      storage_type: 'storage',
+      gpu_type: 'gpu',
+    };
+
+    const categoriesToTry = [safeCat];
+    if (fallbackCategoryMap[safeCat]) {
+      categoriesToTry.push(fallbackCategoryMap[safeCat]);
+    }
+
+    let items = [];
+    for (const cat of categoriesToTry) {
+      try {
+        const response = await API.get('/lookups/category', { params: { category: cat } });
+        items = response.data?.data?.items || [];
+        if (items.length > 0) {
+          break;
+        }
+      } catch (err) {
+        console.error(`Lookup fetch attempt failed for category ${cat}:`, err);
+      }
+    }
+
+    return items;
+  } catch (error) {
+    console.error(`Failed to fetch lookups for category ${category}:`, error);
+    return [];
+  }
+}

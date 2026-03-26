@@ -6,7 +6,7 @@
  * - Tabs se category filter
  * - Table me assets list with actions
  */
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./asset.css";
 import Button from "../../components/Button/Button.jsx";
@@ -15,7 +15,7 @@ import Card from "../../components/Card/Card.jsx";
 import FilterPopup from "../../components/Filter/FilterPopup.jsx";
 import { PageLoader } from "../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../components/ErrorBoundary/ErrorNotification.jsx";
-import { fetchAllAssets } from "../../services/assetApi.js";
+import { fetchAllAssets, fetchAssetCategories } from "../../services/assetApi.js";
 import { fetchAllBranches } from "../../services/branchApi.js";
 import { getBranchName } from "../../utils/branchUtils.js";
 import { getSelectedBranch, onBranchChange } from "../../utils/scope";
@@ -25,6 +25,7 @@ const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 const AssetPage = () => {
   const navigate = useNavigate();
   const [assets, setAssets] = useState([]);
+  const [assetCategories, setAssetCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(getSelectedBranch() || "");
@@ -89,6 +90,18 @@ const AssetPage = () => {
   }, []);
 
   useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchAssetCategories();
+        setAssetCategories(data);
+      } catch (err) {
+        console.error("Failed to fetch asset categories", err);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
     const off = onBranchChange((branchId) => {
       setSelectedBranch(branchId || "");
     });
@@ -119,16 +132,51 @@ const AssetPage = () => {
     return ["ALL", "ACTIVE", "INACTIVE"];
   }, []);
 
-  const categoryOptions = useMemo(() => {
-    const values = new Set(["FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"]);
-    assets.forEach((a) => {
-      if (a.itemCategory) {
-        const normalized = String(a.itemCategory).trim().toUpperCase();
-        values.add(normalized);
+  const categoryMap = useMemo(() => {
+    const map = new Map();
+    assetCategories.forEach((cat) => {
+      if (cat?._id) {
+        map.set(String(cat._id), cat.name || cat.code || String(cat._id));
       }
     });
-    return ["ALL", ...Array.from(values).sort()];
-  }, [assets]);
+    return map;
+  }, [assetCategories]);
+
+  const getCategoryName = useCallback((itemCategory) => {
+    if (!itemCategory) return "";
+
+    if (typeof itemCategory === "object") {
+      if (itemCategory.name) return itemCategory.name;
+      if (itemCategory._id) {
+        const mapped = categoryMap.get(String(itemCategory._id));
+        if (mapped) return mapped;
+        return itemCategory.name || itemCategory.value || String(itemCategory._id);
+      }
+      if (itemCategory.value) return itemCategory.value;
+      return String(itemCategory);
+    }
+
+    if (typeof itemCategory === "string") {
+      const mapped = categoryMap.get(itemCategory);
+      if (mapped) return mapped;
+      return itemCategory;
+    }
+
+    return String(itemCategory);
+  }, [categoryMap]);
+
+  const categoryOptions = useMemo(() => {
+    // Build ONLY from assetCategories fetched from backend
+    const values = new Set(["ALL"]);
+
+    assetCategories.forEach((cat) => {
+      if (cat?.name) {
+        values.add(String(cat.name).trim().toUpperCase());
+      }
+    });
+
+    return ["ALL", ...Array.from(values).filter((v) => v !== "ALL").sort()];
+  }, [assetCategories]);
 
   const typeOptions = useMemo(() => {
     const values = new Set();
@@ -137,7 +185,7 @@ const AssetPage = () => {
     let baseAssets = assets;
     if (pendingFilterCategory && pendingFilterCategory !== "ALL") {
       baseAssets = assets.filter((a) => {
-        const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
+        const assetCategory = String(getCategoryName(a.itemCategory) || "").trim().toUpperCase();
         return assetCategory === pendingFilterCategory.trim().toUpperCase();
       });
     }
@@ -158,14 +206,18 @@ const AssetPage = () => {
 
   const categoryCounts = useMemo(() => {
     const counts = { ALL: activeVisibleAssets.length };
-    tabs.slice(1).forEach(cat => {
-      counts[cat] = activeVisibleAssets.filter(a => {
-        const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
-        return assetCategory === cat;
+    
+    // Build counts dynamically from assetCategories
+    assetCategories.forEach((cat) => {
+      const categoryName = String(cat.name || "").trim().toUpperCase();
+      counts[categoryName] = activeVisibleAssets.filter(a => {
+        const assetCategory = String(getCategoryName(a.itemCategory) || "").trim().toUpperCase();
+        return assetCategory === categoryName;
       }).length;
     });
+    
     return counts;
-  }, [activeVisibleAssets]);
+  }, [activeVisibleAssets, assetCategories, getCategoryName]);
 
   const goAddItem = () => {
     navigate("/assets/add");
@@ -198,7 +250,7 @@ const AssetPage = () => {
     // Filter by Category
     if (appliedFilterCategory !== "ALL") {
       list = list.filter((a) => {
-        const assetCategory = String(a.itemCategory || "").trim().toUpperCase();
+        const assetCategory = String(getCategoryName(a.itemCategory) || "").trim().toUpperCase();
         return assetCategory === appliedFilterCategory.trim().toUpperCase();
       });
     }
@@ -276,7 +328,12 @@ const AssetPage = () => {
       tooltip: (row) => getTooltipDetails(row)
     },
     { header: "Type", key: "itemType", sortable: true },
-    { header: "Category", key: "itemCategory", sortable: true },
+    {
+      header: "Category",
+      key: "itemCategory",
+      sortable: true,
+      render: (row) => getCategoryName(row.itemCategory),
+    },
     { 
       header: "Branch", 
       key: "branchId", 
@@ -305,6 +362,11 @@ const AssetPage = () => {
   return (
     <div className="asset-page">
       <div className="asset">
+      {/* <div className="asset-breadcrumbs" aria-label="Breadcrumb">
+        <span className="breadcrumb-item">Home</span>
+        <span className="breadcrumb-separator">/</span>
+        <span className="breadcrumb-item active" aria-current="page">Assets</span>
+      </div> */}
         <div className="asset-header">
           <h1>Assets</h1>
           <Button variant="primary" aria-label="Add Item" onClick={goAddItem}>
@@ -314,17 +376,33 @@ const AssetPage = () => {
 
       {/* Summary Cards */}
       <div className="asset-summary">
-        {tabs.map((cat) => (
-          <Card
-            key={cat}
-            title={cat === "ALL" ? "Total Assets" : cat.charAt(0) + cat.slice(1).toLowerCase()}
-            subtitle=""
-            footer=""
-            className="summary-card"
-          >
-            <div className="count">{categoryCounts[cat] || 0}</div>
-          </Card>
-        ))}
+        {/* ALL Card */}
+        <Card
+          key="ALL"
+          title="Total Assets"
+          subtitle=""
+          footer=""
+          className="summary-card"
+        >
+          <div className="count">{categoryCounts["ALL"] || 0}</div>
+        </Card>
+        
+        {/* Dynamic Category Cards from assetCategories */}
+        {assetCategories.map((cat) => {
+          const categoryName = String(cat.name || "").trim().toUpperCase();
+          const displayName = cat.name || cat.code || "Unknown";
+          return (
+            <Card
+              key={cat._id}
+              title={displayName}
+              subtitle=""
+              footer=""
+              className="summary-card"
+            >
+              <div className="count">{categoryCounts[categoryName] || 0}</div>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="asset-tabs" role="region" aria-label="Asset Filters">

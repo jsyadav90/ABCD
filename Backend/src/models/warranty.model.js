@@ -3,29 +3,29 @@ import mongoose from "mongoose";
 const warrantySchema = new mongoose.Schema(
   {
     assetId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
-    itemCategory: { type: String, trim: true },
-    itemType: { type: String, trim: true },
+    itemCategory: { type: String, trim: true, default: null },
+    itemType: { type: String, trim: true, default: null },
 
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", default: null, index: true },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", default: null, index: true },
 
     warrantyAvailable: { type: String, trim: true, default: "No" },
-    warrantyMode: { type: String, trim: true },
+    warrantyMode: { type: String, trim: true, default: null },
     inYear: { type: Number, default: null },
     inMonth: { type: Number, default: null },
     warrantyStartDate: { type: Date, default: null },
     warrantyEndDate: { type: Date, default: null },
-    warrantyProvider: { type: String, trim: true },
-    supportVendor: { type: String, trim: true },
-    supportPhone: { type: String, trim: true },
-    supportEmail: { type: String, trim: true },
+    warrantyProvider: { type: String, trim: true, default: null },
+    supportVendor: { type: String, trim: true, default: null },
+    supportPhone: { type: String, trim: true, default: null },
+    supportEmail: { type: String, trim: true, default: null },
 
     // Calculated warranty till date and status
     warrantyTillDate: { type: Date, default: null },
     warrantyStatus: { type: String, enum: ["Under Warranty", "Expired"], default: null },
 
-    amcAvailable: { type: String, trim: true },
-    amcVendor: { type: String, trim: true },
+    amcAvailable: { type: String, trim: true, default: null },
+    amcVendor: { type: String, trim: true, default: null },
     amcStartDate: { type: Date, default: null },
     amcEndDate: { type: Date, default: null },
 

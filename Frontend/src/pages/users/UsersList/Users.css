@@ -226,7 +226,7 @@
 
 }
 
-@media screen and (max-width: 600px) {
+/* @media screen and (max-width: 600px) {
   .table__options{
     display: block;
     
@@ -235,4 +235,4 @@
   margin-bottom: 1rem;
   width: 100%;
  }
-}
+} */

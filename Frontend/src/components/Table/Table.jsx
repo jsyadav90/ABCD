@@ -281,7 +281,7 @@ const Table = ({
                 className={`${
                   selectedRows.includes(row._id)
                     ? "table__row table__row--selected"
-                    : "table__row"
+                    : "table__row"  
                 } ${rowClassName ? rowClassName(row) : ""}`}
               >
                 <td>

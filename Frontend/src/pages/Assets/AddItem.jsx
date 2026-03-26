@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Select from '../../components/Select/Select.jsx';
 import './AddItem.css';
 import FormRenderer from './components/FormRenderer.jsx';
-import { fetchAssetCategories, fetchItemTypesByCategory, createAsset } from '../../services/assetApi.js';
+import { fetchAssetCategories, fetchItemTypesByCategory, createAsset, fetchLookupsByCategory } from '../../services/assetApi.js';
 import { fetchBranchesForDropdown } from '../../services/userApi.js';
 import { getItemFieldConfig } from './config/itemFieldConfig.js';
 import { getSelectedBranch } from '../../utils/scope.js';
@@ -14,6 +14,61 @@ const normalizeTypeKey = (value) =>
     .toLowerCase()
     .replace(/\s+/g, '')
     .replace(/[^a-z0-9]/g, '');
+
+// Helper for lookup option placeholders
+const isLookupPlaceholder = (options) => options && typeof options === 'object' && options.__lookupCategory;
+
+// Scan sections and resolve lookups from backend to real select options
+const resolveLookupOptions = async (sections) => {
+  if (!Array.isArray(sections)) return sections;
+
+  // Collect unique lookup categories from form config
+  const categories = new Set();
+  sections.forEach((section) => {
+    (section.fields || []).forEach((field) => {
+      if (isLookupPlaceholder(field.options)) {
+        const cat = String(field.options.__lookupCategory || '').trim().toLowerCase();
+        if (cat) categories.add(cat);
+      }
+    });
+  });
+
+  if (categories.size === 0) return sections;
+
+  // Fetch all category lookups in parallel
+  const lookupResult = {};
+  await Promise.all(
+    Array.from(categories).map(async (category) => {
+      try {
+        const items = await fetchLookupsByCategory(category);
+        lookupResult[category] = Array.isArray(items) ? items : [];
+      } catch (error) {
+        console.error(`lookupCategory fetch failed for ${category}:`, error);
+        lookupResult[category] = [];
+      }
+    })
+  );
+
+  // Replace placeholder objects with actual option arrays
+  const updatedSections = sections.map((section) => ({
+    ...section,
+    fields: (section.fields || []).map((field) => {
+      if (isLookupPlaceholder(field.options)) {
+        const cat = String(field.options.__lookupCategory || '').trim().toLowerCase();
+        const items = lookupResult[cat] || [];
+        return {
+          ...field,
+          options: items
+            .filter((item) => item && item.name)
+            .map((item) => ({ value: item.name, label: item.name })),
+        };
+      }
+      return field;
+    }),
+  }));
+
+  return updatedSections;
+};
 
 const AddItem = () => {
   const navigate = useNavigate();
@@ -108,7 +163,12 @@ const AddItem = () => {
     const loadConfig = async () => {
       try {
         const config = await getItemFieldConfig(selectedItem);
-        setSections(config.sections || []);
+        let formSections = config.sections || [];
+
+        // Resolve explicit lookup placeholders in config to concrete select options
+        formSections = await resolveLookupOptions(formSections);
+
+        setSections(formSections);
         setFormData((prev) => ({
           ...prev,
           itemType: selectedItem,
@@ -315,6 +375,7 @@ const AddItem = () => {
             borderRadius: '6px',
             border: '1px solid #c3e6cb',
             fontSize: '0.95rem',
+            wordBreak: 'break-word',
           }}>
             {successMessage}
           </div>
@@ -328,6 +389,7 @@ const AddItem = () => {
             borderRadius: '6px',
             border: '1px solid #f5c6cb',
             fontSize: '0.95rem',
+            wordBreak: 'break-word',
           }}>
             {errorMessage}
           </div>

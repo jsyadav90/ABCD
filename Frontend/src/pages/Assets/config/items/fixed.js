@@ -2,6 +2,10 @@ import { common } from "../common.js";
 // @ts-ignore
 import { fromGeneric } from "../sectionManager.js";
 
+export const lookupOptions = {
+  category: (categoryName) => ({ __lookupCategory: String(categoryName || "").trim().toLowerCase() }),
+};
+
 const toBoolEnabledDisabled = () => [
   { value: "Enabled", label: "Enabled" },
   { value: "Disabled", label: "Disabled" },
@@ -45,12 +49,7 @@ export const fixedConfigs = {
           { name: "ramModelNumber", placeholder: "e.g. Vengeance LPX", label: "Memory Part/Model Number", type: "text", maxLength: 100 },
           { name: "ramSerialNumber", placeholder: "e.g. 1234567890", label: "Memory Serial Number", type: "text", maxLength: 100 },
           { name: "ramCapacityGB", placeholder: "e.g. 16", label: "Memory Capacity (GB)", type: "number", min: 1, max: 512,},
-          {
-            name: "ramType",
-            label: "RAM Type",
-            type: "select",
-            options: [],
-          },
+          { name: "ramType", label: "RAM Type", type: "select", options: lookupOptions.category("ram_type") },
           { name: "ramSpeedMHz", placeholder: "e.g. 3200", label: "Speed (MHz)", type: "number", min: 400, max: 1000000 },
           { name: "ramFormFactor", placeholder: "e.g. DIMM", label: "Form Factor", type: "text", maxLength: 40 },
           { name: "ramSlot", placeholder: "e.g. DIMM Slot 1", label: "Memory Slot", type: "text", maxLength: 40 },
@@ -113,12 +112,7 @@ export const fixedConfigs = {
           { name: "driveModelNumber", label: "Drive Model Number", placeholder: "e.g. M.2 SSD", type: "text", maxLength: 120 },
           { name: "driveSerial", label: "Serial Number", placeholder: "e.g. 1234567890", type: "text", maxLength: 120 },
           { name: "driveCapacityGB", label: "Capacity (GB)", placeholder: "e.g. 1000", type: "number", min: 1, max: 200000 },
-          {
-            name: "driveType",
-            label: "Drive Type",
-            type: "select",
-            options: [],
-          },
+          { name: "driveType", label: "Drive Type", type: "select", options: lookupOptions.category("storage_type") },
           { name: "driveInterfaceSpeed", label: "Interface Speed", placeholder: "e.g. PCIe 4.0", type: "text", maxLength: 40 },
           // { name: "driveSlot", label: "Slot Label", type: "text", maxLength: 40 },
           { name: "raidConfigured", label: "RAID Configured", type: "select", options: common.booleanOptions },
@@ -151,7 +145,7 @@ export const fixedConfigs = {
             name: "gpuType",
             label: "Graphics Card Type",
             type: "select",
-            options: [],
+            options: lookupOptions.category("gpu_type"),
             showIf: { graphicCard: "Yes" },
           },
           { name: "gpuInterfaceSpeed", placeholder: "e.g. PCIe 4.0", label: "Interface Speed", type: "text", maxLength: 40, showIf: { graphicCard: "Yes" } },
@@ -442,7 +436,7 @@ export const fixedConfigs = {
             name: "ramType",
             label: "RAM Type",
             type: "select",
-            options: [],
+            options: lookupOptions.category("ram_type"),
           },
           { name: "ramSpeedMHz", placeholder: "e.g. 3200", label: "Speed (MHz)", type: "number", min: 400, max: 1000000 },
           { name: "ramFormFactor", placeholder: "e.g. DIMM", label: "Form Factor", type: "text", maxLength: 40 },
@@ -464,7 +458,7 @@ export const fixedConfigs = {
             name: "driveType",
             label: "Drive Type",
             type: "select",
-            options: [],
+            options: lookupOptions.category("storage_type"),
           },
           { name: "driveInterfaceSpeed", label: "Interface Speed", placeholder: "e.g. PCIe 4.0", type: "text", maxLength: 40 },
           // { name: "driveSlot", label: "Slot Label", type: "text", maxLength: 40 },

@@ -80,6 +80,10 @@
 	background: #dbeafe;
 }
 
+.table__row--selected:hover {
+  background-color: #ffe69c;
+}
+
 /* Inactive Row Style */
 .table__row--inactive {
 	background-color: #f9fafb;
@@ -175,4 +179,17 @@
 .table__checkbox {
 	width: 40px;
 	text-align: center;
+}
+
+
+
+@media screen and (max-width: 600px) {
+  .table__options{
+    display: block;
+    
+  }
+ .table-search{
+  margin-bottom: 1rem;
+  width: 100%;
+ }
 }
