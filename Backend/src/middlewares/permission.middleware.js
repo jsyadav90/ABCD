@@ -28,18 +28,30 @@ export const verifyPermission = (requiredPermission) => {
     let roleKeys = Array.isArray(req.user.rolePermissionKeys) ? req.user.rolePermissionKeys : [];
     let userKeys = Array.isArray(req.user.userPermissionKeys) ? req.user.userPermissionKeys : [];
     
+    // DEBUG: Log what we're getting
+    console.log(`🔐 PERMISSION CHECK DEBUG:`);
+    console.log(`   User: ${req.user.userId || req.user.id}`);
+    console.log(`   Role: ${roleName}`);
+    console.log(`   Required: ${requiredPermission}`);
+    console.log(`   roleKeys length: ${roleKeys.length}`);
+    console.log(`   userKeys length: ${userKeys.length}`);
+    console.log(`   roleKeys includes required: ${roleKeys.includes(requiredPermission)}`);
+    
     if (roleKeys.length === 0 && req.user.roleId) {
       try {
         const roleDoc = await Role.findById(req.user.roleId).select("permissionKeys name");
+        console.log(`   ℹ️ Fetched from DB: ${roleDoc?.name}, permissions: ${roleDoc?.permissionKeys?.length || 0}`);
         if (roleDoc && Array.isArray(roleDoc.permissionKeys)) {
           roleKeys = roleDoc.permissionKeys;
         }
       } catch (e) {
-        // ignore lookup errors; will fall back to empty keys
+        console.log(`   ⚠️ DB lookup failed: ${e.message}`);
       }
     }
     
     const permissions = Array.from(new Set([...(roleKeys || []), ...(userKeys || [])]));
+    console.log(`   Final permissions: ${permissions.length}`);
+    console.log(`   Has required: ${permissions.includes(requiredPermission) ? '✅ YES' : '❌ NO'}`);
 
     // 4. Check if user has the required permission
     if (!permissions.includes(requiredPermission)) {

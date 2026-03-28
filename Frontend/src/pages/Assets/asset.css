@@ -17,8 +17,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
-  padding-bottom: 10px;
+  padding: 10px 0px;
   border-bottom: 1px solid rgba(226, 232, 240, 0.85);
   background: #fff;
   z-index: 100;
@@ -102,7 +101,7 @@
 }
 
 .summary-card .card-body {
-  padding: 12px !important;
+  /* padding: 12px !important; */
   flex: 0 0 50%;
   display: flex !important;
   align-items: center !important;
@@ -129,6 +128,10 @@
   font-weight: bold;
   color: #1d4ed8;
   margin: 0;
+}
+
+.card-body {
+  padding: 0rem !important;
 }
 .asset-tabs {
   display: flex;
@@ -238,9 +241,9 @@
   .asset-page {
     padding: 0 4px;
   }
-  /* .asset-header {
-    padding: 0px 8px;
-  } */
+  .asset-header {
+    padding: 10px 0px;
+  }
   .asset-header h1 {
     font-size: 16px;
   }
@@ -254,3 +257,10 @@
     padding-top: 0px;
   }
 }
+
+
+/* @media (min-width: 480px) {
+  .asset-header{
+    padding: 10px 0px;
+  }
+} */
