@@ -147,6 +147,23 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
 
+    inactiveAt: {
+      type: Date,
+      default: null,
+    },
+
+    inactiveBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    inactiveReason: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
     isBlocked: {
       type: Boolean,
       default: false,
@@ -156,6 +173,28 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    deletedReason: {
+      type: String,
+      trim: true,
+      default: null,
     },
 
     createdBy: {

@@ -70,7 +70,14 @@ const branchSchema = new mongoose.Schema(
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    isActive: { type: Boolean, default: true, index: true },
+    inactiveAt: { type: Date, default: null },
+    inactiveBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    inactiveReason: { type: String, trim: true, default: null },
     isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    deletedReason: { type: String, trim: true, default: null },
   },
   { timestamps: true }
 );

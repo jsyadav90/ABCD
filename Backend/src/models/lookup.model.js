@@ -34,9 +34,43 @@ const lookupSchema = new mongoose.Schema({
     default:true
   },
 
+  inactiveAt:{
+    type:Date,
+    default:null
+  },
+
+  inactiveBy:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"User",
+    default:null
+  },
+
+  inactiveReason:{
+    type:String,
+    trim:true,
+    default:null
+  },
+
   isDeleted:{
     type:Boolean,
     default:false
+  },
+
+  deletedAt:{
+    type:Date,
+    default:null
+  },
+
+  deletedBy:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"User",
+    default:null
+  },
+
+  deletedReason:{
+    type:String,
+    trim:true,
+    default:null
   }
 
 },{

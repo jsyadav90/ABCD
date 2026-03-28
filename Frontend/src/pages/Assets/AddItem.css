@@ -171,6 +171,9 @@
 /* Horizontal scroll for all table sections (Memory, Storage, Network, etc.) */
 .fr-card.fr-table-section {
   overflow-x: auto;
+  overflow-y: visible;
+  display: flex;
+  flex-direction: column;
 }
 
 .fr-title {
@@ -180,6 +183,12 @@
   border-bottom: 1px solid #dfe3eb;
   padding-bottom: 0.5rem;
   margin-bottom: 0.75rem;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  left: 0;
+  background: #fdfdff;
+  z-index: 10;
 }
 
 @media (max-width: 768px) {
@@ -365,6 +374,9 @@
 }
 
 @media (max-width: 480px) {
+  .add-item-form{
+    flex-direction: column;
+  }
   .form-actions {
     flex-direction: column;
     gap: 0.5rem;
@@ -402,7 +414,7 @@
 }
 
 .select-wrapper {
-  width: 10rem;
+  /* width: 10rem; */
   margin: 0;
 }
 

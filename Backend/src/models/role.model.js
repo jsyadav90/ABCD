@@ -80,6 +80,23 @@ const roleSchema = new mongoose.Schema(
       default: true,
     },
 
+    inactiveAt: {
+      type: Date,
+      default: null,
+    },
+
+    inactiveBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    inactiveReason: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
     isDefault: {
       type: Boolean,
       default: false,
@@ -105,8 +122,13 @@ const roleSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Soft Delete
-    isDeleted: {
+    deletedReason: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+     isDeleted: {     // Soft Delete\n (we keep records for audit/history but mark them as deleted)
       type: Boolean,
       default: false,
     },

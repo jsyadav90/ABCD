@@ -288,7 +288,7 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
               <div id={`sec-${sec.sectionTitle}`} className="fr-title">{sec.sectionTitle}</div>
               <div
                 className="fr-table-head"
-                style={{ gridTemplateColumns: `repeat(${cols}, 320px) 80px` }}
+                style={{ gridTemplateColumns: `repeat(${cols}, 250px) 80px` }}
               >
                 {headerFields.map((f) => (
                   <div key={`${f.name}-h`} className="fr-table-head-cell">{f.label}</div>
@@ -298,7 +298,7 @@ const FormRenderer = ({ sections = [], formData = {}, errors = {}, onChange, onS
                 <div
                   key={`row-${sec.sectionTitle}-${idx}`}
                   className="fr-table-row"
-                  style={{ gridTemplateColumns: `repeat(${cols}, 320px) 80px` }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, 250px) 80px` }}
                 >
                   {headerFields.map((f) => {
                     const visible = shouldShow(f, getRowValue(idx));

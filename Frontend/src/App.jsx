@@ -21,7 +21,6 @@ import Loading from "./components/Loading/Loading.jsx";
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const Login = lazy(() => import("./pages/Login/Login"));
-const Register = lazy(() => import("./pages/Register/Register"));
 const Users = lazy(() => import("./pages/users/UsersList/Users"));
 const AddUser = lazy(() => import("./pages/users/AddUserPage/AddUser"));
 const EditUser = lazy(() => import("./pages/users/EditUserPage/EditUser"));
@@ -41,7 +40,6 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/not-found" element={<NotFound />} />
 
           {/* Root redirect to dashboard */}
