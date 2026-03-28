@@ -269,6 +269,45 @@ const AssetPage = () => {
     return branch ? branch.branchName || branch.name || branchId : branchId;
   }, [branches]);
 
+  // Function to get filters that should be displayed (non-default values)
+  const getActiveFilters = useCallback(() => {
+    const filters = [];
+    
+    // Branch: show if not "ALL" (default)
+    if (appliedFilterBranch !== "ALL") {
+      filters.push({
+        label: "Branch",
+        value: getBranchDisplayName(appliedFilterBranch),
+      });
+    }
+    
+    // Category: show if not "ALL" (default)
+    if (appliedFilterCategory !== "ALL") {
+      filters.push({
+        label: "Category",
+        value: appliedFilterCategory,
+      });
+    }
+    
+    // Type: show if not "ALL" (default)
+    if (appliedFilterType !== "ALL") {
+      filters.push({
+        label: "Type",
+        value: appliedFilterType,
+      });
+    }
+    
+    // Status: show if not "ALL" (default)
+    if (appliedFilterStatus !== "ALL") {
+      filters.push({
+        label: "Status",
+        value: appliedFilterStatus,
+      });
+    }
+    
+    return filters;
+  }, [appliedFilterBranch, appliedFilterCategory, appliedFilterType, appliedFilterStatus, getBranchDisplayName]);
+
   const typeOptions = useMemo(() => {
     const values = new Set();
     
@@ -408,6 +447,8 @@ const AssetPage = () => {
     },
   ];
 
+  const tableExtraActions = null;
+
   const getTooltipDetails = (row) => {
     const safe = (value) => (value || value === 0 ? value : "N/A");
     const itemType = row.itemType?.toUpperCase();
@@ -520,42 +561,69 @@ const AssetPage = () => {
         })}
       </div>
 
-      <div className="asset-tabs" role="region" aria-label="Asset Filters">
-        <Button ref={filterButtonRef} variant="secondary" size="small" onClick={() => setIsFilterOpen((v) => !v)}>
-          Filters
-        </Button>
+      {/* Filter button is moved into table header controls via extraActions prop */}
 
-        <FilterPopup
-          isOpen={isFilterOpen}
-          anchorRef={filterButtonRef}
-          fields={filterFields}
-          onClose={() => setIsFilterOpen(false)}
-          onReset={() => {
-            // Reset pending filters to currently applied filters
-            setPendingFilterStatus(appliedFilterStatus);
-            setPendingFilterCategory(appliedFilterCategory);
-            setPendingFilterType(appliedFilterType);
-            setPendingFilterBranch(appliedFilterBranch);
-          }}
-          onApply={() => {
-            // Apply pending filters and close popup
-            setAppliedFilterStatus(pendingFilterStatus);
-            setAppliedFilterCategory(pendingFilterCategory);
-            setAppliedFilterType(pendingFilterType);
-            setAppliedFilterBranch(pendingFilterBranch);
-            setIsFilterOpen(false);
-          }}
-        />
-      </div>
+      <FilterPopup
+        isOpen={isFilterOpen}
+        anchorRef={filterButtonRef}
+        fields={filterFields}
+        onClose={() => setIsFilterOpen(false)}
+        onReset={() => {
+          // Reset pending filters to default values
+          setPendingFilterStatus("ACTIVE");
+          setPendingFilterCategory("ALL");
+          setPendingFilterType("ALL");
+          setPendingFilterBranch("ALL");
+        }}
+        onApply={() => {
+          // Apply pending filters and close popup
+          setAppliedFilterStatus(pendingFilterStatus);
+          setAppliedFilterCategory(pendingFilterCategory);
+          setAppliedFilterType(pendingFilterType);
+          setAppliedFilterBranch(pendingFilterBranch);
+          setIsFilterOpen(false);
+        }}
+      />
 
       <div className="asset-content">
-        {filteredAssets.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📦</div>
-            <div className="empty-text">
-              {appliedFilterCategory === "ALL" ? "No items. Click Add Item to create one." : `No ${capitalizeText(appliedFilterCategory)} items here.`}
-            </div>
+        {/* Filter Display Row - Always visible */}
+        <div className="asset-filters-display">
+          <span className="asset-filters-label">Filters:</span>
+          <div className="asset-filters-chips">
+            {getActiveFilters().length > 0 ? (
+              getActiveFilters().map((filter, idx) => (
+                <span key={idx} className="filter-chip">
+                  {filter.label}
+                  <span style={{ margin: '0 6px' }}>:</span>
+                  <strong>{filter.value},</strong>
+                </span>
+              ))
+            ) : (
+              <span className="filter-chip-empty">No filters applied</span>
+            )}
           </div>
+        </div>
+
+        {/* Table always visible - handles empty state internally */}
+        {filteredAssets.length === 0 ? (
+          <>
+            {/* Table header with search/filters button - still visible */}
+            <div className="table__options">
+              <div className="table__actions">
+                <Button ref={filterButtonRef} variant="secondary" size="small" onClick={() => setIsFilterOpen((v) => !v)}>
+                  Filters
+                </Button>
+              </div>
+              <div className="table__summary">0 to 0 of 0</div>
+            </div>
+            {/* Empty state message */}
+            <div className="empty-state">
+              <div className="empty-icon">📦</div>
+              <div className="empty-text">
+                {appliedFilterCategory === "ALL" ? "No items. Click Add Item to create one." : `No ${capitalizeText(appliedFilterCategory)} items here.`}
+              </div>
+            </div>
+          </>
         ) : (
           <Table
             columns={columns}
@@ -566,6 +634,11 @@ const AssetPage = () => {
             onSelectionChange={() => {}}
             isRowSelectable={() => true}
             rowClassName=""
+            extraActions={
+              <Button ref={filterButtonRef} variant="secondary" size="small" onClick={() => setIsFilterOpen((v) => !v)}>
+                Filters
+              </Button>
+            }
           />
         )}
       </div>

@@ -110,27 +110,29 @@ const FilterPopup = ({
         minWidth: `${minWidth}px`,
       }}
     >
-      {fields.map((field) => (
-        <div key={field.key || field.label} className="filter-row">
-          <label>{field.label}</label>
-          {field.type === 'select' ? (
-            <select value={field.value} onChange={field.onChange}>
-              {field.options.map((option) => (
-                <option key={option} value={option}>
-                  {field.optionRenderer ? field.optionRenderer(option) : capitalizeText(option)}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type={field.type || 'text'}
-              value={field.value}
-              onChange={field.onChange}
-              placeholder={field.placeholder || ''}
-            />
-          )}
-        </div>
-      ))}
+      <div className="filter-fields">
+        {fields.map((field) => (
+          <div key={field.key || field.label} className="filter-row">
+            <label>{field.label}</label>
+            {field.type === 'select' ? (
+              <select value={field.value} onChange={field.onChange}>
+                {field.options.map((option) => (
+                  <option key={option} value={option}>
+                    {field.optionRenderer ? field.optionRenderer(option) : capitalizeText(option)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type || 'text'}
+                value={field.value}
+                onChange={field.onChange}
+                placeholder={field.placeholder || ''}
+              />
+            )}
+          </div>
+        ))}
+      </div>
 
       <div className="filter-actions">
         <Button variant="secondary" size="small" onClick={onReset}>

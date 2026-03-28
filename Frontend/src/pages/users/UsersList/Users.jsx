@@ -5,13 +5,14 @@
  * - All users fetch + selected branch ke hisaab se client-side filter
  * - Role change, manager assign, enable/disable, password change ke modals
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth.js";
 import Table from "../../../components/Table/Table.jsx";
 import Button from "../../../components/Button/Button.jsx";
 import Input from "../../../components/Input/Input.jsx";
 import Modal from "../../../components/Modal/Modal.jsx";
+import FilterPopup from "../../../components/Filter/FilterPopup.jsx";
 import { hasPermission } from "../../../utils/permissionHelper";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../../components/ErrorBoundary/ErrorNotification.jsx";
@@ -26,7 +27,9 @@ import {
   updateUser,
   fetchRolesForDropdown,
   fetchUsersForDropdown,
+  fetchBranchesForDropdown,
 } from "../../../services/userApi.js";
+import { authAPI } from "../../../services/api.js";
 import Select from "../../../components/Select/Select.jsx";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle.jsx";
 import { getSelectedBranch, onBranchChange } from "../../../utils/scope";
@@ -80,6 +83,19 @@ const Users = () => {
     error: ""
   });
 
+  // Filter state
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [appliedFilterBranch, setAppliedFilterBranch] = useState("ALL");
+  const [appliedFilterStatus, setAppliedFilterStatus] = useState("ACTIVE");
+  const [appliedFilterRole, setAppliedFilterRole] = useState("ALL");
+  const [appliedFilterCanLogin, setAppliedFilterCanLogin] = useState("ALL");
+  const [pendingFilterBranch, setPendingFilterBranch] = useState("ALL");
+  const [pendingFilterStatus, setPendingFilterStatus] = useState("ACTIVE");
+  const [pendingFilterRole, setPendingFilterRole] = useState("ALL");
+  const [pendingFilterCanLogin, setPendingFilterCanLogin] = useState("ALL");
+  const [branches, setBranches] = useState([]);
+  const filterButtonRef = useRef(null);
+
   const pageSize = Number(import.meta.env.VITE_PAGE_SIZE || import.meta.env.page_size) || 20;
   const [selectedBranch, setSelectedBranch] = useState(getSelectedBranch() || "");
   const [visibleUsers, setVisibleUsers] = useState([]);
@@ -107,6 +123,54 @@ const Users = () => {
       setSelectedBranch(branchId || "");
     });
     return off;
+  }, []);
+
+  // Load branches and sync pending filters when filter opens
+  useEffect(() => {
+    if (isFilterOpen) {
+      setPendingFilterStatus(appliedFilterStatus);
+      setPendingFilterBranch(appliedFilterBranch);
+      setPendingFilterRole(appliedFilterRole);
+      setPendingFilterCanLogin(appliedFilterCanLogin);
+    }
+  }, [isFilterOpen, appliedFilterStatus, appliedFilterBranch, appliedFilterRole, appliedFilterCanLogin]);
+
+  // Load branches and user profile
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const resp = await authAPI.getProfile();
+        const userInfo = resp.data?.data?.user || {};
+        console.log("User profile loaded:", userInfo);
+        
+        // Load branches for this organization
+        if (userInfo.organizationId) {
+          const branchesData = await fetchBranchesForDropdown(userInfo.organizationId);
+          console.log("Branches loaded:", branchesData);
+          setBranches(branchesData && branchesData.length > 0 ? branchesData : []);
+        } else {
+          console.warn("No organizationId found in user profile");
+        }
+      } catch (err) {
+        console.error("Failed to load user profile or branches", err);
+        setBranches([]);
+      }
+    };
+    
+    loadUserProfile();
+  }, []);
+
+  // Load roles on component mount
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const rolesData = await fetchRolesForDropdown();
+        setRoles(rolesData);
+      } catch (err) {
+        console.error("Failed to fetch roles", err);
+      }
+    };
+    loadRoles();
   }, []);
 
   useEffect(() => {
@@ -401,6 +465,129 @@ const Users = () => {
       );
   };
 
+  // Helper function to get branch display name
+  const getBranchDisplayName = useCallback((branchId) => {
+    if (!branchId || branchId === "ALL") return "All Branches";
+    const branch = branches.find(b => {
+      const bid = typeof b === "object" && b?._id ? String(b._id) : String(b);
+      return bid === String(branchId);
+    });
+    if (!branch) return branchId;
+    return typeof branch === "object" 
+      ? (branch.branchName || branch.name || String(branchId))
+      : String(branch);
+  }, [branches]);
+
+  // Get active filters to display
+  const getActiveFilters = useCallback(() => {
+    const filters = [];
+    
+    // Branch: show if not "ALL" (default)
+    if (appliedFilterBranch !== "ALL") {
+      filters.push({
+        label: "Branch",
+        value: getBranchDisplayName(appliedFilterBranch),
+      });
+    }
+    
+    // Status: always show (applied by default as ACTIVE)
+    filters.push({
+      label: "Status",
+      value: appliedFilterStatus,
+    });
+    
+    // Role: show if not "ALL" (default)
+    if (appliedFilterRole !== "ALL") {
+      const role = roles.find(r => r._id === appliedFilterRole);
+      filters.push({
+        label: "Role",
+        value: role ? (role.displayName || role.name) : appliedFilterRole,
+      });
+    }
+    
+    // Can Login: show if not "ALL" (default)
+    if (appliedFilterCanLogin !== "ALL") {
+      const displayValue = appliedFilterCanLogin === "YES" ? "Yes" : "No";
+      filters.push({
+        label: "Can Login",
+        value: displayValue,
+      });
+    }
+    
+    return filters;
+  }, [appliedFilterBranch, appliedFilterStatus, appliedFilterRole, appliedFilterCanLogin, roles, getBranchDisplayName]);
+
+  // Option renderers and memos
+  const branchOptions = useMemo(() => {
+    const options = [];
+    
+    if (branches && branches.length > 0) {
+      options.push("ALL");
+      branches.forEach((b) => {
+        const branchId = typeof b === "object" && b?._id ? String(b._id) : String(b);
+        const branchName = typeof b === "object" ? (b.branchName || b.name || branchId) : String(b);
+        if (branchId) {
+          options.push(branchId);
+        }
+      });
+    } else {
+      options.push("ALL");
+    }
+    
+    return options;
+  }, [branches]);
+
+  const statusOptions = useMemo(() => ["ACTIVE", "INACTIVE", "ALL"], []);
+
+  const roleOptions = useMemo(() => {
+    if (roles.length === 0) return ["ALL"];
+    return ["ALL", ...roles.map(r => r._id)];
+  }, [roles]);
+
+  const canLoginOptions = useMemo(() => ["ALL", "YES", "NO"], []);
+
+  // Apply filters to visibleUsers
+  const filteredUsers = useMemo(() => {
+    let result = visibleUsers;
+
+    
+
+    // Filter by Branch
+    if (appliedFilterBranch !== "ALL") {
+      result = result.filter(u => {
+        const ids = Array.isArray(u.branchId) ? u.branchId : [];
+        return ids.some(b => {
+          const bid = typeof b === "object" && b?._id ? String(b._id) : String(b);
+          return bid === String(appliedFilterBranch);
+        });
+      });
+    }
+
+    // Filter by Role
+    if (appliedFilterRole !== "ALL") {
+      result = result.filter(u => {
+        const roleId = typeof u.roleId === "object" ? u.roleId?._id : u.roleId;
+        return roleId === appliedFilterRole;
+      });
+    }
+
+    // Filter by Can Login
+    if (appliedFilterCanLogin === "YES") {
+      result = result.filter(u => u.canLogin === true);
+    } else if (appliedFilterCanLogin === "NO") {
+      result = result.filter(u => u.canLogin !== true);
+    }
+
+    // Filter by Status
+    if (appliedFilterStatus === "ACTIVE") {
+      result = result.filter(u => u.isActive !== false);
+    } else if (appliedFilterStatus === "INACTIVE") {
+      result = result.filter(u => u.isActive === false);
+    }
+
+    return result;
+  }, [visibleUsers, appliedFilterStatus, appliedFilterBranch, appliedFilterRole, appliedFilterCanLogin]);
+
   const columns = [
     {
       header: "User ID",
@@ -578,6 +765,49 @@ const Users = () => {
     },
   ];
 
+  // Filter fields configuration
+  const filterFields = [
+    {
+      key: 'branch',
+      label: 'Branch',
+      type: 'select',
+      value: pendingFilterBranch,
+      onChange: (e) => setPendingFilterBranch(e.target.value),
+      options: branchOptions,
+      optionRenderer: getBranchDisplayName,
+    },
+    
+    {
+      key: 'role',
+      label: 'Role',
+      type: 'select',
+      value: pendingFilterRole,
+      onChange: (e) => setPendingFilterRole(e.target.value),
+      options: roleOptions,
+      optionRenderer: (roleId) => {
+        if (roleId === "ALL") return "All";
+        const role = roles.find(r => r._id === roleId);
+        return role ? (role.displayName || role.name) : roleId;
+      },
+    },
+    {
+      key: 'canLogin',
+      label: 'Can Login',
+      type: 'select',
+      value: pendingFilterCanLogin,
+      onChange: (e) => setPendingFilterCanLogin(e.target.value),
+      options: canLoginOptions,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      value: pendingFilterStatus,
+      onChange: (e) => setPendingFilterStatus(e.target.value),
+      options: statusOptions,
+    },
+  ];
+
   const handleBulkDisable = async () => {
     // Exclude current user from bulk disable
     const safeIds = selectedRows.filter((id) => String(id) !== String(currentUser?.id));
@@ -678,17 +908,63 @@ const Users = () => {
           </div>
         </section>
 
+        {/* FilterPopup Component */}
+        <FilterPopup
+          isOpen={isFilterOpen}
+          anchorRef={filterButtonRef}
+          fields={filterFields}
+          onClose={() => setIsFilterOpen(false)}
+          onReset={() => {
+            // Reset pending filters to default values
+            setPendingFilterBranch("ALL");
+            setPendingFilterStatus("ACTIVE");
+            setPendingFilterRole("ALL");
+            setPendingFilterCanLogin("ALL");
+          }}
+          onApply={() => {
+            // Apply pending filters and close popup
+            setAppliedFilterBranch(pendingFilterBranch);
+            setAppliedFilterStatus(pendingFilterStatus);
+            setAppliedFilterRole(pendingFilterRole);
+            setAppliedFilterCanLogin(pendingFilterCanLogin);
+            setIsFilterOpen(false);
+          }}
+        />
+
+        {/* Filter Display Row */}
+        <div className="user-filters-display">
+          <span className="user-filters-label">Filters:</span>
+          <div className="user-filters-chips">
+            {getActiveFilters().length > 0 ? (
+              getActiveFilters().map((filter, idx) => (
+                <span key={idx} className="filter-chip">
+                  {filter.label}
+                  <span style={{ margin: '0 6px' }}>:</span>
+                  <strong>{filter.value},</strong>
+                </span>
+              ))
+            ) : (
+              <span className="filter-chip-empty">No filters applied</span>
+            )}
+          </div>
+        </div>
+
         <div className="users-table">
           <
 // @ts-ignore
           Table
             columns={columns}
-            data={visibleUsers}
+            data={filteredUsers}
             pageSize={pageSize}
             showSearch={true}
             showPagination={true}
             onSelectionChange={(selected) => setSelectedRows(selected)}
             isRowSelectable={(row) => String(row._id) !== String(currentUser?.id)}
+            extraActions={
+              <Button ref={filterButtonRef} variant="secondary" size="small" onClick={() => setIsFilterOpen((v) => !v)}>
+                Filters
+              </Button>
+            }
           />
         </div>
 

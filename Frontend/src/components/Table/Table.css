@@ -8,8 +8,9 @@
 
 .table__options {
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 	align-items: center;
+	gap: 1rem;
 	padding: 0.6rem;
 	border-bottom: 1px solid #ddd;
 	overflow: hidden;
@@ -25,6 +26,7 @@
 	display: flex;
 	align-items: center;
 	gap: 0.75rem;
+	margin-left: auto;
 }
 
 /* ================= TABLE CONTAINER ================= */
@@ -127,6 +129,12 @@
 	border: 1px solid #ccc;
 	border-radius: 5px;
 	outline: none;
+}
+
+.table__actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 /* ================= HIGHLIGHT ================= */

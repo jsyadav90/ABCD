@@ -38,45 +38,11 @@
   gap: 8px;
   position: relative;
 }
-.filter-popup {
-  width: 270px;
-  background: #1f2937;
-  color: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.2);
-  padding: 12px;
-  min-width: 300px;
-}
-.filter-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-.filter-row label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #e2e8f0;
-}
-.filter-row select {
-  width: 100%;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #94a3b8;
-  background: #f8fafc;
-  color: #0f172a;
-}
-.filter-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
 .btn {
   appearance: none;
   border: none;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 12px !important;
   cursor: pointer;
 }
 .btn-primary {
@@ -207,6 +173,75 @@
   display: flex;
   gap: 4px;
 }
+
+/* ============== FILTERS DISPLAY ROW ============== */
+.asset-filters-display {
+  background: #f3f4f6;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.asset-filters-label {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 13px;
+}
+
+.asset-filters-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  /* background: #fff;
+  border: 1px solid #d1d5db;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px; */
+  font-style:italic ;
+  /* font-weight: bold; */
+  color: #6282b7;
+  display: inline-flex;
+  align-items: center;
+}
+
+.filter-chip-empty {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+}
+
+/* ============== FILTERS CONTROLS ROW ============== */
+.asset-filters-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.asset-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.asset-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 @media (max-width: 768px) {
   .asset-page {
     padding: 0 8px;

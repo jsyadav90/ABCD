@@ -15,6 +15,7 @@ const Table = ({
   defaultSortKey = null,
   defaultSortDirection = "asc",
   rowClassName,
+  extraActions = null,
 }) => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(() => {
@@ -196,21 +197,23 @@ const Table = ({
 
   return (
     <div className="table">
-      {(showSearch || showPagination) && (
+      {(showSearch || showPagination || extraActions) && (
         <div className="table__options">
+          <div className="table__actions">
+            {extraActions}
+          </div>
+
           {showSearch && (
-              <TableSearch
-                value={search}
-                onChange={(val) => {
-                  setSearch(val);
-                  setPage(1);
-                }}
-              />
-            )}
+            <TableSearch
+              value={search}
+              onChange={(val) => {
+                setSearch(val);
+                setPage(1);
+              }}
+            />
+          )}
 
           <div className="table__options-right">
-            
-
             {showPagination && (
             <div className="table__summary">
               {totalItems === 0 ? (
