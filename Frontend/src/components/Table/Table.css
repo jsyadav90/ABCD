@@ -77,6 +77,7 @@
 /* Hover effect - overrides alternating colors */
 .table__data tbody tr.table__row:hover {
 	background: #a2bdd8 !important;
+	color: #fff !important;
 }
 
 /* Selected row - overrides alternating colors */
@@ -86,7 +87,8 @@
 
 /* Selected row on hover */
 .table__data tbody tr.table__row--selected:hover {
-	background-color: #ffe69c !important;
+	background-color: #a2bdd8 !important;
+	color: #fff !important;
 }
 
 /* Inactive Row Style */
