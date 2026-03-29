@@ -149,12 +149,6 @@ const hasUserAccess = async (reqUser, targetUser) => {
 export const createUser = asyncHandler(async (req, res) => {
   const payload = req.body;
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('📥 createUser called with payload:', payload);
-    console.log('✓ name:', payload.name);
-    console.log('✓ organizationId:', payload.organizationId);
-  }
-
   const orgId = payload.organizationId || req.user?.organizationId || null;
 
   if (!payload.name || !orgId) {
@@ -247,7 +241,6 @@ export const createUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create(toCreate);
-  console.log(`🆔 User created with userId=${user.userId}, seqId=${user.seqId}, org=${orgId}`);
 
   // canLogin is always false on creation now, so no need to create credentials here.
   // Admin must enable login explicitly later.
@@ -277,11 +270,6 @@ export const listUsers = asyncHandler(async (req, res) => {
   const limit = Math.max(parseInt(req.query.limit || 25, 10), 1);
   const skip = (page - 1) * limit;
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log("🔍 listUsers: Request User Role:", req.user?.role);
-    console.log("🔍 listUsers: Request User Org:", req.user?.organizationId);
-  }
-
   const filter = {};
   // Support filtering by role name or roleId
   if (req.query.role) {
@@ -307,9 +295,6 @@ export const listUsers = asyncHandler(async (req, res) => {
     // Restrict organization for non-super roles
     if (isEnterprise && req.user?.organizationId) {
       filter.organizationId = req.user.organizationId;
-      if (process.env.NODE_ENV === 'development') {
-        console.log("🔍 listUsers: Enterprise Admin Org Filter:", filter.organizationId);
-      }
     } else {
       // Branch/Standard users: strictly subset branch visibility
       if (req.user?.organizationId) {
@@ -372,15 +357,9 @@ export const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const payload = { ...req.body };
 
-  console.log('📝 UPDATE USER - Request received');
-  console.log('🔑 User ID:', id);
-  console.log('📦 Initial payload:', payload);
-
   // Prevent direct overwrite of login-related flags without using specific endpoints
   delete payload.canLogin;
   delete payload.isActive;
-
-  console.log('📦 Payload after removing protected fields:', payload);
 
   const existing = await User.findById(id).select('branchId').lean();
   if (!existing) {
@@ -394,17 +373,8 @@ export const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(id, payload, { new: true }).populate('roleId branchId');
   
   if (!user) {
-    console.log('❌ User not found with ID:', id);
     throw new apiError(404, "User not found");
   }
-  
-  console.log('✅ User updated successfully:', {
-    userId: user.userId,
-    name: user.name,
-    email: user.email,
-    role: user.roleId?.name,
-    branches: user.branchId?.map(b => b.name),
-  });
 
   return res.status(200).json(new apiResponse(200, user, "User updated successfully"));
 });
@@ -447,7 +417,6 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
       try {
         const enforcedLoginId = loginId || user.userId;
         const loginResult = await createUserLoginCredentials(user._id, user.name, enforcedLoginId);
-        console.log(`✅ Login credentials created for user ${user._id}: username = ${loginResult.username}`);
       } catch (loginError) {
         console.error(`❌ Failed to create login credentials:`, loginError.message);
         throw new apiError(500, `Failed to create login credentials: ${loginError.message}`);
@@ -458,7 +427,6 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
   } else {
     // disable login: remove any UserLogin record so credentials no longer work
     const deleteResult = await UserLogin.deleteOne({ user: user._id });
-    console.log(`✅ Deleted UserLogin records: ${deleteResult.deletedCount}`);
     user.canLogin = false;
   }
 
@@ -466,7 +434,6 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
   
   // Fetch updated user to confirm changes
   const updatedUser = await User.findById(id);
-  console.log(`✅ User updated - canLogin is now: ${updatedUser.canLogin}`);
   
   return res.status(200).json(new apiResponse(200, updatedUser, `Login ${enable ? "enabled" : "disabled"} successfully for user ${user.name}`));
 });
@@ -582,15 +549,10 @@ export const deleteUserPermanent = asyncHandler(async (req, res) => {
 // Fetch all roles for dropdown (returns id, name, and displayName)
 export const getRolesForDropdown = asyncHandler(async (req, res) => {
   try {
-    console.log('🔍 getRolesForDropdown called');
-    
     // Fetch all roles (both system and custom)
     let roles = await Role.find({}, "name displayName description category").lean().sort({ priority: -1 });
     
-    console.log(`📊 Found ${roles.length} roles in database`);
-    
     if (!roles || roles.length === 0) {
-      console.log('⚠️ No roles found in database — initializing system roles');
       const Organization = (await import("../models/organization.model.js")).Organization;
       const UserModel = (await import("../models/user.model.js")).User;
       
@@ -605,7 +567,6 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
           status: "ACTIVE",
           createdBy: seedUser._id,
         });
-        console.log("🏗️ Created default organization ABCD");
       }
       
       // Ensure a seed user exists to act as creator
@@ -618,7 +579,6 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
           canLogin: false,
           isActive: true,
         });
-        console.log("👤 Created seed user for role initialization");
       }
       
       // Initialize system roles
@@ -626,7 +586,6 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
       
       // Re-fetch roles
       roles = await Role.find({}, "name displayName description category").lean().sort({ priority: -1 });
-      console.log(`✅ Initialized. Roles now: ${roles.length}`);
     }
 
     const formattedRoles = roles.map((role) => ({
@@ -635,8 +594,6 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
       displayName: role.displayName,
       description: role.description,
     }));
-
-    console.log(`✅ Returning ${formattedRoles.length} formatted roles`);
     return res.status(200).json(new apiResponse(200, formattedRoles, "Roles retrieved successfully"));
   } catch (error) {
     console.error('❌ Error in getRolesForDropdown:', error.message);

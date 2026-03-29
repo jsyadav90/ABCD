@@ -92,7 +92,7 @@
   padding: 12px !important;
   border-bottom: none !important;
   border-right: 1px solid #ddd !important;
-  flex: 0 0 50%;
+  flex: 0 0 60%;
   background-color: #0C3C78 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -102,7 +102,7 @@
 
 .summary-card .card-body {
   /* padding: 12px !important; */
-  flex: 0 0 50%;
+  flex: 0 0 40%;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
