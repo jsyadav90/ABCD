@@ -413,8 +413,10 @@ const AssetPage = () => {
     return list;
   }, [visibleAssets, appliedFilterStatus, appliedFilterCategory, appliedFilterType, appliedFilterBranch]);
 
+  const shouldShowBranchField = branchOptions.length > 1 && (!selectedBranch || selectedBranch === "__ALL__" || selectedBranch === "");
+
   const filterFields = [
-    ...(userBranchIds.length > 1 && (!selectedBranch || selectedBranch === "__ALL__" || selectedBranch === "") ? [
+    ...(shouldShowBranchField ? [
       {
         key: 'branch',
         label: 'Branch',

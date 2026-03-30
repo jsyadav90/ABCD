@@ -788,7 +788,7 @@ const Users = () => {
   // - Single branch user: never show (filtered by that branch only)
   // - Multi-branch user with "ALL" selected: show branch field
   // - Multi-branch user with specific branch selected: never show
-  const shouldShowBranchField = userBranchIds.length > 1 && (!selectedBranch || selectedBranch === "__ALL__" || selectedBranch === "");
+  const shouldShowBranchField = branches.length > 1 && (!selectedBranch || selectedBranch === "__ALL__" || selectedBranch === "");
 
   const filterFields = [
     ...(shouldShowBranchField ? [
