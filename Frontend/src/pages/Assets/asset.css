@@ -130,7 +130,7 @@
   margin: 0;
 }
 
-.card-body {
+.asset-summary .card-body {
   padding: 0rem !important;
 }
 .asset-tabs {

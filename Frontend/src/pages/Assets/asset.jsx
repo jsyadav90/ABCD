@@ -22,6 +22,7 @@ import { getSelectedBranch, onBranchChange } from "../../utils/scope";
 import { authAPI } from "../../services/api.js";
 import { fetchBranchesForDropdown } from "../../services/userApi.js";
 import { getTooltipDetails, highlightText } from "../../utils/assetUtils.jsx";
+import { toCapitalizedCase } from "../../utils/string.jsx";
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 
@@ -469,9 +470,8 @@ const AssetPage = () => {
           style={{
             background: 'none',
             border: 'none',
-            color: '#0284c7',
+            // color: '#0284c7',
             cursor: 'pointer',
-            textDecoration: 'underline',
             fontSize: 'inherit',
             fontWeight: 'inherit',
             padding: 0,
@@ -482,7 +482,8 @@ const AssetPage = () => {
         </button>
       )
     },
-    { header: "Type", key: "itemType", sortable: true },
+    { header: "Type", key: "itemType", sortable: true, render: (row) => row.itemType === "cpu" || row.itemType === "Cpu" || row.itemType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.itemType || "").trim()) },
+    {header: "Sub Type", key: "itemSubType", sortable: true, render: (row) => row.itemType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.itemSubType || row.itemType))},
     {
       header: "Category",
       key: "itemCategory",
