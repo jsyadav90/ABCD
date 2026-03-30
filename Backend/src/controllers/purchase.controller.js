@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import { Purchase } from "../models/purchase.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
@@ -24,7 +24,7 @@ const normalizePurchase = (raw) => {
     out.receiptDate = null;
   }
 
-  const receivedOn = lc(out.itemReceivedOn);
+  const receivedOn = lc(out.AssetReceivedOn);
   if (receivedOn === "invoice") {
     out.deliveryChallanNumber = null;
     out.deliveryChallanDate = null;
@@ -63,8 +63,8 @@ export const upsertPurchaseByAsset = asyncHandler(async (req, res) => {
     assetId,
     organizationId: orgId,
     branchId: base.branchId || base.branch || null,
-    itemCategory: base.itemCategory || undefined,
-    itemType: base.itemType ? lc(base.itemType) : undefined,
+    AssetCategory: base.AssetCategory || undefined,
+    AssetType: base.AssetType ? lc(base.AssetType) : undefined,
     updatedBy: req.user?._id || req.user?.id,
   };
 
@@ -92,4 +92,5 @@ export const getPurchaseByAsset = asyncHandler(async (req, res) => {
   const doc = await Purchase.findOne(filter).lean();
   return res.status(200).json(new apiResponse(200, doc || null, "Purchase fetched"));
 });
+
 

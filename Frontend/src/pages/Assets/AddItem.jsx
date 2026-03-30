@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Select from '../../components/Select/Select.jsx';
 import './AddItem.css';
 import FormRenderer from './components/FormRenderer.jsx';
-import { fetchAssetCategories, fetchItemTypesByCategory, createAsset, fetchLookupsByCategory } from '../../services/assetApi.js';
+import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory } from '../../services/assetApi.js';
 import { fetchBranchesForDropdown } from '../../services/userApi.js';
-import { getItemFieldConfig } from './config/itemFieldConfig.js';
+import { getAssetFieldConfig } from './config/assetFieldConfig.js';
 import { getSelectedBranch } from '../../utils/scope.js';
 
 const normalizeTypeKey = (value) =>
@@ -74,9 +74,9 @@ const AddItem = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItem, setSelectedItem] = useState(''); // normalized name for config lookup
-  const [selectedItemId, setSelectedItemId] = useState(''); // itemType._id for API
+  const [selectedassetId, setSelectedassetId] = useState(''); // assetType._id for API
   const [categories, setCategories] = useState([]);
-  const [itemTypes, setItemTypes] = useState([]);
+  const [assetTypes, setassetTypes] = useState([]);
   const [sections, setSections] = useState([]);
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
@@ -129,40 +129,40 @@ const AddItem = () => {
 
   useEffect(() => {
     if (!selectedCategory) {
-      setItemTypes([]);
+      setassetTypes([]);
       setSelectedItem('');
-      setSelectedItemId('');
+      setSelectedassetId('');
       setSections([]);
       return;
     }
 
-    const loadItemTypes = async () => {
+    const loadassetTypes = async () => {
       try {
-        const data = await fetchItemTypesByCategory(selectedCategory);
-        setItemTypes(data);
+        const data = await fetchAssetTypesByCategory(selectedCategory);
+        setassetTypes(data);
         setSelectedItem('');
-        setSelectedItemId('');
+        setSelectedassetId('');
         setSections([]);
       } catch (error) {
         console.error('Failed to load item types:', error);
-        setItemTypes([]);
+        setassetTypes([]);
         setSections([]);
       }
     };
 
-    loadItemTypes();
+    loadassetTypes();
   }, [selectedCategory]);
 
   useEffect(() => {
     if (!selectedItem) {
       setSections([]);
-      setFormData((prev) => ({ ...prev, itemType: '' }));
+      setFormData((prev) => ({ ...prev, assetType: '' }));
       return;
     }
 
     const loadConfig = async () => {
       try {
-        const config = await getItemFieldConfig(selectedItem);
+        const config = await getAssetFieldConfig(selectedItem);
         let formSections = config.sections || [];
 
         // Resolve explicit lookup placeholders in config to concrete select options
@@ -171,7 +171,7 @@ const AddItem = () => {
         setSections(formSections);
         setFormData((prev) => ({
           ...prev,
-          itemType: selectedItem,
+          assetType: selectedItem,
         }));
       } catch (error) {
         console.error('Failed to load item field config:', error);
@@ -198,7 +198,7 @@ const AddItem = () => {
     };
   });
 
-  const itemOptions = itemTypes.map((item) => ({
+  const itemOptions = assetTypes.map((item) => ({
     value: item._id, // Store the ObjectId as value
     label: item.name || item._id,
     _id: item._id, // Keep _id for reference
@@ -245,12 +245,12 @@ const AddItem = () => {
 
   const handleItemSelect = (e) => {
     const selectedId = e.target.value;
-    const selectedItemObj = itemTypes.find(item => item._id === selectedId);
+    const selectedItemObj = assetTypes.find(item => item._id === selectedId);
     
     if (selectedItemObj) {
       const normalizedName = normalizeTypeKey(selectedItemObj.name || selectedItemObj._id);
       setSelectedItem(normalizedName); // normalized name for config lookup
-      setSelectedItemId(selectedId); // ObjectId for data persistence
+      setSelectedassetId(selectedId); // ObjectId for data persistence
     }
   };
 
@@ -291,17 +291,17 @@ const AddItem = () => {
       }
 
       // All validations passed - prepare payload
-      const { itemCategory: _ignored, ...filteredFormData } = formData;
+      const { assetcategory: _ignored, ...filteredFormData } = formData;
       const payload = {
-        itemType: selectedItem, // normalized name for backend handler routing
-        itemTypeId: selectedItemId, // ObjectId for proper M2M relationship
-        itemCategory: selectedCategory, // ObjectId reference to asset category
+        AssetType: selectedItem, // normalized name for backend handler routing
+        AssetTypeId: selectedassetId, // ObjectId for proper M2M relationship
+        AssetCategory: selectedCategory, // ObjectId reference to asset category
         branchId: filteredFormData.branchId || filteredFormData.branch, // Include branch ObjectId
         ...filteredFormData,
       };
 
       // Log payload to console for debugging
-      // console.log('📤 Sending payload to backend:', payload);
+      // console.log('[SEND] Sending payload to backend:', payload);
 
       // Call createAsset API
       const result = await createAsset(payload);
@@ -325,7 +325,7 @@ const AddItem = () => {
 
   const handleReset = () => {
     // Reset form but keep branch if it was auto-assigned
-    const resetData = { itemCategory: selectedCategoryName, itemType: selectedItem };
+    const resetData = { assetcategory: selectedCategoryName, assetType: selectedItem };
     if (isBranchFieldDisabled && userSelectedBranch) {
       resetData.branch = userSelectedBranch;
       resetData.branchId = userSelectedBranch;
@@ -406,7 +406,7 @@ const AddItem = () => {
             />
             <Select
               name="item"
-              value={selectedItemId}
+              value={selectedassetId}
               onChange={handleItemSelect}
               options={itemOptions}
               placeholder={selectedCategory ? 'Select an item': 'Select a category first'}

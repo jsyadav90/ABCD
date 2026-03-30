@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Laptop Asset Handler
  * Description: Laptop create/list/get logic, currently model-shared with CPU-like structure.
  * Creates 3 documents: Fixed Asset (asset_fixed), Purchase (asset_purchases), Warranty (asset_warranties)
@@ -10,8 +10,8 @@ import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit 
 
 const create = async (req) => {
   const body = req.body || {};
-  const itemType = norm(body.itemType).toLowerCase();
-  const itemCategory = body.itemCategory; // Now it's ObjectId, no need to normalize to string
+  const AssetType = norm(body.AssetType).toLowerCase();
+  const AssetCategory = body.AssetCategory; // Now it's ObjectId, no need to normalize to string
 
   const memoryModules = body.memory?.ramModules || [];
   const storageDevices = body.storage?.storageDevices || [];
@@ -46,8 +46,8 @@ const create = async (req) => {
   // Build Fixed Asset Payload (no purchase/warranty fields)
   const fixedPayload = {
     ...body,
-    itemCategory,
-    itemType,
+    AssetCategory,
+    AssetType,
     branchId,
     memory,
     storage,
@@ -62,7 +62,7 @@ const create = async (req) => {
   // Purchase & Warranty field names to extract
   const purchaseFields = [
     "purchaseType", "poNumber", "poDate", "receiptNumber", "receiptDate", "purchaseDate",
-    "vendorId", "itemReceivedOn", "invoiceNumber", "invoiceDate", "deliveryChallanNumber",
+    "vendorId", "AssetReceivedOn", "invoiceNumber", "invoiceDate", "deliveryChallanNumber",
     "deliveryChallanDate", "purchaseCost", "taxAmount", "totalAmount", "currency",
     "deliveryDate", "receivedBy"
   ];
@@ -92,17 +92,17 @@ const create = async (req) => {
   // Delete fields from fixedPayload
   [...purchaseFields, ...warrantyFields].forEach((k) => delete fixedPayload[k]);
 
-  // 1️⃣ Save Fixed Asset first
+  // 1. Save Fixed Asset first
   const fixedDoc = await Laptop.create(fixedPayload);
   const assetId = fixedDoc._id;
 
-  // 2️⃣ Create Purchase Document if any purchase field exists
+  // 2. Create Purchase Document if any purchase field exists
   let purchaseDoc = null;
   if (Object.keys(purchaseData).length > 0) {
     purchaseDoc = await Purchase.create({
       assetId,
-      itemCategory,
-      itemType,
+      AssetCategory,
+      AssetType,
       organizationId: fixedPayload.organizationId,
       branchId,
       ...purchaseData,
@@ -110,13 +110,13 @@ const create = async (req) => {
     });
   }
 
-  // 3️⃣ Create Warranty Document if any warranty field exists
+  // 3. Create Warranty Document if any warranty field exists
   let warrantyDoc = null;
   if (Object.keys(warrantyData).length > 0) {
     warrantyDoc = await Warranty.create({
       assetId,
-      itemCategory,
-      itemType,
+      AssetCategory,
+      AssetType,
       organizationId: fixedPayload.organizationId,
       branchId,
       ...warrantyData,
@@ -153,11 +153,11 @@ const list = async (req) => {
 
   const flattenedItems = items.map((item) => ({
     ...item,
-    itemName: item.itemId || item.summary?.itemName || "N/A",
+    AssetName: item.AssetId || item.summary?.AssetName || "N/A",
     manufacturer: item.manufacturer || item.summary?.manufacturer || "N/A",
     model: item.model || item.summary?.model || "N/A",
     serialNumber: item.serialNumber || item.summary?.serialNumber || "N/A",
-    itemTag: item.itemId || item.summary?.itemTag || "N/A",
+    AssetTag: item.AssetId || item.summary?.AssetTag || "N/A",
   }));
 
   return { items: flattenedItems, message: "Assets retrieved" };
@@ -180,3 +180,4 @@ const getById = async (req) => {
 };
 
 export default { create, list, getById };
+

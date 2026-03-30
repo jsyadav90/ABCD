@@ -74,7 +74,7 @@ const loadCategoryConfigs = async (category) => {
   return p;
 };
 
-export const getItemFieldConfig = async (itemType) => {
+export const getAssetFieldConfig = async (itemType) => {
   const type = String(itemType || "").trim().toLowerCase();
   if (!type) return genericConfig;
   if (configCache.has(type)) return configCache.get(type);
@@ -85,5 +85,5 @@ export const getItemFieldConfig = async (itemType) => {
   return cfg;
 };
 
-export const ITEM_FIELD_CONFIG = {};
+export const ASSET_FIELD_CONFIG = {};
 

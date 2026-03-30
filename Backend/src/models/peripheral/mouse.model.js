@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Model: Mouse Peripheral
  * Description: Mouse-specific fields for peripheral assets. 
  * Collections: asset_peripheral_mouse
@@ -8,23 +8,23 @@ import mongoose from "mongoose";
 const mouseSchema = new mongoose.Schema(
   {
     // Mandatory first fields
-    itemCategory: {
+    AssetCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "AssetCategory",
       required: true
     },
-    itemType: { type: String, required: true, trim: true },
-    itemTypeId: {
+    AssetType: { type: String, required: true, trim: true },
+    AssetTypeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ItemType",
+      ref: "AssetType",
       default: null
     },
 
     // Basic Information
-    itemId: { type: String, trim: true, default: null },
-    itemTag: { type: String, trim: true, default: null },
+    AssetId: { type: String, trim: true, default: null },
+    AssetTag: { type: String, trim: true, default: null },
     barcode: { type: String, trim: true, default: null },
-    itemSubType: { type: String, trim: true, default: null },
+    assetSubType: { type: String, trim: true, default: null },
     manufacturer: { type: String, trim: true, default: null },
     model: { type: String, trim: true, default: null },
     modelNumber: { type: String, trim: true, default: null },
@@ -53,9 +53,9 @@ const mouseSchema = new mongoose.Schema(
     weight: { type: Number, default: null }, // grams
 
     // Item State
-    itemStatus: { type: String, trim: true, default: "active" },
-    itemIsCurrently: { type: String, trim: true, default: "inStore" },
-    itemUser: { type: String, trim: true, default: null },
+    AssetStatus: { type: String, trim: true, default: "active" },
+    assetIsCurrently: { type: String, trim: true, default: "inStore" },
+    AssetUser: { type: String, trim: true, default: null },
     AssignDate: { type: Date, default: null },
 
     // Infrastructure fields
@@ -75,8 +75,8 @@ const mouseSchema = new mongoose.Schema(
 
     // Summary field for quick listing
     summary: {
-      itemName: { type: String, trim: true, default: null },
-      itemTag: { type: String, trim: true, default: null },
+      AssetName: { type: String, trim: true, default: null },
+      AssetTag: { type: String, trim: true, default: null },
       serialNumber: { type: String, trim: true, default: null },
       manufacturer: { type: String, trim: true, default: null },
       model: { type: String, trim: true, default: null },
@@ -87,8 +87,8 @@ const mouseSchema = new mongoose.Schema(
 
 mouseSchema.pre("save", function (next) {
   if (this.summary) {
-    this.summary.itemName = [this.manufacturer, this.model].filter(Boolean).join(" ");
-    this.summary.itemTag = this.itemTag || null;
+    this.summary.AssetName = [this.manufacturer, this.model].filter(Boolean).join(" ");
+    this.summary.AssetTag = this.AssetTag || null;
     this.summary.serialNumber = this.serialNumber || null;
     this.summary.manufacturer = this.manufacturer || null;
     this.summary.model = this.model || null;
@@ -97,6 +97,7 @@ mouseSchema.pre("save", function (next) {
 });
 
 mouseSchema.index({ organizationId: 1, branchId: 1 });
-mouseSchema.index({ itemType: 1, itemIsCurrently: 1 });
+mouseSchema.index({ AssetType: 1, assetIsCurrently: 1 });
 
 export const Mouse = mongoose.model("Mouse", mouseSchema);
+

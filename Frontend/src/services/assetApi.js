@@ -40,13 +40,13 @@ export const fetchAssetCategories = async () => {
   }
 }
 
-export const fetchItemTypesByCategory = async (categoryId) => {
+export const fetchAssetTypesByCategory = async (categoryId) => {
   try {
-    const response = await API.get(`/itemtypes/category/${categoryId}`)
+    const response = await API.get(`/assettypes/category/${categoryId}`)
     return response.data?.data?.items || []
   } catch (error) {
-    console.error('Failed to fetch item types:', error)
-    throw new Error(error.response?.data?.message || 'Failed to fetch item types')
+    console.error('Failed to fetch asset types:', error)
+    throw new Error(error.response?.data?.message || 'Failed to fetch asset types')
   }
 }
 
@@ -60,9 +60,9 @@ export const createAsset = async (assetData) => {
   }
 }
 
-export const fetchAssetDetailsById = async (assetId, itemType = "CPU") => {
+export const fetchAssetDetailsById = async (assetId, assetType = "CPU") => {
   try {
-    const response = await API.get(`/assets/${assetId}?itemType=${itemType}`)
+    const response = await API.get(`/assets/${assetId}?assetType=${assetType}`)
     return response.data?.data || {}
   } catch (error) {
     console.error('Failed to fetch asset details:', error)

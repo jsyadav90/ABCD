@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { fetchUserById } from "../../../services/userApi";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
@@ -47,19 +47,19 @@ const UserDetails = () => {
 
   const mockAssignedItems = [
     {
-      itemType: "Laptop",
+      assetType: "Laptop",
       assetCode: "LT-DEL-221",
       assignedDate: "12-Mar-2024",
       status: "Active",
     },
     {
-      itemType: "Monitor",
+      assetType: "Monitor",
       assetCode: "MN-DEL-089",
       assignedDate: "12-Mar-2024",
       status: "Active",
     },
     {
-      itemType: "Keyboard",
+      assetType: "Keyboard",
       assetCode: "KB-DEL-045",
       assignedDate: "15-Mar-2024",
       status: "Active",
@@ -110,7 +110,7 @@ const UserDetails = () => {
             <div>
             <h3>{user?.name || "User"}</h3>
             <p>
-              {user?.userId || "--"} • {user?.role || "--"}
+              {user?.userId || "--"} | {user?.role || "--"}
             </p>
             </div>
           </div>
@@ -205,7 +205,7 @@ const UserDetails = () => {
               <tbody>
                 {mockAssignedItems.map((item, idx) => (
                   <tr key={idx}>
-                    <td data-label="Item Type">{item.itemType}</td>
+                    <td data-label="Item Type">{item.assetType}</td>
                     <td data-label="Asset Code">{item.assetCode}</td>
                     <td data-label="Assigned Date">{item.assignedDate}</td>
                     <td className="status-active" data-label="Status">{item.status}</td>
@@ -221,7 +221,7 @@ const UserDetails = () => {
             <ul className="timeline-list">
               {mockTimeline.map((item, idx) => (
                 <li key={idx}>
-                  <span className="timeline-date">{item.date}</span> → {item.event}
+                  <span className="timeline-date">{item.date}</span> â†’ {item.event}
                 </li>
               ))}
             </ul>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Asset Tooltip Utilities
  * Provides tooltip details for different asset types in the asset table
  */
@@ -7,20 +7,20 @@ import React from 'react';
 
 export const getTooltipDetails = (row) => {
   const safe = (value) => (value || value === 0 ? value : "N/A");
-  const itemType = row.itemType?.toUpperCase();
+  const assetType = row.assetType?.toUpperCase();
 
   const totalRam = Number(row.memory?.totalCapacityGB) || (row.memory?.modules?.reduce((sum, module) => sum + (Number(module.ramCapacityGB) || 0), 0) || 0);
   const totalStorage = Number(row.storage?.totalCapacityGB) || (row.storage?.devices?.reduce((sum, device) => sum + (Number(device.driveCapacityGB) || 0), 0) || 0);
 
-  if (itemType === 'CPU') {
+  if (assetType === 'CPU') {
     return `OS: ${safe(row.osName)}, Model: ${safe(row.model)}, CPU: ${safe(row.processorModel)}, RAM: ${totalRam ? `${totalRam}GB` : 'N/A'}, Storage: ${totalStorage ? `${totalStorage}GB` : 'N/A'}`;
   }
 
-  if (itemType === 'LAPTOP') {
+  if (assetType === 'LAPTOP') {
     return `OS: ${safe(row.osName)}, Model: ${safe(row.model)}, CPU: ${safe(row.processorModel)}, RAM: ${totalRam ? `${totalRam}GB` : 'N/A'}, Storage: ${totalStorage ? `${totalStorage}GB` : 'N/A'}`;
   }
 
-  if (itemType === 'MONITOR') {
+  if (assetType === 'MONITOR') {
     const size = safe(row.screenSizeInches);
     const resolution = safe(row.resolution);
     const panel = safe(row.panelType ?? row.panel_type);
@@ -28,23 +28,23 @@ export const getTooltipDetails = (row) => {
     return `Size: ${size}", Resolution: ${resolution}, Panel: ${panel}, Refresh Rate: ${refresh}Hz`;
   }
 
-  if (itemType === 'PRINTER') {
+  if (assetType === 'PRINTER') {
     return `Model: ${safe(row.model)}, Type: ${safe(row.printerType)}, Technology: ${safe(row.printTechnology)}, Max Resolution: ${safe(row.maxResolution)}`;
   }
 
-  if (itemType === 'CAMERA') {
+  if (assetType === 'CAMERA') {
     return `Model: ${safe(row.model)}, Type: ${safe(row.cameraType)}, Resolution: ${safe(row.resolution)}, Interface: ${safe(row.interfaceType)}`;
   }
 
-  if (itemType === 'KEYBOARD') {
+  if (assetType === 'KEYBOARD') {
     return `Model: ${safe(row.model)}, Type: ${safe(row.keyboardType)}, Interface: ${safe(row.interfaceType)}, Layout: ${safe(row.layout)}`;
   }
 
-  if (itemType === 'MOUSE') {
+  if (assetType === 'MOUSE') {
     return `Model: ${safe(row.model)}, Type: ${safe(row.mouseType)}, Interface: ${safe(row.interfaceType)}, DPI: ${safe(row.dpi)}`;
   }
 
-  if (itemType === 'HEADPHONE') {
+  if (assetType === 'HEADPHONE') {
     return `Model: ${safe(row.model)}, Type: ${safe(row.headphoneType)}, Interface: ${safe(row.interfaceType)}, Driver Size: ${safe(row.driverSize)}`;
   }
 

@@ -1,9 +1,9 @@
-/**
+﻿/**
  * ISACTIVE STATUS MANAGEMENT IMPLEMENTATION GUIDE
  * ===============================================
  * 
  * This guide explains how to implement isActive status management in your controllers.
- * All models (Assets, Categories, ItemTypes, Roles, etc.) now support status management.
+ * All models (Assets, Categories, AssetTypes, Roles, etc.) now support status management.
  * 
  * BENEFITS OF THIS APPROACH:
  * - Non-destructive: Records stay in database but are hidden from users
@@ -270,17 +270,17 @@ export const deactivateRole = asyncHandler(async (req, res) => {
 // ============================================================
 /*
 ALL MODELS:
-✓ CPU
-✓ Laptop
-✓ Monitor
-✓ AssetCategory
-✓ ItemType
-✓ Warranty
-✓ Branch
-✓ Organization
-✓ Role
-✓ User (already has it)
-✓ Purchase (check if it has it)
+[OK] CPU
+[OK] Laptop
+[OK] Monitor
+[OK] AssetCategory
+[OK] AssetType
+[OK] Warranty
+[OK] Branch
+[OK] Organization
+[OK] Role
+[OK] User (already has it)
+[OK] Purchase (check if it has it)
 
 Use the same functions for all models!
 */
@@ -304,10 +304,11 @@ Use the same functions for all models!
    - isDeleted: For permanent removal (soft delete, hidden from users)
 
 6. Deactivated records are still in DB - good for:
-   ✓ Temporarily suspending users/roles
-   ✓ Archiving old assets
-   ✓ Hiding obsolete categories
-   ✓ Disabling vendors/suppliers
+   - Temporarily suspending users/roles
+   - Archiving old assets
+   - Hiding obsolete categories
+   - Disabling vendors/suppliers
 
 7. Use toggleActive() when users can enable/disable their own preferences
 */
+

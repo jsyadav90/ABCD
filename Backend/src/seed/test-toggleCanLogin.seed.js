@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { User } from "../models/user.model.js";
 import { UserLogin } from "../models/userLogin.model.js";
@@ -9,7 +9,7 @@ const testToggleCanLogin = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/abcd");
-    console.log("✅ Connected to MongoDB");
+    console.log("[OK] Connected to MongoDB");
 
     // Find an existing user (use the superadmin or create a test user)
     let user = await User.findOne({ userId: "superadmin" });
@@ -18,12 +18,12 @@ const testToggleCanLogin = async () => {
     }
 
     if (!user) {
-      console.log("❌ No users found in database");
+      console.log("âŒ No users found in database");
       await mongoose.disconnect();
       return;
     }
 
-    console.log("\n📋 Test User Details:");
+    console.log("\nŸ“‹ Test User Details:");
     console.log("- User ID:", user._id);
     console.log("- Name:", user.name);
     console.log("- isActive:", user.isActive);
@@ -31,56 +31,56 @@ const testToggleCanLogin = async () => {
 
     // Test 1: Try to enable login when user is inactive
     if (!user.isActive) {
-      console.log("\n🔴 Test 1: Attempting to enable login for inactive user");
+      console.log("\nŸ”´ Test 1: Attempting to enable login for inactive user");
       console.log("Expected Result: Should fail with error message");
-      console.log("Actual Result: ✅ Cannot enable login for inactive user");
+      console.log("Actual Result: [OK] Cannot enable login for inactive user");
     }
 
     // Test 2: Set user to active first
-    console.log("\n🟡 Test 2: Setting user to active");
+    console.log("\nŸŸ¡ Test 2: Setting user to active");
     user.isActive = true;
     await user.save();
-    console.log("✅ User is now active");
+    console.log("[OK] User is now active");
 
     // Test 3: Enable login
-    console.log("\n🟢 Test 3: Enabling login for active user");
+    console.log("\nŸŸ¢ Test 3: Enabling login for active user");
     user.canLogin = true;
     await user.save();
     
     // Check if UserLogin was created
     const userLogin = await UserLogin.findOne({ user: user._id });
-    console.log("✅ canLogin enabled");
-    console.log("✅ UserLogin exists:", !!userLogin);
+    console.log("[OK] canLogin enabled");
+    console.log("[OK] UserLogin exists:", !!userLogin);
 
     // Reload and verify
     const updatedUser = await User.findById(user._id);
-    console.log("\n📊 User After Enable:");
+    console.log("\nŸ“Š User After Enable:");
     console.log("- isActive:", updatedUser.isActive);
     console.log("- canLogin:", updatedUser.canLogin);
 
     // Test 4: Disable login
-    console.log("\n🟡 Test 4: Disabling login");
+    console.log("\nŸŸ¡ Test 4: Disabling login");
     user.canLogin = false;
     await user.save();
     
     // Check if UserLogin was deleted
     const userLoginAfterDisable = await UserLogin.findOne({ user: user._id });
-    console.log("✅ canLogin disabled");
-    console.log("✅ UserLogin deleted:", !userLoginAfterDisable);
+    console.log("[OK] canLogin disabled");
+    console.log("[OK] UserLogin deleted:", !userLoginAfterDisable);
 
     // Reload and verify
     const userAfterDisable = await User.findById(user._id);
-    console.log("\n📊 User After Disable:");
+    console.log("\nŸ“Š User After Disable:");
     console.log("- isActive:", userAfterDisable.isActive);
     console.log("- canLogin:", userAfterDisable.canLogin);
 
-    console.log("\n✅ All tests completed successfully!");
+    console.log("\n[OK] All tests completed successfully!");
 
   } catch (error) {
-    console.error("❌ Error:", error.message);
+    console.error("âŒ Error:", error.message);
   } finally {
     await mongoose.disconnect();
-    console.log("\n🔌 Disconnected from MongoDB");
+    console.log("\nŸ”Œ Disconnected from MongoDB");
   }
 };
 

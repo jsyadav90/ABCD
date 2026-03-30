@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 import path from "path";
 import mongoose from "mongoose";
 import dns from "dns";
@@ -14,9 +14,9 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 const { default: connectDB } = await import("../config/db.js");
 const { AssetCategory } = await import("../models/assetcategory.model.js");
-const { ItemType } = await import("../models/itemtype.model.js");
+const { AssetType } = await import("../models/assettype.model.js");
 
-const itemTypesData = {
+const AssetTypesData = {
   "Fixed Assets": [
     "CPU", "Monitor", "Laptop", "Printer", "Tablet", "Interactive Panel", "Projector", "Network Switch", "Router", "Firewall", "Barcode Printer", "Barcode Scanner", "Scanner", "Biometric Device", "NAS Storage"
   ],
@@ -31,7 +31,7 @@ const itemTypesData = {
   ]
 };
 
-async function seedItemTypes() {
+async function seedAssetTypes() {
   try {
     if (!process.env.MONGO_URI) {
       console.error("Missing MONGO_URI");
@@ -40,28 +40,28 @@ async function seedItemTypes() {
 
     await connectDB();
 
-    for (const [categoryName, items] of Object.entries(itemTypesData)) {
+    for (const [categoryName, items] of Object.entries(AssetTypesData)) {
       const category = await AssetCategory.findOne({ name: categoryName });
       if (!category) {
         console.log(`Category ${categoryName} not found, skipping`);
         continue;
       }
 
-      for (const itemName of items) {
-        const existing = await ItemType.findOne({ name: itemName, category: category._id });
+      for (const AssetName of items) {
+        const existing = await AssetType.findOne({ name: AssetName, category: category._id });
         if (existing) {
-          console.log(`Item type ${itemName} already exists for ${categoryName}`);
+          console.log(`Item type ${AssetName} already exists for ${categoryName}`);
           continue;
         }
 
-        const newItemType = await ItemType.create({
-          name: itemName,
+        const newAssetType = await AssetType.create({
+          name: AssetName,
           category: category._id,
           isActive: true,
           isDeleted: false,
         });
 
-        console.log(`Created item type: ${itemName} for ${categoryName}`);
+        console.log(`Created item type: ${AssetName} for ${categoryName}`);
       }
     }
 
@@ -73,4 +73,4 @@ async function seedItemTypes() {
   }
 }
 
-seedItemTypes();
+seedAssetTypes();

@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 
 const warrantySchema = new mongoose.Schema(
   {
     assetId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
-    itemCategory: { type: String, trim: true, default: null },
-    itemType: { type: String, trim: true, default: null },
+    AssetCategory: { type: String, trim: true, default: null },
+    AssetType: { type: String, trim: true, default: null },
 
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", default: null, index: true },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", default: null, index: true },
@@ -52,4 +52,5 @@ warrantySchema.index(
 );
 
 export const Warranty = mongoose.model("Warranty", warrantySchema);
+
 

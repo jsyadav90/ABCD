@@ -1,8 +1,8 @@
-/**
+﻿/**
  * Asset Routes
  * Description: Assets ke create/list/get endpoints. Auth + permission guards applied.
- * - POST /api/v1/assets       -> create (itemType ke hisaab se handler)
- * - GET  /api/v1/assets       -> list (optional ?itemType=cpu/monitor)
+ * - POST /api/v1/assets       -> create (AssetType ke hisaab se handler)
+ * - GET  /api/v1/assets       -> list (optional ?AssetType=cpu/monitor)
  * - GET  /api/v1/assets/:id   -> get by id (try-all if type missing)
  */
 import express from "express";
@@ -22,3 +22,4 @@ router.get("/count",
 router.get("/:id", verifyPermission("assets:inventory:view"), getAssetById);
 
 export default router;
+

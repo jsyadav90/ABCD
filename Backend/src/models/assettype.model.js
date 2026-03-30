@@ -1,11 +1,11 @@
-/**
- * Model: Item Type
- * Description: Stores unique item types (CPU, Monitor, Laptop, etc.) with their categories
- * Collection: item_types
+﻿/**
+ * Model: Asset Type
+ * Description: Stores unique asset types (CPU, Monitor, Laptop, etc.) with their categories
+ * Collection: asset_types
  */
 import mongoose from "mongoose";
 
-const itemTypeSchema = new mongoose.Schema(
+const AssetTypeSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -64,11 +64,12 @@ const itemTypeSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    collection: "item_types",
+    collection: "asset_types",
   }
 );
 
 // Compound index to ensure unique name per category
-itemTypeSchema.index({ name: 1, category: 1 }, { unique: true });
+AssetTypeSchema.index({ name: 1, category: 1 }, { unique: true });
 
-export const ItemType = mongoose.model("ItemType", itemTypeSchema);
+export const AssetType = mongoose.model("AssetType", AssetTypeSchema);
+

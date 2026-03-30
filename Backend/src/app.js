@@ -1,4 +1,4 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -13,7 +13,7 @@ import purchaseRoutes from "./routes/purchase.routes.js";
 import warrantyRoutes from "./routes/warranty.routes.js";
 import { apiError } from "./utils/apiError.js";
 import lookupRoutes from "./routes/lookup.routes.js";
-import itemTypeRoutes from "./routes/itemtype.routes.js";
+import assetTypeRoutes from "./routes/assettype.routes.js";
 import vendorRoutes from "./routes/vendor.routes.js";
 import { setSecurityHeaders, issueCsrfToken, csrfGuard } from "./middlewares/security.middleware.js";
 
@@ -60,7 +60,7 @@ app.use(csrfGuard);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Backend server is running 🚀",
+    message: "Backend server is running successfully",
   });
 });
 
@@ -77,7 +77,7 @@ app.use("/api/v1/assetcategories", assetCategoryRoutes);
 app.use("/api/v1/purchases", purchaseRoutes);
 app.use("/api/v1/warranties", warrantyRoutes);
 app.use("/api/v1/lookups", lookupRoutes);
-app.use("/api/v1/itemtypes", itemTypeRoutes);
+app.use("/api/v1/assettypes", assetTypeRoutes);
 app.use("/api/v1/vendors", vendorRoutes);
 
 /* ===============================
@@ -112,3 +112,4 @@ app.use((err, req, res, next) => {
    Export App
 ================================ */
 export default app;
+

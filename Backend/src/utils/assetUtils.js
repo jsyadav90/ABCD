@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Asset Utilities
  * Purpose: Repeated helper logic ko centralize karna taa ki handlers aur controllers simple aur readable rahein.
  */
@@ -15,7 +15,7 @@ export const toNumberOrNull = (val) => {
 /**
  * Query se common filters build karta hai
  * - isDeleted false
- * - isActive, branchId, itemCategory, itemType normalize
+ * - isActive, branchId, AssetCategory, AssetType normalize
  * - organization scope apply (agar req.user.organizationId ho)
  * - For non-super admins: branch scoping by user's assigned branches when "__ALL__" selected
  */
@@ -82,8 +82,8 @@ export const buildAssetListFilter = (req) => {
     }
   }
   
-  if (q.itemCategory) filter.itemCategory = q.itemCategory; // Now it's ObjectId, no need to normalize
-  if (q.itemType) filter.itemType = norm(q.itemType).toLowerCase();
+  if (q.AssetCategory) filter.AssetCategory = q.AssetCategory; // Now it's ObjectId, no need to normalize
+  if (q.AssetType) filter.AssetType = norm(q.AssetType).toLowerCase();
   if (req?.user?.organizationId) filter.organizationId = req.user.organizationId;
   return filter;
 };
@@ -101,4 +101,5 @@ export const ensureOrgAndAudit = (req) => ({
   createdBy: req.user?._id || req.user?.id,
   updatedBy: null,
 });
+
 

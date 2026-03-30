@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Model: Laptop Asset
  * Description: Laptop-specific fields + summary for fast list views. Collection: asset_fixed
  */
@@ -6,23 +6,23 @@ import mongoose from "mongoose";
 
 const laptopSchema = new mongoose.Schema(
   {
-    itemCategory: {
+    AssetCategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "AssetCategory",
       required: true
     },
-    itemType: { type: String, required: true, trim: true },
-    itemTypeId: {
+    AssetType: { type: String, required: true, trim: true },
+    AssetTypeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ItemType",
+      ref: "AssetType",
       default: null
     },
 
     // Basic Information
-    itemId: { type: String, trim: true, default: null },
-    itemTag: { type: String, trim: true, default: null },
+    AssetId: { type: String, trim: true, default: null },
+    AssetTag: { type: String, trim: true, default: null },
     barcode: { type: String, trim: true, default: null },
-    itemSubType: { type: String, trim: true, default: null },
+    assetSubType: { type: String, trim: true, default: null },
     manufacturer: { type: String, trim: true, default: null },
     model: { type: String, trim: true, default: null },
     modelNumber: { type: String, trim: true, default: null },
@@ -122,9 +122,9 @@ const laptopSchema = new mongoose.Schema(
     remarks: { type: String, trim: true, maxlength: 500, default: null },
 
     // Item state fields (common)
-    itemStatus: { type: String, trim: true, default: "active" },
-    itemIsCurrently: { type: String, trim: true, default: "inStore" },
-    itemUser: { type: String, trim: true, default: null },
+    AssetStatus: { type: String, trim: true, default: "active" },
+    assetIsCurrently: { type: String, trim: true, default: "inStore" },
+    AssetUser: { type: String, trim: true, default: null },
     AssignDate: { type: Date, default: null },
 
     // auditing
@@ -143,8 +143,8 @@ const laptopSchema = new mongoose.Schema(
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
 
     summary: {
-      itemName: { type: String, trim: true, default: null },
-      itemTag: { type: String, trim: true, default: null },
+      AssetName: { type: String, trim: true, default: null },
+      AssetTag: { type: String, trim: true, default: null },
       serialNumber: { type: String, trim: true, default: null },
       manufacturer: { type: String, trim: true, default: null },
       model: { type: String, trim: true, default: null },
@@ -153,14 +153,14 @@ const laptopSchema = new mongoose.Schema(
   { timestamps: true, collection: "asset_fixed" }
 );
 
-laptopSchema.index({ organizationId: 1, branchId: 1, itemCategory: 1, itemType: 1, isDeleted: 1, createdAt: -1 });
-laptopSchema.index({ itemId: 1 }, { sparse: true });
+laptopSchema.index({ organizationId: 1, branchId: 1, AssetCategory: 1, AssetType: 1, isDeleted: 1, createdAt: -1 });
+laptopSchema.index({ AssetId: 1 }, { sparse: true });
 laptopSchema.index({ serialNumber: 1 }, { sparse: true });
 
 laptopSchema.pre("save", function () {
   this.summary = {
-    itemName: this.itemId || "Laptop",
-    itemTag: this.itemTag || this.itemId || "N/A",
+    AssetName: this.AssetId || "Laptop",
+    AssetTag: this.AssetTag || this.AssetId || "N/A",
     serialNumber: this.serialNumber || "N/A",
     manufacturer: this.manufacturer || "N/A",
     model: this.model || "N/A",
@@ -169,3 +169,4 @@ laptopSchema.pre("save", function () {
 
 const Laptop = mongoose.model("Laptop", laptopSchema);
 export { Laptop };
+

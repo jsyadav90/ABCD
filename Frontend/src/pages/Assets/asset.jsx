@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Page: Assets List
  * Description: Assets ka industry-standard dashboard view with summary cards aur filtered table.
  * Logics:
@@ -70,7 +70,7 @@ const AssetPage = () => {
         setAssets(uniqueData);
         // Debug: log sample monitor rows so we can verify available fields
         try {
-          console.debug('Fetched assets sample (first 5 monitors):', uniqueData.filter(a => String(a.itemType || '').toUpperCase() === 'MONITOR').slice(0,5));
+          console.debug('Fetched assets sample (first 5 monitors):', uniqueData.filter(a => String(a.assetType || '').toUpperCase() === 'MONITOR').slice(0,5));
         } catch {
           console.debug('Fetched assets (first 5):', uniqueData.slice(0,5));
         }
@@ -189,27 +189,27 @@ const AssetPage = () => {
     return map;
   }, [assetCategories]);
 
-  const getCategoryName = useCallback((itemCategory) => {
-    if (!itemCategory) return "";
+  const getCategoryName = useCallback((assetcategory) => {
+    if (!assetcategory) return "";
 
-    if (typeof itemCategory === "object") {
-      if (itemCategory.name) return itemCategory.name;
-      if (itemCategory._id) {
-        const mapped = categoryMap.get(String(itemCategory._id));
+    if (typeof assetcategory === "object") {
+      if (assetcategory.name) return assetcategory.name;
+      if (assetcategory._id) {
+        const mapped = categoryMap.get(String(assetcategory._id));
         if (mapped) return mapped;
-        return itemCategory.name || itemCategory.value || String(itemCategory._id);
+        return assetcategory.name || assetcategory.value || String(assetcategory._id);
       }
-      if (itemCategory.value) return itemCategory.value;
-      return String(itemCategory);
+      if (assetcategory.value) return assetcategory.value;
+      return String(assetcategory);
     }
 
-    if (typeof itemCategory === "string") {
-      const mapped = categoryMap.get(itemCategory);
+    if (typeof assetcategory === "string") {
+      const mapped = categoryMap.get(assetcategory);
       if (mapped) return mapped;
-      return itemCategory;
+      return assetcategory;
     }
 
-    return String(itemCategory);
+    return String(assetcategory);
   }, [categoryMap]);
 
   const categoryOptions = useMemo(() => {
@@ -318,15 +318,15 @@ const AssetPage = () => {
     let baseAssets = assets;
     if (pendingFilterCategory && pendingFilterCategory !== "ALL") {
       baseAssets = assets.filter((a) => {
-        const assetCategory = String(getCategoryName(a.itemCategory) || "").trim().toUpperCase();
+        const assetCategory = String(getCategoryName(a.assetcategory) || "").trim().toUpperCase();
         return assetCategory === pendingFilterCategory.trim().toUpperCase();
       });
     }
     
     // Then get types from filtered assets
     baseAssets.forEach((a) => {
-      if (a.itemType) {
-        const normalized = String(a.itemType).trim().toUpperCase();
+      if (a.assetType) {
+        const normalized = String(a.assetType).trim().toUpperCase();
         values.add(normalized);
       }
     });
@@ -344,7 +344,7 @@ const AssetPage = () => {
     assetCategories.forEach((cat) => {
       const categoryName = String(cat.name || "").trim().toUpperCase();
       counts[categoryName] = activeVisibleAssets.filter(a => {
-        const assetCategory = String(getCategoryName(a.itemCategory) || "").trim().toUpperCase();
+        const assetCategory = String(getCategoryName(a.assetcategory) || "").trim().toUpperCase();
         return assetCategory === categoryName;
       }).length;
     });
@@ -398,7 +398,7 @@ const AssetPage = () => {
     // Filter by Category
     if (appliedFilterCategory !== "ALL") {
       list = list.filter((a) => {
-        const assetCategory = String(getCategoryName(a.itemCategory) || "").trim().toUpperCase();
+        const assetCategory = String(getCategoryName(a.assetcategory) || "").trim().toUpperCase();
         return assetCategory === appliedFilterCategory.trim().toUpperCase();
       });
     }
@@ -406,7 +406,7 @@ const AssetPage = () => {
     // Filter by Type
     if (appliedFilterType !== "ALL") {
       list = list.filter((a) => {
-        const assetType = String(a.itemType || "").trim().toUpperCase();
+        const assetType = String(a.assetType || "").trim().toUpperCase();
         return assetType === appliedFilterType.trim().toUpperCase();
       });
     }
@@ -459,12 +459,12 @@ const AssetPage = () => {
   const columns = [
     { 
       header: "Item ID", 
-      key: "itemId", 
+      key: "assetId", 
       sortable: true,
       render: (row, search) => (
         <button
           onClick={() => {
-            localStorage.setItem('lastItemType', row.itemType || 'cpu');
+            localStorage.setItem('lastassetType', row.assetType || 'cpu');
             navigate(`/assets/${row._id}`);
           }}
           style={{
@@ -478,17 +478,17 @@ const AssetPage = () => {
           }}
           title={getTooltipDetails(row)}
         >
-          {highlightText(row.itemId, search)}
+          {highlightText(row.assetId, search)}
         </button>
       )
     },
-    { header: "Type", key: "itemType", sortable: true, render: (row) => row.itemType === "cpu" || row.itemType === "Cpu" || row.itemType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.itemType || "").trim()) },
-    {header: "Sub Type", key: "itemSubType", sortable: true, render: (row) => row.itemType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.itemSubType || row.itemType))},
+    { header: "Type", key: "assetType", sortable: true, render: (row) => row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.assetType || "").trim()) },
+    {header: "Sub Type", key: "assetSubType", sortable: true, render: (row) => row.assetType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.assetSubType || row.assetType))},
     {
       header: "Category",
-      key: "itemCategory",
+      key: "assetcategory",
       sortable: true,
-      render: (row) => getCategoryName(row.itemCategory),
+      render: (row) => getCategoryName(row.assetcategory),
     },
     { 
       header: "Branch", 
@@ -603,7 +603,7 @@ const AssetPage = () => {
             </div>
             {/* Empty state message */}
             <div className="empty-state">
-              <div className="empty-icon">📦</div>
+              <div className="empty-icon">[BOX]</div>
               <div className="empty-text">
                 {appliedFilterCategory === "ALL" ? "No items. Click Add Item to create one." : `No ${capitalizeText(appliedFilterCategory)} items here.`}
               </div>

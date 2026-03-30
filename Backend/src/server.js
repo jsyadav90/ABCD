@@ -23,20 +23,20 @@ connectDB()
   .then(async () => {
     const PORT = envConfig.port;
     app.listen(PORT, () => {
-      console.log(`🚀 Server started successfully`);
+      console.log(`[OK] Server started successfully`);
       console.log(`
-        ╔════════════════════════════════════════╗
-        ║     ABCD2 Backend Server Running       ║
-        ╠════════════════════════════════════════╣
-        ║ Environment: ${envConfig.nodeEnv.padEnd(25)} ║
-        ║ Port: ${PORT.toString().padEnd(31)}  ║
-        ║ API: http://localhost:${PORT}/api         ║
-        ╚════════════════════════════════════════╝
+        ================================================================================
+        =     ABCD2 Backend Server Running       =
+        ================================================================================
+        = Environment: ${envConfig.nodeEnv.padEnd(25)} =
+        = Port: ${PORT.toString().padEnd(31)}  =
+        = API: http://localhost:${PORT}/api         =
+        ================================================================================
       `);
     });
   })
   .catch((err) => {
-    console.error("❌ Failed to start server", err.message);
+    console.error("[X] Failed to start server", err.message);
     console.error("MongoDB connection failed:", err.message);
     process.exit(1);
   });

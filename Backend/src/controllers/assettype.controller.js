@@ -1,23 +1,23 @@
-/**
- * Item Type Controller
- * Description: CRUD operations for item types (CPU, Monitor, Laptop, etc.)
+﻿/**
+ * asset type Controller
+ * Description: CRUD operations for asset types (CPU, Monitor, Laptop, etc.)
  */
-import { ItemType } from "../models/itemtype.model.js";
+import { AssetType } from "../models/assettype.model.js";
 import { AssetCategory } from "../models/assetcategory.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 
 /**
- * CREATE: Item Type
- * POST /api/v1/itemtypes
+ * CREATE: asset type
+ * POST /api/v1/assettypes
  */
-export const createItemType = asyncHandler(async (req, res) => {
+export const createAssetType = asyncHandler(async (req, res) => {
   const { name, category, description } = req.body;
 
   // Validation
   if (!name || !String(name).trim()) {
-    throw new apiError(400, "Item type name is required");
+    throw new apiError(400, "asset type name is required");
   }
   if (!category || !String(category).trim()) {
     throw new apiError(400, "Category ID is required");
@@ -35,35 +35,35 @@ export const createItemType = asyncHandler(async (req, res) => {
   }
 
   // Check duplicate name in same category
-  const existing = await ItemType.findOne({
+  const existing = await AssetType.findOne({
     name: { $regex: `^${name.trim()}$`, $options: "i" },
     category: category,
     isDeleted: false,
   });
 
   if (existing) {
-    throw new apiError(400, "Item type with this name already exists in the selected category");
+    throw new apiError(400, "asset type with this name already exists in the selected category");
   }
 
-  const itemType = await ItemType.create({
+  const newAssetType = await AssetType.create({
     name: name.trim(),
     category: category,
     description: description ? description.trim() : null,
   });
 
   // Populate category for response
-  await itemType.populate('category', 'name');
+  await newAssetType.populate('category', 'name');
 
   return res
     .status(201)
-    .json(new apiResponse(201, itemType, "Item type created successfully"));
+    .json(new apiResponse(201, newAssetType, "asset type created successfully"));
 });
 
 /**
- * GET ALL: Item Types
- * GET /api/v1/itemtypes
+ * GET ALL: asset types
+ * GET /api/v1/assettypes
  */
-export const getAllItemTypes = asyncHandler(async (req, res) => {
+export const getAllAssetTypes = asyncHandler(async (req, res) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
   const category = req.query.category;
@@ -81,66 +81,66 @@ export const getAllItemTypes = asyncHandler(async (req, res) => {
   }
 
   // Fetch data with pagination and populate category
-  const itemTypes = await ItemType.find(filter)
+  const assetTypes = await AssetType.find(filter)
     .populate('category', 'name code')
     .skip(skip)
     .limit(limit)
     .sort({ name: 1 });
 
   // Total count
-  const total = await ItemType.countDocuments(filter);
+  const total = await AssetType.countDocuments(filter);
 
   return res
     .status(200)
     .json(
       new apiResponse(
         200,
-        { items: itemTypes, meta: { page, limit, total } },
-        "Item types retrieved successfully"
+        { items: assetTypes, meta: { page, limit, total } },
+        "asset types retrieved successfully"
       )
     );
 });
 
 /**
- * GET BY ID: Item Type
- * GET /api/v1/itemtypes/:id
+ * GET BY ID: asset type
+ * GET /api/v1/assettypes/:id
  */
-export const getItemTypeById = asyncHandler(async (req, res) => {
+export const getAssetTypeById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const itemType = await ItemType.findOne({
+  const foundAssetType = await AssetType.findOne({
     _id: id,
     isDeleted: false,
   }).populate('category', 'name code');
 
-  if (!itemType) {
-    throw new apiError(404, "Item type not found");
+  if (!foundAssetType) {
+    throw new apiError(404, "asset type not found");
   }
 
   return res
     .status(200)
-    .json(new apiResponse(200, itemType, "Item type retrieved successfully"));
+    .json(new apiResponse(200, foundAssetType, "asset type retrieved successfully"));
 });
 
 /**
- * UPDATE: Item Type
- * PUT /api/v1/itemtypes/:id
+ * UPDATE: asset type
+ * PUT /api/v1/assettypes/:id
  */
-export const updateItemType = asyncHandler(async (req, res) => {
+export const updateAssetType = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name, category, description, isActive } = req.body;
 
-  const itemType = await ItemType.findOne({
+  const assetTypeToUpdate = await AssetType.findOne({
     _id: id,
     isDeleted: false,
   });
 
-  if (!itemType) {
-    throw new apiError(404, "Item type not found");
+  if (!assetTypeToUpdate) {
+    throw new apiError(404, "asset type not found");
   }
 
   // Check category if being updated
-  if (category && category !== itemType.category.toString()) {
+  if (category && category !== assetTypeToUpdate.category.toString()) {
     const categoryExists = await AssetCategory.findOne({
       _id: category,
       isDeleted: false,
@@ -153,7 +153,7 @@ export const updateItemType = asyncHandler(async (req, res) => {
 
     // Check duplicate name in new category
     if (name && String(name).trim()) {
-      const existing = await ItemType.findOne({
+      const existing = await AssetType.findOne({
         _id: { $ne: id },
         name: { $regex: `^${name.trim()}$`, $options: "i" },
         category: category,
@@ -161,74 +161,74 @@ export const updateItemType = asyncHandler(async (req, res) => {
       });
 
       if (existing) {
-        throw new apiError(400, "Item type with this name already exists in the selected category");
+        throw new apiError(400, "asset type with this name already exists in the selected category");
       }
     }
 
-    itemType.category = category;
+    assetTypeToUpdate.category = category;
   }
 
   // Check duplicate name in same category if name is changing
-  if (name && String(name).trim() && name.trim() !== itemType.name) {
-    const existing = await ItemType.findOne({
+  if (name && String(name).trim() && name.trim() !== assetTypeToUpdate.name) {
+    const existing = await AssetType.findOne({
       _id: { $ne: id },
       name: { $regex: `^${name.trim()}$`, $options: "i" },
-      category: itemType.category,
+      category: assetTypeToUpdate.category,
       isDeleted: false,
     });
 
     if (existing) {
-      throw new apiError(400, "Item type with this name already exists in the selected category");
+      throw new apiError(400, "asset type with this name already exists in the selected category");
     }
 
-    itemType.name = name.trim();
+    assetTypeToUpdate.name = name.trim();
   }
 
   // Update other fields
   if (description !== undefined) {
-    itemType.description = description ? description.trim() : null;
+    assetTypeToUpdate.description = description ? description.trim() : null;
   }
   if (isActive !== undefined) {
-    itemType.isActive = isActive;
+    assetTypeToUpdate.isActive = isActive;
   }
 
-  await itemType.save();
-  await itemType.populate('category', 'name code');
+  await assetTypeToUpdate.save();
+  await assetTypeToUpdate.populate('category', 'name code');
 
   return res
     .status(200)
-    .json(new apiResponse(200, itemType, "Item type updated successfully"));
+    .json(new apiResponse(200, assetTypeToUpdate, "asset type updated successfully"));
 });
 
 /**
- * DELETE: Item Type (Soft Delete)
- * DELETE /api/v1/itemtypes/:id
+ * DELETE: asset type (Soft Delete)
+ * DELETE /api/v1/assettypes/:id
  */
-export const deleteItemType = asyncHandler(async (req, res) => {
+export const deleteAssetType = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const itemType = await ItemType.findOne({
+  const assetTypeToDelete = await AssetType.findOne({
     _id: id,
     isDeleted: false,
   });
 
-  if (!itemType) {
-    throw new apiError(404, "Item type not found");
+  if (!assetTypeToDelete) {
+    throw new apiError(404, "asset type not found");
   }
 
-  itemType.isDeleted = true;
-  await itemType.save();
+  assetTypeToDelete.isDeleted = true;
+  await assetTypeToDelete.save();
 
   return res
     .status(200)
-    .json(new apiResponse(200, null, "Item type deleted successfully"));
+    .json(new apiResponse(200, null, "asset type deleted successfully"));
 });
 
 /**
- * GET BY CATEGORY: Get item types for a specific category
- * GET /api/v1/itemtypes/category/:categoryId
+ * GET BY CATEGORY: Get asset types for a specific category
+ * GET /api/v1/assettypes/category/:categoryId
  */
-export const getItemTypesByCategory = asyncHandler(async (req, res) => {
+export const getAssetTypesByCategory = asyncHandler(async (req, res) => {
   const { categoryId } = req.params;
 
   // Verify category exists
@@ -242,7 +242,7 @@ export const getItemTypesByCategory = asyncHandler(async (req, res) => {
     throw new apiError(404, "Category not found");
   }
 
-  const itemTypes = await ItemType.find({
+  const assetTypes = await AssetType.find({
     category: categoryId,
     isDeleted: false,
     isActive: true,
@@ -253,8 +253,10 @@ export const getItemTypesByCategory = asyncHandler(async (req, res) => {
     .json(
       new apiResponse(
         200,
-        { items: itemTypes, category: category },
-        "Item types retrieved successfully"
+        { items: assetTypes, category: category },
+        "asset types retrieved successfully"
       )
     );
 });
+
+

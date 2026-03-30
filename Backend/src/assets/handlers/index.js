@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Asset Handlers Registry
- * Description: itemType -> handler mapping. New asset types ko plug karo.
+ * Description: AssetType -> handler mapping. New asset types ko plug karo.
  * Fixed assets: cpu, laptop, monitor, printer (each has own handler, shared asset_fixed collection)
  * Peripheral assets: camera, keyboard, mouse, headphone (each has own handler, shared asset_peripheral collection)
  */
@@ -24,3 +24,4 @@ export const handlers = {
   headphone,
   __generic: null,
 };
+

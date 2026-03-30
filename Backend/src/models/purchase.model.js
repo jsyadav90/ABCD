@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 
 const purchaseSchema = new mongoose.Schema(
   {
     assetId: { type: mongoose.Schema.Types.ObjectId, required: true, index: true },
-    itemCategory: { type: String, trim: true, default: null },
-    itemType: { type: String, trim: true, default: null },
+    assetCategory: { type: String, trim: true, default: null },
+    AssetType: { type: String, trim: true, default: null },
 
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", default: null, index: true },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: "Branch", default: null, index: true },
@@ -17,11 +17,11 @@ const purchaseSchema = new mongoose.Schema(
     purchaseDate: { type: Date, default: null }, // Date of invoice or delivery Challan.
     vendorId: { type: String, trim: true, default: null }, // Could be a reference to a Vendor collection if needed.
 
-    itemReceivedOn: { type: String, trim: true, default: null }, // e.g. invoice, challan.
-    invoiceNumber: { type: String, trim: true, default: null }, // Applicable if itemReceivedOn is invoice.
-    invoiceDate: { type: Date, default: null }, // Applicable if itemReceivedOn is invoice.
-    deliveryChallanNumber: { type: String, trim: true, default: null }, // Applicable if itemReceivedOn is challan.
-    deliveryChallanDate: { type: Date, default: null }, // Applicable if itemReceivedOn is challan.
+    assetReceivedOn: { type: String, trim: true, default: null }, // e.g. invoice, challan.
+    invoiceNumber: { type: String, trim: true, default: null }, // Applicable if assetReceivedOn is invoice.
+    invoiceDate: { type: Date, default: null }, // Applicable if assetReceivedOn is invoice.
+    deliveryChallanNumber: { type: String, trim: true, default: null }, // Applicable if assetReceivedOn is challan.
+    deliveryChallanDate: { type: Date, default: null }, // Applicable if assetReceivedOn is challan.
 
     purchaseCost: { type: Number, default: null },
     taxAmount: { type: Number, default: null },
@@ -51,4 +51,5 @@ purchaseSchema.index(
 );
 
 export const Purchase = mongoose.model("Purchase", purchaseSchema);
+
 

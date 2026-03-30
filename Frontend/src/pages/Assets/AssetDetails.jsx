@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Page: Asset Details
  * Description: Industry-standard asset detail view with complete information including
  * basic info, specifications, warranty, purchase, assignment history, repair history, and timeline
@@ -25,8 +25,8 @@ const AssetDetails = () => {
     const fetchAssetDetails = async () => {
       try {
         setLoading(true);
-        const itemType = localStorage.getItem("lastItemType") || "CPU";
-        const data = await fetchAssetDetailsById(id, itemType);
+        const assetType = localStorage.getItem("lastassetType") || "CPU";
+        const data = await fetchAssetDetailsById(id, assetType);
         setAsset(data);
       } catch (err) {
         console.error("Failed to fetch asset details", err);
@@ -99,23 +99,23 @@ const AssetDetails = () => {
       <div className="asset-details-header">
         <div className="header-left">
           <div className="asset-icon">
-            {asset.itemType === "MONITOR" && "🖥️"}
-            {asset.itemType === "LAPTOP" && "💻"}
-            {asset.itemType === "CPU" && "🖥️"}
-            {!["MONITOR", "LAPTOP", "CPU"].includes(asset.itemType) && "📦"}
+            {asset.assetType === "MONITOR" && "[MONITOR]"}
+            {asset.assetType === "LAPTOP" && "[LAPTOP]"}
+            {asset.assetType === "CPU" && "[MONITOR]"}
+            {!["MONITOR", "LAPTOP", "CPU"].includes(asset.assetType) && "[BOX]"}}
           </div>
           <div className="header-info">
             <div className="header-title">
-              <h1>{asset.itemId}</h1>
+              <h1>{asset.assetId}</h1>
               <Badge variant={getStatusColor(asset.isActive)}>
                 {getStatusBadge(asset.isActive)}
               </Badge>
             </div>
             <p className="header-subtitle">
-              {asset.itemType} • {asset.manufacturer || "Unknown"} • {asset.model || "N/A"}
+              {asset.assetType} | {asset.manufacturer || "Unknown"} | {asset.model || "N/A"}
             </p>
             <p className="header-meta">
-              Serial: <strong>{asset.serialNumber || "N/A"}</strong> • 
+              Serial: <strong>{asset.serialNumber || "N/A"}</strong> | 
               Added: <strong>{formatDate(asset.createdAt)}</strong>
             </p>
           </div>
@@ -132,13 +132,13 @@ const AssetDetails = () => {
           </div>
           <div className="header-actions">
             <Button variant="secondary" size="small" onClick={() => navigate(`/assets/edit/${id}`)}>
-              ✏️ Edit
+              [EDIT] Edit
             </Button>
             <Button variant="secondary" size="small">
-              ⤴️ Transfer
+              [TRANSFER] Transfer
             </Button>
             <Button variant="danger" size="small">
-              🗑️ Retire
+              [TRASH] Retire
             </Button>
           </div>
         </div>
@@ -150,31 +150,31 @@ const AssetDetails = () => {
           className={`tab ${activeTab === "overview" ? "active" : ""}`}
           onClick={() => setActiveTab("overview")}
         >
-          📋 Overview
+          [DOCS] Overview
         </button>
         <button
           className={`tab ${activeTab === "specifications" ? "active" : ""}`}
           onClick={() => setActiveTab("specifications")}
         >
-          ⚙️ Specifications
+          [GEAR] Specifications
         </button>
         <button
           className={`tab ${activeTab === "warranty" ? "active" : ""}`}
           onClick={() => setActiveTab("warranty")}
         >
-          🛡️ Warranty
+          [SHIELD] Warranty
         </button>
         <button
           className={`tab ${activeTab === "purchase" ? "active" : ""}`}
           onClick={() => setActiveTab("purchase")}
         >
-          💳 Purchase
+          [WALLET] Purchase
         </button>
         <button
           className={`tab ${activeTab === "history" ? "active" : ""}`}
           onClick={() => setActiveTab("history")}
         >
-          📜 Timeline
+          [TIMELINE] Timeline
         </button>
       </div>
 
@@ -189,15 +189,15 @@ const AssetDetails = () => {
                 <div className="info-items">
                   <div className="info-item">
                     <label>Asset ID</label>
-                    <p>{asset.itemId || "N/A"}</p>
+                    <p>{asset.assetId || "N/A"}</p>
                   </div>
                   <div className="info-item">
                     <label>Item Type</label>
-                    <p>{asset.itemType || "N/A"}</p>
+                    <p>{asset.assetType || "N/A"}</p>
                   </div>
                   <div className="info-item">
                     <label>Category</label>
-                    <p>{typeof asset.itemCategory === "string" ? asset.itemCategory : asset.itemCategory?.name || "N/A"}</p>
+                    <p>{typeof asset.assetcategory === "string" ? asset.assetcategory : asset.assetcategory?.name || "N/A"}</p>
                   </div>
                   <div className="info-item">
                     <label>Status</label>
@@ -235,7 +235,7 @@ const AssetDetails = () => {
                   </div>
                   <div className="info-item">
                     <label>Asset Tag</label>
-                    <p className="asset-tag">{asset.assetTag || asset.itemId || "N/A"}</p>
+                    <p className="asset-tag">{asset.assetTag || asset.assetId || "N/A"}</p>
                   </div>
                   {asset.osName && (
                     <div className="info-item">
@@ -328,7 +328,7 @@ const AssetDetails = () => {
               )}
 
               {/* Monitor Specifications */}
-              {asset.itemType === "MONITOR" && (
+              {asset.assetType === "MONITOR" && (
                 <div className="info-section">
                   <h3>Display Specifications</h3>
                   <div className="info-items">
@@ -529,7 +529,7 @@ const AssetDetails = () => {
                     </div>
                     <div className="info-item">
                       <label>Item Received On</label>
-                      <p>{purchase.itemReceivedOn || "N/A"}</p>
+                      <p>{purchase.assetReceivedOn || "N/A"}</p>
                     </div>
                   </div>
                 </div>
@@ -606,7 +606,7 @@ const AssetDetails = () => {
             <div className="timeline">
               {/* Creation Event */}
               <div className="timeline-event">
-                <div className="timeline-marker">📝</div>
+                <div className="timeline-marker">[PIN]</div>
                 <div className="timeline-content">
                   <h4>Asset Created</h4>
                   <p>{formatDate(asset.createdAt)}</p>
@@ -617,7 +617,7 @@ const AssetDetails = () => {
               {/* Purchase Event */}
               {purchase?.purchaseDate && (
                 <div className="timeline-event">
-                  <div className="timeline-marker">💳</div>
+                  <div className="timeline-marker">[WALLET]</div>
                   <div className="timeline-content">
                     <h4>Asset Purchased</h4>
                     <p>{formatDate(purchase.purchaseDate)}</p>
@@ -631,7 +631,7 @@ const AssetDetails = () => {
               {/* Delivery Event */}
               {purchase?.deliveryDate && (
                 <div className="timeline-event">
-                  <div className="timeline-marker">📦</div>
+                  <div className="timeline-marker">[BOX]</div>
                   <div className="timeline-content">
                     <h4>Asset Delivered</h4>
                     <p>{formatDate(purchase.deliveryDate)}</p>
@@ -643,7 +643,7 @@ const AssetDetails = () => {
               {/* Warranty Event */}
               {warranty?.warrantyStartDate && (
                 <div className="timeline-event">
-                  <div className="timeline-marker">🛡️</div>
+                  <div className="timeline-marker">[SHIELD]</div>
                   <div className="timeline-content">
                     <h4>Warranty Started</h4>
                     <p>{formatDate(warranty.warrantyStartDate)}</p>
@@ -657,7 +657,7 @@ const AssetDetails = () => {
               {/* Assignment Event */}
               {asset.assignmentDate && (
                 <div className="timeline-event">
-                  <div className="timeline-marker">👤</div>
+                  <div className="timeline-marker">[USER]</div>
                   <div className="timeline-content">
                     <h4>Asset Assigned</h4>
                     <p>{formatDate(asset.assignmentDate)}</p>
@@ -671,7 +671,7 @@ const AssetDetails = () => {
               {/* Update Event */}
               {asset.updatedAt && asset.updatedAt !== asset.createdAt && (
                 <div className="timeline-event">
-                  <div className="timeline-marker">✏️</div>
+                  <div className="timeline-marker">[CHECK]</div>
                   <div className="timeline-content">
                     <h4>Last Updated</h4>
                     <p>{formatDate(asset.updatedAt)}</p>
@@ -683,7 +683,7 @@ const AssetDetails = () => {
               {/* Warranty Expiration Event */}
               {warranty?.warrantyEndDate && (
                 <div className={`timeline-event ${new Date() > new Date(warranty.warrantyEndDate) ? "expired" : ""}`}>
-                  <div className="timeline-marker">⏰</div>
+                  <div className="timeline-marker">â°</div>
                   <div className="timeline-content">
                     <h4>Warranty Expires</h4>
                     <p>{formatDate(warranty.warrantyEndDate)}</p>
@@ -697,7 +697,7 @@ const AssetDetails = () => {
               {/* Empty State */}
               {!purchase?.purchaseDate && !warranty?.warrantyStartDate && !asset.assignmentDate && (
                 <div className="timeline-event">
-                  <div className="timeline-marker">ℹ️</div>
+                  <div className="timeline-marker">â„¹ï¸</div>
                   <div className="timeline-content">
                     <h4>Limited History</h4>
                     <p>More details will appear as asset events are recorded.</p>
@@ -712,7 +712,7 @@ const AssetDetails = () => {
       {/* Back Button */}
       <div className="asset-details-footer">
         <Button variant="secondary" onClick={() => navigate("/assets")}>
-          ← Back to Assets
+          â† Back to Assets
         </Button>
       </div>
     </div>

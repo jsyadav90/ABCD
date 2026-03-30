@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 import path from "path";
 import mongoose from "mongoose";
 import dns from "dns";
@@ -17,24 +17,24 @@ const { AssetCategory } = await import("../models/assetcategory.model.js");
 
 async function checkUserCategories() {
   try {
-    console.log("🔄 Connecting to database...");
+    console.log("Ÿ”„ Connecting to database...");
     await connectDB();
-    console.log("✅ Connected successfully!");
+    console.log("[OK] Connected successfully!");
 
-    console.log("\n📋 Checking asset_category collection...");
+    console.log("\nŸ“‹ Checking asset_category collection...");
 
     // Check all documents in asset_category collection
     const allCategories = await AssetCategory.find({});
     console.log(`\nTotal documents in asset_category: ${allCategories.length}`);
 
     if (allCategories.length === 0) {
-      console.log("❌ No documents found in asset_category collection!");
-      console.log("💡 Please check:");
+      console.log("âŒ No documents found in asset_category collection!");
+      console.log("Ÿ’¡ Please check:");
       console.log("   1. Collection name is correct (asset_category vs asset_categories)");
       console.log("   2. Database connection is working");
       console.log("   3. Data exists in the collection");
     } else {
-      console.log("✅ Found documents:");
+      console.log("[OK] Found documents:");
       allCategories.forEach((cat, index) => {
         console.log(`${index + 1}. Name: "${cat.name}", Active: ${cat.isActive}, Deleted: ${cat.isDeleted}, ID: ${cat._id}`);
       });
@@ -47,13 +47,13 @@ async function checkUserCategories() {
       });
 
       if (activeCategories.length === 0) {
-        console.log("⚠️  No active categories found! Categories must have isActive: true and isDeleted: false");
+        console.log("âš ï¸  No active categories found! Categories must have isActive: true and isDeleted: false");
       } else {
-        console.log("✅ Active categories found - these should appear in the dropdown!");
+        console.log("[OK] Active categories found - these should appear in the dropdown!");
       }
     }
 
-    console.log("\n🔍 API Response format check:");
+    console.log("\nŸ” API Response format check:");
     const apiResponse = {
       success: true,
       data: {
@@ -73,8 +73,8 @@ async function checkUserCategories() {
 
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error:", error.message);
-    console.error("💡 Make sure:");
+    console.error("âŒ Error:", error.message);
+    console.error("Ÿ’¡ Make sure:");
     console.error("   1. MONGO_URI in .env is correct");
     console.error("   2. MongoDB server is running");
     console.error("   3. Collection name matches your data");

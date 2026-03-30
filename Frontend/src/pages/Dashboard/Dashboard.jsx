@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Page: Dashboard
  * Description: Organization ki high-level summary dikhata hai (users count, quick actions, alerts).
  * Major Logics:
@@ -202,7 +202,7 @@ const Dashboard = () => {
     wheelTimeoutRef.current = setTimeout(() => setIsAutoScrolling(true), 1500);
   };
 
-  // 🔥 Drag Scroll Logic
+  // [ARROW] Drag Scroll Logic
   const handleMouseDown = (e) => {
     if (!isMarqueeEnabled) return;
     setIsDown(true);
@@ -245,7 +245,7 @@ const Dashboard = () => {
   };
 
   const alertsColumns = [
-    { header: "Item Name", key: "itemName", sortable: true },
+    { header: "Asset Name", key: "assetName", sortable: true },
     { header: "Category", key: "category", sortable: true },
     {
       header: "Issue",
@@ -261,8 +261,8 @@ const Dashboard = () => {
   ];
 
   const statsTiles = [
-    { title: "Total Users", value: totalUsers ?? "—" },
-    { title: "Total Asset", value: totalAssets ?? "—" },
+    { title: "Total Users", value: totalUsers ?? "--" },
+    { title: "Total Asset", value: totalAssets ?? "--" },
     { title: "Computers", value: 110 },
     { title: "Faulty Items", value: 6, danger: true },
     // { title: "Total Desktop", value: 110 }, 
@@ -279,7 +279,7 @@ const Dashboard = () => {
   const alertsData = [
     {
       _id: "1",
-      itemName: "Dell OptiPlex 3080",
+      assetName: "Dell OptiPlex 3080",
       category: "Desktop",
       issue: "Warranty Expiring Soon",
       issueVariant: "warning",
@@ -289,7 +289,7 @@ const Dashboard = () => {
     },
     {
       _id: "2",
-      itemName: "Cisco Switch 2960",
+      assetName: "Cisco Switch 2960",
       category: "Networking",
       issue: "Device Down",
       issueVariant: "danger",
@@ -299,7 +299,7 @@ const Dashboard = () => {
     },
     {
       _id: "3",
-      itemName: "HP EliteBook 850",
+      assetName: "HP EliteBook 850",
       category: "Laptop",
       issue: "Battery Health Moderate",
       issueVariant: "secondary",
@@ -309,7 +309,7 @@ const Dashboard = () => {
     },
     {
       _id: "4",
-      itemName: "Projector EPSON X500",
+      assetName: "Projector EPSON X500",
       category: "Peripheral",
       issue: "Lamp Replacement Due",
       issueVariant: "warning",
@@ -356,8 +356,8 @@ const Dashboard = () => {
             <div>
               <div className="user-name">{profile?.name || "--"}</div>
               <div className="user-role">
-                {profile?.role ? profile.role.replaceAll("_"," ").toUpperCase() : "—"}
-                <span className="user-id"> • ID: {profile?.userId || "--"}</span>
+                {profile?.role ? profile.role.replaceAll("_"," ").toUpperCase() : "N/A"}
+                <span className="user-id"> | ID: {profile?.userId || "--"}</span>
               </div>
               <div className="user-email">{profile?.email || "--"}</div>
             </div>

@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Assets Controller
- * Description: Type-based dispatcher. Frontend ke itemType ke hisaab se specific handler (cpu/monitor/printer) choose karta hai.
+ * Description: Type-based dispatcher. Frontend ke AssetType ke hisaab se specific handler (cpu/monitor/printer) choose karta hai.
  * Goals:
  * - Simple surface for FE: /assets POST/GET/GET/:id sabhi item types ke liye kaam kare
  * - Fast list: handler ke andar lean() + sort, aur yahan merge when multiple types
@@ -21,49 +21,49 @@ import { handlers } from "../assets/handlers/index.js";
 import { Purchase } from "../models/purchase.model.js";
 import { Warranty } from "../models/warranty.model.js";
 import { AssetCategory } from "../models/assetcategory.model.js";
-import { ItemType } from "../models/itemtype.model.js";
+import { AssetType } from "../models/assettype.model.js";
 
 const normKey = (val) => String(val || "").trim().toLowerCase();
 
-const getHandler = (itemType) => {
-  const key = normKey(itemType);
+const getHandler = (AssetType) => {
+  const key = normKey(AssetType);
   const handler = handlers[key] || handlers.__generic;
   if (!handler) {
-    throw new apiError(400, `Unsupported itemType: "${itemType}". No handler found.`);
+    throw new apiError(400, `Unsupported AssetType: "${AssetType}". No handler found.`);
   }
   return handler;
 };
 
 export const createAsset = asyncHandler(async (req, res) => {
-  const { itemType, itemCategory } = req.body;
-  if (!itemType || !String(itemType).trim()) {
-    throw new apiError(400, "itemType is required");
+  const { AssetType, AssetCategory } = req.body;
+  if (!AssetType || !String(AssetType).trim()) {
+    throw new apiError(400, "AssetType is required");
   }
-  if (!itemCategory || !String(itemCategory).trim()) {
-    throw new apiError(400, "itemCategory is required");
+  if (!AssetCategory || !String(AssetCategory).trim()) {
+    throw new apiError(400, "AssetCategory is required");
   }
 
-  // Validate itemCategory exists
+  // Validate AssetCategory exists
   const category = await AssetCategory.findOne({
-    _id: itemCategory,
+    _id: AssetCategory,
     isDeleted: false,
     isActive: true,
   });
 
   if (!category) {
-    throw new apiError(400, "Invalid itemCategory - category not found or inactive");
+    throw new apiError(400, "Invalid AssetCategory - category not found or inactive");
   }
 
-  // Create or update ItemType
-  await ItemType.findOneAndUpdate(
+  // Create or update AssetType
+  await AssetType.findOneAndUpdate(
     {
-      name: { $regex: `^${itemType.trim()}$`, $options: "i" },
-      category: itemCategory,
+      name: { $regex: `^${AssetType.trim()}$`, $options: "i" },
+      category: AssetCategory,
       isDeleted: false,
     },
     {
-      name: itemType.trim(),
-      category: itemCategory,
+      name: AssetType.trim(),
+      category: AssetCategory,
       isActive: true,
     },
     {
@@ -73,15 +73,15 @@ export const createAsset = asyncHandler(async (req, res) => {
     }
   );
 
-  const handler = getHandler(itemType);
+  const handler = getHandler(AssetType);
   const { doc, message } = await handler.create(req);
   return res.status(201).json(new apiResponse(201, doc, message || "Asset created successfully"));
 });
 
 export const listAssets = asyncHandler(async (req, res) => {
-  const itemType = req.query?.itemType;
-  if (itemType) {
-    const handler = getHandler(itemType);
+  const AssetType = req.query?.AssetType;
+  if (AssetType) {
+    const handler = getHandler(AssetType);
     const { items, message } = await handler.list(req);
     return res.status(200).json(new apiResponse(200, { items }, message || "Assets retrieved"));
   }
@@ -110,9 +110,9 @@ export const listAssets = asyncHandler(async (req, res) => {
 });
 
 export const getAssetById = asyncHandler(async (req, res) => {
-  const itemType = req.query?.itemType;
-  if (itemType) {
-    const handler = getHandler(itemType);
+  const AssetType = req.query?.AssetType;
+  if (AssetType) {
+    const handler = getHandler(AssetType);
     const { doc, message } = await handler.getById(req);
     const [purchase, warranty] = await Promise.all([
       Purchase.findOne({ assetId: doc?._id, organizationId: req.user?.organizationId, isDeleted: false }).lean(),
@@ -198,3 +198,4 @@ export const countAssets = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new apiResponse(200, { total }, "Assets count retrieved"));
 });
+

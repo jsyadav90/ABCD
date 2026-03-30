@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Users Controller
  * 
  * Logics:
@@ -11,7 +11,7 @@
  *   Fetches a user by id with role and branch population, and enforces access/visibility.
  * - listUsers(req, res):
  *   Server-side pagination, role/active filters, search, and strict branch-based visibility:
- *   non‑super users only see users whose branchId overlaps with their branches; if no branches, only self.
+ *   non-‘super users only see users whose branchId overlaps with their branches; if no branches, only self.
  * - updateUser(req, res):
  *   Updates general fields (not canLogin/isActive), enforcing access.
  * - toggleCanLogin(req, res):
@@ -152,7 +152,7 @@ export const createUser = asyncHandler(async (req, res) => {
   const orgId = payload.organizationId || req.user?.organizationId || null;
 
   if (!payload.name || !orgId) {
-    console.error('❌ Missing required fields');
+    console.error('âŒ Missing required fields');
     throw new apiError(400, "name and organizationId are required");
   }
 
@@ -232,12 +232,12 @@ export const createUser = asyncHandler(async (req, res) => {
       toCreate.roleId = userRole._id;
     } else {
       // Fallback: try to find any role if "user" not found (should not happen if seeded)
-      console.warn("⚠️ Default 'user' role not found, assigning first available role");
+      console.warn("âš ï¸ Default 'user' role not found, assigning first available role");
       const anyRole = await Role.findOne({ isDeleted: false }).sort({ priority: 1 });
       if (anyRole) toCreate.roleId = anyRole._id;
     }
   } catch (err) {
-    console.error("❌ Failed to assign default role:", err);
+    console.error("âŒ Failed to assign default role:", err);
   }
 
   const user = await User.create(toCreate);
@@ -418,7 +418,7 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
         const enforcedLoginId = loginId || user.userId;
         const loginResult = await createUserLoginCredentials(user._id, user.name, enforcedLoginId);
       } catch (loginError) {
-        console.error(`❌ Failed to create login credentials:`, loginError.message);
+        console.error(`âŒ Failed to create login credentials:`, loginError.message);
         throw new apiError(500, `Failed to create login credentials: ${loginError.message}`);
       }
     }
@@ -596,7 +596,7 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
     }));
     return res.status(200).json(new apiResponse(200, formattedRoles, "Roles retrieved successfully"));
   } catch (error) {
-    console.error('❌ Error in getRolesForDropdown:', error.message);
+    console.error('âŒ Error in getRolesForDropdown:', error.message);
     throw new apiError(500, `Failed to fetch roles: ${error.message}`);
   }
 });
@@ -697,7 +697,7 @@ export const changeUserPassword = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { newPassword } = req.body;
 
-  console.log('🔐 changeUserPassword called for userId:', id);
+  console.log('Ÿ” changeUserPassword called for userId:', id);
 
   if (!newPassword || !String(newPassword).trim()) {
     throw new apiError(400, "newPassword is required");
@@ -754,7 +754,7 @@ export const changeUserPassword = asyncHandler(async (req, res) => {
   userLogin.forcePasswordChange = false; // User has now changed password
   await userLogin.save();
 
-  console.log('✅ Password changed successfully for user:', user.name);
+  console.log('[OK] Password changed successfully for user:', user.name);
 
   return res.status(200).json(new apiResponse(200, { success: true, message: `Password changed for ${user.name}` }, "Password changed successfully"));
 });

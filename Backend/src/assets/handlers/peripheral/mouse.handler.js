@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Mouse Asset Handler (Peripheral)
  * Description: Mouse-specific create/list/getById logics.
  * Uses Mouse model (asset_peripheral_mouse collection).
@@ -11,21 +11,21 @@ import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit 
 
 const create = async (req) => {
   const body = req.body || {};
-  const itemType = norm(body.itemType).toLowerCase();
-  const itemCategory = body.itemCategory;
+  const AssetType = norm(body.AssetType).toLowerCase();
+  const AssetCategory = body.AssetCategory;
   const branchId = extractBranchIdFromBody(body);
 
   // Build Peripheral Asset Payload with all mouse fields
   const fixedPayload = {
-    itemCategory,
-    itemType,
+    AssetCategory,
+    AssetType,
     branchId,
     
     // Basic Information
-    itemId: body.itemId || null,
-    itemTag: body.itemTag || null,
+    AssetId: body.AssetId || null,
+    AssetTag: body.AssetTag || null,
     barcode: body.barcode || null,
-    itemSubType: body.itemSubType || null,
+    assetSubType: body.assetSubType || null,
     manufacturer: body.manufacturer || null,
     model: body.model || null,
     modelNumber: body.modelNumber || null,
@@ -53,9 +53,9 @@ const create = async (req) => {
     weight: body.weight !== undefined && body.weight !== null ? Number(body.weight) : null,
 
     // Item State
-    itemStatus: body.itemStatus || "active",
-    itemIsCurrently: body.itemIsCurrently || "inStore",
-    itemUser: body.itemUser || null,
+    AssetStatus: body.AssetStatus || "active",
+    assetIsCurrently: body.assetIsCurrently || "inStore",
+    AssetUser: body.AssetUser || null,
     AssignDate: body.AssignDate || null,
 
     // Organization & Audit
@@ -65,7 +65,7 @@ const create = async (req) => {
   // Purchase field names to extract
   const purchaseFields = [
     "purchaseType", "poNumber", "poDate", "receiptNumber", "receiptDate", "purchaseDate",
-    "vendorId", "itemReceivedOn", "invoiceNumber", "invoiceDate", "deliveryChallanNumber",
+    "vendorId", "AssetReceivedOn", "invoiceNumber", "invoiceDate", "deliveryChallanNumber",
     "deliveryChallanDate", "purchaseCost", "taxAmount", "totalAmount", "currency",
     "deliveryDate", "receivedBy"
   ];
@@ -93,17 +93,17 @@ const create = async (req) => {
     }
   });
 
-  // 1️⃣ Save Peripheral Asset (Mouse)
+  // 1. Save Peripheral Asset (Mouse)
   const fixedDoc = await Mouse.create(fixedPayload);
   const assetId = fixedDoc._id;
 
-  // 2️⃣ Create Purchase Document if any purchase field exists
+  // 2. Create Purchase Document if any purchase field exists
   let purchaseDoc = null;
   if (Object.keys(purchaseData).length > 0) {
     purchaseDoc = await Purchase.create({
       assetId,
-      itemCategory,
-      itemType,
+      AssetCategory,
+      AssetType,
       organizationId: fixedPayload.organizationId,
       branchId,
       ...purchaseData,
@@ -111,13 +111,13 @@ const create = async (req) => {
     });
   }
 
-  // 3️⃣ Create Warranty Document if any warranty field exists
+  // 3. Create Warranty Document if any warranty field exists
   let warrantyDoc = null;
   if (Object.keys(warrantyData).length > 0) {
     warrantyDoc = await Warranty.create({
       assetId,
-      itemCategory,
-      itemType,
+      AssetCategory,
+      AssetType,
       organizationId: fixedPayload.organizationId,
       branchId,
       ...warrantyData,
@@ -154,11 +154,11 @@ const list = async (req) => {
   
   const flattenedItems = items.map((item) => ({
     ...item,
-    itemName: item.itemId || item.summary?.itemName || "N/A",
+    AssetName: item.AssetId || item.summary?.AssetName || "N/A",
     manufacturer: item.manufacturer || item.summary?.manufacturer || "N/A",
     model: item.model || item.summary?.model || "N/A",
     serialNumber: item.serialNumber || item.summary?.serialNumber || "N/A",
-    itemTag: item.itemId || item.summary?.itemTag || "N/A",
+    AssetTag: item.AssetId || item.summary?.AssetTag || "N/A",
   }));
   
   return { items: flattenedItems, message: "Mouse assets retrieved" };
@@ -184,3 +184,4 @@ const getById = async (req) => {
 };
 
 export default { create, list, getById };
+

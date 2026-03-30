@@ -1,4 +1,4 @@
-import { apiError } from "../utils/apiError.js";
+﻿import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/role.model.js";
 
@@ -29,7 +29,7 @@ export const verifyPermission = (requiredPermission) => {
     let userKeys = Array.isArray(req.user.userPermissionKeys) ? req.user.userPermissionKeys : [];
     
     // DEBUG: Log what we're getting
-    console.log(`🔐 PERMISSION CHECK DEBUG:`);
+    console.log(`Ÿ” PERMISSION CHECK DEBUG:`);
     console.log(`   User: ${req.user.userId || req.user.id}`);
     console.log(`   Role: ${roleName}`);
     console.log(`   Required: ${requiredPermission}`);
@@ -40,18 +40,18 @@ export const verifyPermission = (requiredPermission) => {
     if (roleKeys.length === 0 && req.user.roleId) {
       try {
         const roleDoc = await Role.findById(req.user.roleId).select("permissionKeys name");
-        console.log(`   ℹ️ Fetched from DB: ${roleDoc?.name}, permissions: ${roleDoc?.permissionKeys?.length || 0}`);
+        console.log(`   â„¹ï¸ Fetched from DB: ${roleDoc?.name}, permissions: ${roleDoc?.permissionKeys?.length || 0}`);
         if (roleDoc && Array.isArray(roleDoc.permissionKeys)) {
           roleKeys = roleDoc.permissionKeys;
         }
       } catch (e) {
-        console.log(`   ⚠️ DB lookup failed: ${e.message}`);
+        console.log(`   âš ï¸ DB lookup failed: ${e.message}`);
       }
     }
     
     const permissions = Array.from(new Set([...(roleKeys || []), ...(userKeys || [])]));
     console.log(`   Final permissions: ${permissions.length}`);
-    console.log(`   Has required: ${permissions.includes(requiredPermission) ? '✅ YES' : '❌ NO'}`);
+    console.log(`   Has required: ${permissions.includes(requiredPermission) ? '[OK] YES' : '[X] NO'}`);
 
     // 4. Check if user has the required permission
     if (!permissions.includes(requiredPermission)) {

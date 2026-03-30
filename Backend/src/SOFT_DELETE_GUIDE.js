@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SOFT DELETE IMPLEMENTATION GUIDE
  * ================================
  * 
@@ -172,7 +172,7 @@ ASSET MODELS:
 
 CORE MODELS:
 - AssetCategory
-- ItemType
+- AssetType
 - Warranty
 - Branch
 - Organization
@@ -223,3 +223,4 @@ export const deleteAssetCategory = asyncHandler(async (req, res) => {
 
 7. For audit trails: query with queryDeleted() to see what was deleted and by whom
 */
+

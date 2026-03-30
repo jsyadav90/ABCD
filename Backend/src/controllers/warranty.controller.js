@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import { Warranty } from "../models/warranty.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
@@ -122,8 +122,8 @@ export const upsertWarrantyByAsset = asyncHandler(async (req, res) => {
     assetId,
     organizationId: orgId,
     branchId: base.branchId || base.branch || null,
-    itemCategory: base.itemCategory || undefined,
-    itemType: base.itemType ? lc(base.itemType) : undefined,
+    AssetCategory: base.AssetCategory || undefined,
+    AssetType: base.AssetType ? lc(base.AssetType) : undefined,
     updatedBy: req.user?._id || req.user?.id,
   };
   if (!update.createdBy) update.createdBy = req.user?._id || req.user?.id;
@@ -150,4 +150,5 @@ export const getWarrantyByAsset = asyncHandler(async (req, res) => {
   const doc = await Warranty.findOne(filter).lean();
   return res.status(200).json(new apiResponse(200, doc || null, "Warranty fetched"));
 });
+
 
