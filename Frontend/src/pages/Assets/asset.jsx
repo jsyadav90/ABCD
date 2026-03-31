@@ -21,7 +21,7 @@ import { getBranchName } from "../../utils/branchUtils.js";
 import { getSelectedBranch, onBranchChange } from "../../utils/scope";
 import { authAPI } from "../../services/api.js";
 import { fetchBranchesForDropdown } from "../../services/userApi.js";
-import { getTooltipDetails, highlightText } from "../../utils/assetUtils.jsx";
+import { getTooltipDetails, highlightText } from "./utils/assetUtils.jsx";
 import { toCapitalizedCase } from "../../utils/string.jsx";
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
@@ -189,27 +189,27 @@ const AssetPage = () => {
     return map;
   }, [assetCategories]);
 
-  const getCategoryName = useCallback((assetcategory) => {
-    if (!assetcategory) return "";
+  const getCategoryName = useCallback((assetCategory) => {
+    if (!assetCategory) return "";
 
-    if (typeof assetcategory === "object") {
-      if (assetcategory.name) return assetcategory.name;
-      if (assetcategory._id) {
-        const mapped = categoryMap.get(String(assetcategory._id));
+    if (typeof assetCategory === "object") {
+      if (assetCategory.name) return assetCategory.name;
+      if (assetCategory._id) {
+        const mapped = categoryMap.get(String(assetCategory._id));
         if (mapped) return mapped;
-        return assetcategory.name || assetcategory.value || String(assetcategory._id);
+        return assetCategory.name || assetCategory.value || String(assetCategory._id);
       }
-      if (assetcategory.value) return assetcategory.value;
-      return String(assetcategory);
+      if (assetCategory.value) return assetCategory.value;
+      return String(assetCategory);
     }
 
-    if (typeof assetcategory === "string") {
-      const mapped = categoryMap.get(assetcategory);
+    if (typeof assetCategory === "string") {
+      const mapped = categoryMap.get(assetCategory);
       if (mapped) return mapped;
-      return assetcategory;
+      return assetCategory;
     }
 
-    return String(assetcategory);
+    return String(assetCategory);
   }, [categoryMap]);
 
   const categoryOptions = useMemo(() => {
@@ -318,8 +318,8 @@ const AssetPage = () => {
     let baseAssets = assets;
     if (pendingFilterCategory && pendingFilterCategory !== "ALL") {
       baseAssets = assets.filter((a) => {
-        const assetCategory = String(getCategoryName(a.assetcategory) || "").trim().toUpperCase();
-        return assetCategory === pendingFilterCategory.trim().toUpperCase();
+        const assetCat = String(getCategoryName(a.assetCategory) || "").trim().toUpperCase();
+        return assetCat === pendingFilterCategory.trim().toUpperCase();
       });
     }
     
@@ -331,7 +331,7 @@ const AssetPage = () => {
       }
     });
     return ["ALL", ...Array.from(values).sort()];
-  }, [assets, pendingFilterCategory]);
+  }, [assets, pendingFilterCategory, getCategoryName]);
 
   const activeVisibleAssets = useMemo(() => {
     return visibleAssets.filter((a) => a.isActive !== false);
@@ -343,10 +343,11 @@ const AssetPage = () => {
     // Build counts dynamically from assetCategories
     assetCategories.forEach((cat) => {
       const categoryName = String(cat.name || "").trim().toUpperCase();
-      counts[categoryName] = activeVisibleAssets.filter(a => {
-        const assetCategory = String(getCategoryName(a.assetcategory) || "").trim().toUpperCase();
-        return assetCategory === categoryName;
+      const categoryCount = activeVisibleAssets.filter(a => {
+        const assetCat = String(getCategoryName(a.assetCategory) || "").trim().toUpperCase();
+        return assetCat === categoryName;
       }).length;
+      counts[categoryName] = categoryCount;
     });
     
     return counts;
@@ -398,8 +399,8 @@ const AssetPage = () => {
     // Filter by Category
     if (appliedFilterCategory !== "ALL") {
       list = list.filter((a) => {
-        const assetCategory = String(getCategoryName(a.assetcategory) || "").trim().toUpperCase();
-        return assetCategory === appliedFilterCategory.trim().toUpperCase();
+        const assetCat = String(getCategoryName(a.assetCategory) || "").trim().toUpperCase();
+        return assetCat === appliedFilterCategory.trim().toUpperCase();
       });
     }
 
@@ -482,19 +483,19 @@ const AssetPage = () => {
         </button>
       )
     },
-    { header: "Type", key: "assetType", sortable: true, render: (row) => row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.assetType || "").trim()) },
-    {header: "Sub Type", key: "assetSubType", sortable: true, render: (row) => row.assetType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.assetSubType || row.assetType))},
+    { header: "Type", key: "assetType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.assetType || "").trim()), search) },
+    {header: "Sub Type", key: "assetSubType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.assetCategory || row.assetType)), search)},
     {
       header: "Category",
-      key: "assetcategory",
+      key: "assetCategory",
       sortable: true,
-      render: (row) => getCategoryName(row.assetcategory),
+      render: (row, search) => highlightText(getCategoryName(row.assetCategory), search),
     },
     { 
       header: "Branch", 
       key: "branchId", 
       sortable: true,
-      render: (row) => getBranchName(row.branchId, branches)
+      render: (row, search) => highlightText(getBranchName(row.branchId, branches), search)
     },
     { header: "Model", key: "model", sortable: true },
     { header: "Serial Number", key: "serialNumber", sortable: true },

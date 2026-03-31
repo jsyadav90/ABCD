@@ -54,6 +54,13 @@
   font-size: 48px;
   line-height: 1;
   opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-icon .material-icons {
+  font-size: 48px;
 }
 
 .header-info {
@@ -113,6 +120,13 @@
   gap: 8px;
 }
 
+.header-actions .material-icons {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
 /* ===== TABS ===== */
 .asset-details-tabs {
   display: flex;
@@ -143,7 +157,7 @@
   appearance: none;
   background: none;
   border: none;
-  padding: 16px 0;
+  padding: 16px 16px;
   margin: 0;
   font-size: 14px;
   font-weight: 500;
@@ -152,6 +166,15 @@
   border-bottom: 3px solid transparent;
   transition: all 0.3s ease;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab .material-icons {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .tab:hover {

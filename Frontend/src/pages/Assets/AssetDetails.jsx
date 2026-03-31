@@ -99,10 +99,10 @@ const AssetDetails = () => {
       <div className="asset-details-header">
         <div className="header-left">
           <div className="asset-icon">
-            {asset.assetType === "MONITOR" && "[MONITOR]"}
-            {asset.assetType === "LAPTOP" && "[LAPTOP]"}
-            {asset.assetType === "CPU" && "[MONITOR]"}
-            {!["MONITOR", "LAPTOP", "CPU"].includes(asset.assetType) && "[BOX]"}}
+            {asset.assetType === "MONITOR" && <span className="material-icons">desktop_mac</span>}
+            {asset.assetType === "LAPTOP" && <span className="material-icons">laptop</span>}
+            {asset.assetType === "CPU" && <span className="material-icons">computer</span>}
+            {!["MONITOR", "LAPTOP", "CPU"].includes(asset.assetType) && <span className="material-icons">storage</span>}
           </div>
           <div className="header-info">
             <div className="header-title">
@@ -132,13 +132,13 @@ const AssetDetails = () => {
           </div>
           <div className="header-actions">
             <Button variant="secondary" size="small" onClick={() => navigate(`/assets/edit/${id}`)}>
-              [EDIT] Edit
+              <span className="material-icons" style={{fontSize: '18px', marginRight: '4px'}}>edit</span>Edit
             </Button>
             <Button variant="secondary" size="small">
-              [TRANSFER] Transfer
+              <span className="material-icons" style={{fontSize: '18px', marginRight: '4px'}}>send</span>Transfer
             </Button>
             <Button variant="danger" size="small">
-              [TRASH] Retire
+              <span className="material-icons" style={{fontSize: '18px', marginRight: '4px'}}>delete</span>Retire
             </Button>
           </div>
         </div>
@@ -150,31 +150,31 @@ const AssetDetails = () => {
           className={`tab ${activeTab === "overview" ? "active" : ""}`}
           onClick={() => setActiveTab("overview")}
         >
-          [DOCS] Overview
+          <span className="material-icons">description</span> Overview
         </button>
         <button
           className={`tab ${activeTab === "specifications" ? "active" : ""}`}
           onClick={() => setActiveTab("specifications")}
         >
-          [GEAR] Specifications
+          <span className="material-icons">settings</span> Specifications
         </button>
         <button
           className={`tab ${activeTab === "warranty" ? "active" : ""}`}
           onClick={() => setActiveTab("warranty")}
         >
-          [SHIELD] Warranty
+          <span className="material-icons">shield</span> Warranty
         </button>
         <button
           className={`tab ${activeTab === "purchase" ? "active" : ""}`}
           onClick={() => setActiveTab("purchase")}
         >
-          [WALLET] Purchase
+          <span className="material-icons">shopping_cart</span> Purchase
         </button>
         <button
           className={`tab ${activeTab === "history" ? "active" : ""}`}
           onClick={() => setActiveTab("history")}
         >
-          [TIMELINE] Timeline
+          <span className="material-icons">timeline</span> Timeline
         </button>
       </div>
 
@@ -712,7 +712,7 @@ const AssetDetails = () => {
       {/* Back Button */}
       <div className="asset-details-footer">
         <Button variant="secondary" onClick={() => navigate("/assets")}>
-          â† Back to Assets
+          <span className="material-icons">arrow_back</span> Back to Assets
         </Button>
       </div>
     </div>
