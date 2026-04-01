@@ -1,4 +1,4 @@
-/* AssetSpecifications.css - Professional & Clean Design */
+/* AssetSpecifications.css - Uses exact same form styling as AddAsset */
 
 .asset-specifications {
   background: transparent;
@@ -42,201 +42,152 @@
   color: #64748b;
 }
 
+/* Main specifications container - matches add-item-form-renderer style */
 .specifications-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 18px;
-  margin: 0 0 24px;
   width: 100%;
-  max-width: 100%;
-  grid-auto-rows: minmax(100px, auto);
-  grid-auto-flow: dense;
+  background-color: #ffffff;
+  border: 1px solid #e4e7eb;
+  box-shadow: 0 10px 20px rgba(17, 25, 39, 0.06);
+  border-radius: 12px;
+  padding: 1.25rem;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .specifications-content {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
+    padding: 1rem;
+    border-radius: 8px;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 480px) {
   .specifications-content {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    padding: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #ddd;
   }
 }
 
+/* Section styling */
 .spec-section {
   display: block;
   width: 100%;
-  margin: 0;
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-  -moz-column-break-inside: avoid;
-  align-self: start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e4e7eb;
 }
 
-@media (min-width: 1500px) {
-  .specifications-content {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
+.spec-section:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
 }
 
-@media (max-width: 1200px) {
-  .specifications-content {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  }
+.spec-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2a44;
+  border-bottom: none;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
-@media (max-width: 980px) {
-  .specifications-content {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .specifications-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 980px) {
-  .specifications-content {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .specifications-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Base Spec Section Styling */
-.spec-section {
-  border: 1px solid #e2e8f0;
-  border-left: 4px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 20px;
-  background: #ffffff;
-  position: relative;
-  transition: all 0.3s ease;
+/* Grid layout for fields - 3 columns desktop, wraps automatically */
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: start;
   width: 100%;
 }
 
-.spec-section:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+@media (max-width: 1200px) {
+  .spec-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
 }
 
-/* Section Title */
-.spec-section h4 {
-  margin: 0 0 18px 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+@media (max-width: 900px) {
+  .spec-grid {
+    gap: 0.625rem;
+  }
 }
 
-/* Different accent colors for different section types - based on position */
-.spec-section:nth-child(1) {
-  border-left-color: #6366f1; /* Processor - Indigo */
+@media (max-width: 768px) {
+  .spec-grid {
+    gap: 0.5rem;
+  }
 }
 
-.spec-section:nth-child(1) h4 {
-  color: #4f46e5;
+@media (max-width: 480px) {
+  .spec-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
 }
 
-.spec-section:nth-child(2) {
-  border-left-color: #8b5cf6; /* Memory - Violet */
+/* Remove margin from input wrappers inside spec-grid */
+.spec-grid .input-wrapper,
+.spec-grid .textarea-wrapper,
+.spec-grid .select-wrapper {
+  margin-bottom: 0;
 }
 
-.spec-section:nth-child(2) h4 {
-  color: #7c3aed;
-}
-
-.spec-section:nth-child(3) {
-  border-left-color: #06b6d4; /* Storage - Cyan */
-}
-
-.spec-section:nth-child(3) h4 {
-  color: #0891b2;
-}
-
-.spec-section:nth-child(4) {
-  border-left-color: #f59e0b; /* Display - Amber */
-}
-
-.spec-section:nth-child(4) h4 {
-  color: #d97706;
-}
-
-.spec-section:nth-child(5) {
-  border-left-color: #ec4899; /* Graphics - Pink */
-}
-
-.spec-section:nth-child(5) h4 {
-  color: #db2777;
-}
-
-.spec-section:nth-child(6) {
-  border-left-color: #3b82f6; /* OS - Blue */
-}
-
-.spec-section:nth-child(6) h4 {
-  color: #1d4ed8;
-}
-
-.spec-section:nth-child(7) {
-  border-left-color: #10b981; /* Security/Hardware - Emerald */
-}
-
-.spec-section:nth-child(7) h4 {
-  color: #059669;
-}
-
-.spec-section:nth-child(n+8) {
-  border-left-color: #64748b; /* Others - Slate */
-}
-
-.spec-section:nth-child(n+8) h4 {
-  color: #475569;
-}
-
-/* Grid for spec items - Responsive masonry-like layout */
-.spec-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  align-items: start;
-}
-
-.spec-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.spec-item:hover {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
-}
-
+/* Full width items */
 .spec-item.full-width {
   grid-column: 1 / -1;
-  padding: 14px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+}
+
+/* Empty state styling */
+.no-specs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.no-specs .material-icons {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.no-specs p {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.specifications-empty {
+  width: 100%;
+  padding: 40px 20px;
+}
+
+.specifications-empty .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #64748b;
+}
+
+.specifications-empty .empty-state .material-icons {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.specifications-empty .empty-state h3,
+.specifications-empty .empty-state p {
+  margin: 0;
+  color: #64748b;
 }
 
 .spec-item label {
@@ -248,129 +199,90 @@
   margin-bottom: 3px;
 }
 
-.spec-item span {
+.spec-item span,
+.spec-item input,
+.spec-item textarea {
   font-size: 0.95rem;
   font-weight: 500;
   color: #1e293b;
   word-break: break-word;
 }
 
-/* Module and Drive Lists */
-.module-list,
-.drive-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.module-item,
-.drive-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.module-item:hover,
-.drive-item:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
-}
-
-.module-spec,
-.drive-spec {
-  font-weight: 500;
-  font-size: 0.9rem;
+.spec-value {
+  width: 100%;
+  border: none;
+  background: #fff;
   color: #1e293b;
+  padding: 0;
+  margin: 0;
+  min-height: 1.25rem;
+  line-height: 1.5;
+  cursor: default;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.module-manufacturer,
-.drive-manufacturer {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 400;
+.spec-value.multiline {
+  min-height: 4rem;
 }
 
-.drive-interface {
-  font-size: 0.8rem;
-  color: #94a3b8;
-  font-weight: 400;
+.spec-value:hover,
+.spec-value:focus {
+  background: #fff;
+  border: none;
+  box-shadow: none;
 }
 
-/* No Specifications State */
-.no-specs {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  text-align: center;
-  color: #94a3b8;
+.spec-item input,
+.spec-item textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 9px 10px;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  gap: 12px;
+  color: #1e293b;
+  outline: none;
+  resize: vertical;
 }
 
-.no-specs .material-icons {
-  font-size: 44px;
-  opacity: 0.4;
+.spec-item input:focus,
+.spec-item textarea:focus {
+  border-color: #cbd5e1;
+  box-shadow: none;
 }
 
-.no-specs p {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #64748b;
+.spec-item input[readonly],
+.spec-item textarea[readonly] {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #1e293b;
+  cursor: default;
 }
 
-.no-specs small {
-  color: #94a3b8;
-  font-size: 0.85rem;
+.spec-item input[readonly]:hover,
+.spec-item textarea[readonly]:hover {
+  background: transparent;
+  border: none;
 }
 
-/* Empty State */
-.specifications-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
+.spec-item input[readonly]:focus,
+.spec-item textarea[readonly]:focus {
+  outline: none;
+  box-shadow: none;
 }
 
-.specifications-empty .empty-state {
-  text-align: center;
-  color: #94a3b8;
+
+.spec-item span {
+  display: inline-block;
 }
 
-.specifications-empty .empty-state .material-icons {
-  font-size: 60px;
-  margin-bottom: 12px;
-  opacity: 0.25;
-}
-
-.specifications-empty .empty-state h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #475569;
-}
-
-.specifications-empty .empty-state p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #94a3b8;
-}
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .spec-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 }
 
@@ -386,8 +298,8 @@
   }
 
   .spec-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
   }
 
   .spec-item {
@@ -421,8 +333,8 @@
   }
 
   .spec-grid {
-    gap: 8px;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 
   .spec-item {

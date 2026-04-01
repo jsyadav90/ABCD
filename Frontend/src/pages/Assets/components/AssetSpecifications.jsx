@@ -1,6 +1,7 @@
 /**
  * Component: AssetSpecifications
  * Description: Generic specifications component that renders specs based on configuration
+ * Now uses exact same Input/Textarea components as the form renderer for consistent UX
  * 
  * HOW TO ADD NEW ASSET TYPES:
  * 1. Go to: Frontend/src/pages/Assets/config/assetSpecsConfig.js
@@ -14,11 +15,15 @@
  * - Shows nice messages for unsupported types or missing data
  */
 
-import React from "react";
+import React, { useState } from "react";
+import Input from "../../../components/Input/Input.jsx";
+import Textarea from "../../../components/Textarea/Textarea.jsx";
 import { ASSET_SPECS_CONFIG, LIST_FORMATTERS, getNestedValue, hasFieldData } from "../config/assetSpecsConfig.js";
 import "./AssetSpecifications.css";
 
 const AssetSpecifications = ({ asset }) => {
+  const [formData, setFormData] = useState({});
+
   if (!asset) {
     return (
       <div className="specifications-empty">
@@ -54,7 +59,7 @@ const AssetSpecifications = ({ asset }) => {
     }
   };
 
-  // Render a field item
+  // Render a field item using Input component
   const renderFieldItem = (field) => {
     if (!hasFieldData(asset, field.key)) return null;
 
@@ -63,17 +68,15 @@ const AssetSpecifications = ({ asset }) => {
     if (field.format === "list" && Array.isArray(value) && value.length > 0) {
       const formatter = LIST_FORMATTERS[field.listFormat];
       const formattedItems = formatter ? formatter(value) : value;
+      const listText = formattedItems
+        .map((item) => (item.main ? `${item.main}${item.sub ? ` (${item.sub})` : ""}` : item))
+        .join("\n");
 
       return (
-        <div key={field.key} className="spec-item full-width">
+        <div key={field.key} className="spec-item"> 
           <label>{field.label}</label>
-          <div className="module-list">
-            {formattedItems.map((item, idx) => (
-              <div key={idx} className="module-item">
-                <span className="module-spec">{item.main}</span>
-                {item.sub && <span className="module-manufacturer">{item.sub}</span>}
-              </div>
-            ))}
+          <div className="spec-value multiline" title={listText}>
+            {listText}
           </div>
         </div>
       );
@@ -85,7 +88,9 @@ const AssetSpecifications = ({ asset }) => {
     return (
       <div key={field.key} className="spec-item">
         <label>{field.label}</label>
-        <span>{displayValue}</span>
+        <div className="spec-value" title={displayValue}>
+          {displayValue}
+        </div>
       </div>
     );
   };
@@ -153,3 +158,4 @@ const AssetSpecifications = ({ asset }) => {
 };
 
 export default AssetSpecifications;
+

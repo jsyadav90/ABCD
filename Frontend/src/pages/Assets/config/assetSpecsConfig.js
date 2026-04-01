@@ -68,10 +68,6 @@ export const ASSET_SPECS_CONFIG = {
         fields: [
           { key: "memory.totalCapacityGB", label: "Total Capacity", unit: "GB", format: "number" },
           { key: "memory.modules", label: "Installed Modules", format: "list", listFormat: "ramModule" },
-          { key: "memory.modules", label: "Installed Modules", format: "list", listFormat: "ramModule" },
-          { key: "memory.modules", label: "Installed Modules", format: "list", listFormat: "ramModule" },
-          { key: "memory.modules", label: "Installed Modules", format: "list", listFormat: "ramModule" },
-          { key: "memory.modules", label: "Installed Modules", format: "list", listFormat: "ramModule" },
         ]
       },
       {

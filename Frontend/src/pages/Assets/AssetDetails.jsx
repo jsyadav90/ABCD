@@ -21,7 +21,7 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("specifications");
 
   useEffect(() => {
     const fetchAssetDetails = async () => {
@@ -199,8 +199,8 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
       {/* ===== TABS ===== */}
       <div className="asset-details-tabs">
         <button
-          className={`tab ${activeTab === "overview" ? "active" : ""}`}
-          onClick={() => setActiveTab("overview")}
+          className={`tab ${activeTab === "specifications" ? "active" : ""}`}
+          onClick={() => setActiveTab("specifications")}
         >
           <span className="material-icons">description</span> Specifications
         </button>
@@ -232,14 +232,11 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
 
       {/* ===== CONTENT SECTIONS ===== */}
       <div className="asset-details-content">
-        {/* ===== OVERVIEW TAB ===== */}
-        {activeTab === "overview" && (
-          <div className="tab-content overview-tab">
+        {/* ===== SPECIFICATIONS TAB ===== */}
+        {activeTab === "specifications" && (
+          <div className="tab-content specifications-tab">
             <div className="info-grid">
-              {/* //! Specifications Details */}
               <AssetSpecifications asset={asset} />
-
-               
             </div>
           </div>
         )}
