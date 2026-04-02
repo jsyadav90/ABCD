@@ -23,6 +23,7 @@ import { authAPI } from "../../services/api.js";
 import { fetchBranchesForDropdown } from "../../services/userApi.js";
 import { getTooltipDetails, highlightText } from "./utils/assetUtils.jsx";
 import { toCapitalizedCase } from "../../utils/string.jsx";
+const pageSize = Number(import.meta.env.VITE_PAGE_SIZE) || 20;
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 
@@ -616,7 +617,7 @@ const AssetPage = () => {
             data={filteredAssets}
             showSearch={true}
             showPagination={true}
-            pageSize={20}
+            pageSize={pageSize}
             onSelectionChange={() => {}}
             isRowSelectable={() => true}
             rowClassName=""
