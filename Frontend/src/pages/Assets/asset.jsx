@@ -551,7 +551,9 @@ const AssetPage = () => {
       )
     },
     { header: "Type", key: "assetType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.assetType || "").trim()), search) },
-    {header: "Sub Type", key: "assetSubType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.assetCategory || row.assetType)), search)},
+
+    // {header: "Sub Type", key: "assetSubType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.assetCategory || row.assetType)), search)},
+
     {
       header: "Category",
       key: "assetCategory",

@@ -34,11 +34,6 @@ const cameraSchema = new mongoose.Schema(
     ownershipType: { type: String, trim: true, default: null },
     manufacturingDate: { type: Date, default: null },
 
-    // Camera Type (e.g., "USB Webcam", "Security Camera", "Video Conference Camera")
-    cameraType: { type: String, trim: true, default: null },
-
-
-
     // Camera Specifications
     resolution: { type: String, trim: true, default: null }, // e.g., "1080p", "4K", "2MP"
     frameRate: { type: Number, default: null }, // FPS (0-240)

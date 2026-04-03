@@ -17,13 +17,13 @@ const create = async (req) => {
 
   // Build Peripheral Asset Payload with all keyboard fields
   const fixedPayload = {
-    AssetCategory,
-    AssetType,
+    assetCategory: AssetCategory,
+    assetType: AssetType,
     branchId,
     
     // Basic Information
-    AssetId: body.AssetId || null,
-    AssetTag: body.AssetTag || null,
+    assetId: body.assetId || body.AssetId || null,
+    assetTag: body.assetTag || body.AssetTag || null,
     barcode: body.barcode || null,
     assetSubType: body.assetSubType || null,
     manufacturer: body.manufacturer || null,

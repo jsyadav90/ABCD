@@ -14,15 +14,22 @@ export const peripheralConfigs = {
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
         omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
-        // overrideFields: [{},{},{}  ],
-        addFields: [
-          {
-            name: "cameraType",
-            label: "Camera Type",
-            type: "select",
-            options: lookupOptions.category("camera_type"),
-          },
-        ],
+        overrideFields: [{
+          name: "assetSubType",
+          label: "Sub Type",
+          placeholder: "Select Camera Type",
+          type: "select",
+          options: lookupOptions.category("camera_type"),
+          required: true,
+        },  ],
+        // addFields: [
+        //   {
+        //     name: "assetSubType",
+        //     label: "Camera Type",
+        //     type: "select",
+        //     options: lookupOptions.category("camera_type"),
+        //   },
+        // ],
       }),
       //! Location Information
      fromGeneric("Location & Other Information",{

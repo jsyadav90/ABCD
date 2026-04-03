@@ -16,8 +16,6 @@
   "ownershipType": "Owned",
   "manufacturingDate": "2023-01-10",
 
-  "cameraType": "Webcam",
-
   "resolution": "720p",
   "frameRate": 30,
   "sensorType": "CMOS",
@@ -255,7 +253,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e4e",
 
   "isActive": true,
@@ -342,7 +340,7 @@
   "itemUser": "Teacher-02",
   "AssignDate": "2024-02-01",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e4e",
 
   "isActive": true,
@@ -427,7 +425,7 @@
   "itemUser": "Conference-Room-01",
   "AssignDate": "2024-03-01",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e4e",
 
   "isActive": true,
@@ -536,7 +534,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e51",
 
   "isActive": true,
@@ -643,7 +641,7 @@
   "itemUser": "Teacher-11",
   "AssignDate": "2024-02-10",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e51",
 
   "isActive": true,
@@ -750,7 +748,7 @@
   "itemUser": "Meeting-Room-02",
   "AssignDate": "2024-01-20",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e51",
 
   "isActive": true,
@@ -857,7 +855,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e51",
 
   "isActive": true,
@@ -964,7 +962,7 @@
   "itemUser": "Auditorium",
   "AssignDate": "2024-01-15",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e51",
 
   "isActive": true,
@@ -1071,7 +1069,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e51",
 
   "isActive": true,
@@ -1181,7 +1179,7 @@
   "itemUser": "Teacher-21",
   "AssignDate": "2024-01-05",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1288,7 +1286,7 @@
   "itemUser": "Hall-01",
   "AssignDate": "2024-02-01",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1395,7 +1393,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1502,7 +1500,7 @@
   "itemUser": "Conference-02",
   "AssignDate": "2024-02-20",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1609,7 +1607,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1716,7 +1714,7 @@
   "itemUser": "Auditorium-01",
   "AssignDate": "2024-01-25",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1812,7 +1810,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a85b680a2e0b7064e54",
 
   "isActive": true,
@@ -1906,7 +1904,7 @@
   "itemUser": "Teacher-31",
   "AssignDate": "2024-01-10",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2013,7 +2011,7 @@
   "itemUser": "Auditorium-02",
   "AssignDate": "2024-02-15",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2108,7 +2106,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2215,7 +2213,7 @@
   "itemUser": "Teacher-32",
   "AssignDate": "2024-02-05",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2322,7 +2320,7 @@
   "itemUser": "Hall-02",
   "AssignDate": "2024-01-18",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2417,7 +2415,7 @@
   "itemUser": null,
   "AssignDate": null,
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2510,7 +2508,7 @@
   "itemUser": "Teacher-33",
   "AssignDate": "2024-02-25",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2590,7 +2588,7 @@
   "itemStatus": "active",
   "itemIsCurrently": "inStore",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e57",
 
   "isActive": true,
@@ -2677,7 +2675,7 @@
   "itemUser": "Teacher-41",
   "AssignDate": "2024-01-05",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -2758,7 +2756,7 @@
   "itemStatus": "active",
   "itemIsCurrently": "inStore",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -2842,7 +2840,7 @@
   "itemUser": "Hall-03",
   "AssignDate": "2024-01-20",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -2923,7 +2921,7 @@
   "itemStatus": "active",
   "itemIsCurrently": "inStore",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -3007,7 +3005,7 @@
   "itemUser": "Meeting-01",
   "AssignDate": "2024-02-10",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -3088,7 +3086,7 @@
   "itemStatus": "active",
   "itemIsCurrently": "inStore",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -3172,7 +3170,7 @@
   "itemUser": "Auditorium-03",
   "AssignDate": "2024-02-01",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -3253,7 +3251,7 @@
   "itemStatus": "active",
   "itemIsCurrently": "inStore",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,
@@ -3337,7 +3335,7 @@
   "itemUser": "Meeting-02",
   "AssignDate": "2024-02-28",
 
-  "organizationId": null,
+  "organizationId": "6991f27977da956717ec33f5",
   "branchId": "69935a86b680a2e0b7064e5a",
 
   "isActive": true,

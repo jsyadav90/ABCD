@@ -20,13 +20,13 @@ const create = async (req) => {
   // Build Fixed Asset Payload with all camera fields
   const fixedPayload = {
     // Basic fields
-    AssetCategory,
-    AssetType,
+    assetCategory: AssetCategory,
+    assetType: AssetType,
     branchId,
     
     // Basic Information
-    AssetId: body.AssetId || null,
-    AssetTag: body.AssetTag || null,
+    assetId: body.assetId || body.AssetId || null,
+    assetTag: body.assetTag || body.AssetTag || null,
     barcode: body.barcode || null,
     assetSubType: body.assetSubType || null,
     manufacturer: body.manufacturer || null,
@@ -38,7 +38,7 @@ const create = async (req) => {
     manufacturingDate: body.manufacturingDate || null,
 
     // Camera Type
-    cameraType: body.cameraType || null,
+    assetType: body.assetType || null,
 
     
 

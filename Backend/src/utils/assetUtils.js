@@ -82,8 +82,10 @@ export const buildAssetListFilter = (req) => {
     }
   }
   
-  if (q.AssetCategory) filter.AssetCategory = q.AssetCategory; // Now it's ObjectId, no need to normalize
-  if (q.AssetType) filter.AssetType = norm(q.AssetType).toLowerCase();
+  if (q.AssetCategory) filter.assetCategory = q.AssetCategory; // Now it's ObjectId, no need to normalize
+  if (q.AssetType) filter.assetType = norm(q.AssetType).toLowerCase();
+  if (q.assetCategory) filter.assetCategory = q.assetCategory;
+  if (q.assetType) filter.assetType = norm(q.assetType).toLowerCase();
   if (req?.user?.organizationId) filter.organizationId = req.user.organizationId;
   return filter;
 };
