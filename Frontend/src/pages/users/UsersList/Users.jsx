@@ -456,6 +456,7 @@ const Users = () => {
         await updateUser(assignReportingModal.userId, { reportingTo: assignReportingModal.newManagerId || null });
         
         // Update local state
+        // @ts-ignore
         setAllUsers(prev => prev.map(u => u._id === assignReportingModal.userId ? { ...u, reportingTo: assignReportingModal.newManagerId || null } : u));
         
         setSuccessMessage("Reporting manager updated successfully");
@@ -655,6 +656,15 @@ const Users = () => {
       key: "actions",
       render: (row) => (
         <div className="action-menu-container">
+          {/* View Button */}
+          <button
+            className="action-btn action-btn--view"
+            onClick={() => navigate(`/user-detail/${row._id}`)}
+            title="View user details"
+          >
+            <span className="material-icons">visibility</span>
+          </button>
+
           <button
             className="hamburger-btn"
             onClick={() =>
@@ -667,7 +677,7 @@ const Users = () => {
 
           {openMenuId === row._id && (
             <div className="action-dropdown-menu">
-              {hasPermission("users:users_list:edit_role") && (
+              {hasPermission("users:rows_buttons:edit_role") && (
                 <button
                   className="action-menu-item"
                   onClick={() => handleOpenEditRole(row)}
@@ -676,7 +686,7 @@ const Users = () => {
                 </button>
               )}
 
-              {hasPermission("users:users_list:assign_reporting") && (
+              {hasPermission("users:rows_buttons:assign_reporting") && (
                 <button
                   className="action-menu-item"
                   onClick={() => handleOpenAssignReporting(row)}
@@ -685,7 +695,7 @@ const Users = () => {
                 </button>
               )}
 
-              {hasPermission("users:users_list:edit") && (
+              {hasPermission("users:rows_buttons:edit") && (
                 <button
                   className="action-menu-item"
                   onClick={() => {
@@ -702,7 +712,7 @@ const Users = () => {
                 <>
                   {!row.isActive ? (
                     <>
-                      {hasPermission("users:users_list:enable") && (
+                      {hasPermission("users:rows_buttons:enable") && (
                         <button
                           className="action-menu-item action-menu-item--success"
                           onClick={() => {
@@ -716,7 +726,7 @@ const Users = () => {
                     </>
                   ) : (
                     <>
-                      {hasPermission("users:users_list:disable") && (
+                      {hasPermission("users:rows_buttons:disable") && (
                         <button
                           className="action-menu-item action-menu-item--danger"
                           onClick={() => {
@@ -729,7 +739,7 @@ const Users = () => {
                       )}
                       {row.canLogin ? (
                         <>
-                          {hasPermission("users:users_list:disable_login") && (
+                          {hasPermission("users:rows_buttons:disable_login") && (
                             <button
                               className="action-menu-item action-menu-item--warning"
                               onClick={() => {
@@ -743,7 +753,7 @@ const Users = () => {
                         </>
                       ) : (
                         <>
-                          {hasPermission("users:users_list:enable_login") && (
+                          {hasPermission("users:rows_buttons:enable_login") && (
                             <button
                               className="action-menu-item action-menu-item--success"
                               onClick={() => {
@@ -761,7 +771,7 @@ const Users = () => {
                 </>
               )}
 
-              {row.canLogin && hasPermission("users:users_list:change_password") && (
+              {row.canLogin && hasPermission("users:rows_buttons:change_password") && (
                 <button
                   className="action-menu-item action-menu-item--info"
                   onClick={() => {
@@ -894,45 +904,40 @@ const Users = () => {
           />
         )}
 
-        <div className="page-title">
+        <div className="users-header">
           <h2>Users</h2>
-        </div>
+          <div className="users-header__actions">
+            {hasPermission("users:page_buttons:add") && (
+              <Button
+                onClick={() => navigate("/users/add")}
+                className="users-actions__btn users-actions__btn--add"
+              >
+                + Add New User
+              </Button>
+            )}
 
-        <section className="users-actions">
-          <div className="users-actions__wrapper">
-            <div className="users-actions__bar">
-              {hasPermission("users:users_list:add") && (
-                <Button
-                  onClick={() => navigate("/users/add")}
-                  className="users-actions__btn users-actions__btn--add"
-                >
-                  + Add New User
-                </Button>
-              )}
+            {/* Export Button - Protected by new permission */}
+            {hasPermission("users:page_buttons:export") && (
+              <Button
+                onClick={() => alert("Export functionality would be triggered here")}
+                className="users-actions__btn users-actions__btn--export"
+                style={{ backgroundColor: "#10b981" }}
+              >
+                <span className="material-icons" style={{fontSize: "1.2rem", marginRight: "5px", verticalAlign: "middle"}}>download</span>
+                Export Users
+              </Button>
+            )}
 
-              {/* Export Button - Protected by new permission */}
-              {hasPermission("users:users_list:export") && (
-                <Button
-                  onClick={() => alert("Export functionality would be triggered here")}
-                  className="users-actions__btn users-actions__btn--export"
-                  style={{ backgroundColor: "#10b981" }}
-                >
-                  <span className="material-icons" style={{fontSize: "1.2rem", marginRight: "5px", verticalAlign: "middle"}}>download</span> 
-                  Export Users
-                </Button>
-              )}
-
-              {selectedRows.length > 1 && hasPermission("users:users_list:disable") && (
-                <Button
-                  onClick={handleBulkDisable}
-                  className="btn-md delete-btn"
-                >
-                  Disable
-                </Button>
-              )}
-            </div>
+            {selectedRows.length > 1 && hasPermission("users:rows_buttons:disable") && (
+              <Button
+                onClick={handleBulkDisable}
+                className="btn-md delete-btn"
+              >
+                Disable
+              </Button>
+            )}
           </div>
-        </section>
+        </div>
 
         {/* FilterPopup Component */}
         <FilterPopup

@@ -104,3 +104,23 @@ export const fetchLookupsByCategory = async (category) => {
     return [];
   }
 }
+
+export const deleteAsset = async (assetId) => {
+  try {
+    const response = await API.delete(`/assets/${assetId}`)
+    return response.data?.data || {}
+  } catch (error) {
+    console.error('Failed to delete asset:', error)
+    throw new Error(error.response?.data?.message || 'Failed to delete asset')
+  }
+}
+
+export const toggleAssetStatus = async (assetId, isActive) => {
+  try {
+    const response = await API.patch(`/assets/${assetId}/status`, { isActive })
+    return response.data?.data || {}
+  } catch (error) {
+    console.error('Failed to toggle asset status:', error)
+    throw new Error(error.response?.data?.message || 'Failed to toggle asset status')
+  }
+}

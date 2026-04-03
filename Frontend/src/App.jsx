@@ -64,7 +64,7 @@ function App() {
           <Route
             path="/users"
             element={
-              <ProtectedRoute requiredPermission="users:users_list:view">
+              <ProtectedRoute requiredPermission="users:rows_buttons:view">
                 <MainLayout>
                   <Users />
                 </MainLayout>
@@ -75,7 +75,7 @@ function App() {
           <Route
             path="/users/add"
             element={
-              <ProtectedRoute requiredPermission="users:users_list:add">
+              <ProtectedRoute requiredPermission="users:page_buttons:add">
                 <MainLayout>
                   <AddUser />
                 </MainLayout>
@@ -86,7 +86,7 @@ function App() {
           <Route
             path="/users/edit/:id"
             element={
-              <ProtectedRoute requiredPermission="users:users_list:edit">
+              <ProtectedRoute requiredPermission="users:rows_buttons:edit">
                 <MainLayout>
                   <EditUser />
                 </MainLayout>
@@ -97,7 +97,7 @@ function App() {
           <Route
             path="/user-detail/:id"
             element={
-              <ProtectedRoute requiredPermission="users:users_list:view">
+              <ProtectedRoute requiredPermission="users:rows_buttons:view">
                 <MainLayout>
                   <UserDetails />
                 </MainLayout>
@@ -118,9 +118,7 @@ function App() {
           <Route
             path="/assets"
             element={
-              <
-// @ts-ignore
-              ProtectedRoute>
+              <ProtectedRoute requiredPermission="assets:rows_buttons:view">
                 <MainLayout>
                   <AssetPage />
                 </MainLayout>
@@ -130,9 +128,7 @@ function App() {
           <Route
             path="/assets/add"
             element={
-              <
-// @ts-ignore
-              ProtectedRoute>
+              <ProtectedRoute requiredPermission="assets:page_buttons:add">
                 <MainLayout>
                   <AddAssetPage />
                 </MainLayout>
@@ -142,9 +138,17 @@ function App() {
           <Route
             path="/assets/add/:type"
             element={
-              <
-// @ts-ignore
-              ProtectedRoute>
+              <ProtectedRoute requiredPermission="assets:page_buttons:add">
+                <MainLayout>
+                  <AddAssetPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assets/edit/:id"
+            element={
+              <ProtectedRoute requiredPermission="assets:rows_buttons:edit">
                 <MainLayout>
                   <AddAssetPage />
                 </MainLayout>
@@ -154,9 +158,7 @@ function App() {
           <Route
             path="/assets/:id"
             element={
-              <
-// @ts-ignore
-              ProtectedRoute>
+              <ProtectedRoute requiredPermission="assets:rows_buttons:view">
                 <MainLayout>
                   <AssetDetails />
                 </MainLayout>

@@ -45,48 +45,48 @@ const router = express.Router();
 router.use(verifyJWT);
 
 // Get dropdown data for roles - Required for Add/Edit forms
-router.get("/dropdown/roles", verifyPermission("users:users_list:view"), getRolesForDropdown);
+router.get("/dropdown/roles", verifyPermission("users:rows_buttons:view"), getRolesForDropdown);
 
 // Get dropdown data for branches
-router.get("/dropdown/branches", verifyPermission("users:users_list:view"), getBranchesForDropdown);
+router.get("/dropdown/branches", verifyPermission("users:rows_buttons:view"), getBranchesForDropdown);
 
 // Get dropdown data for users (managers)
-router.get("/dropdown/users", verifyPermission("users:users_list:view"), getUsersForDropdown);
+router.get("/dropdown/users", verifyPermission("users:rows_buttons:view"), getUsersForDropdown);
 
 // Create a new user
-router.post("/", verifyPermission("users:users_list:add"), createUser);
+router.post("/", verifyPermission("users:page_buttons:add"), createUser);
 
 // Preview next userId (readonly, non-mutating)
-router.get("/next-id", verifyPermission("users:users_list:add"), getNextUserId);
+router.get("/next-id", verifyPermission("users:page_buttons:add"), getNextUserId);
 
 // List all users with filters and pagination
-router.get("/", verifyPermission("users:users_list:view"), listUsers);
+router.get("/", verifyPermission("users:rows_buttons:view"), listUsers);
 
 // Get user by ID
-router.get("/:id", verifyPermission("users:users_list:view"), getUserById);
+router.get("/:id", verifyPermission("users:rows_buttons:view"), getUserById);
 
 // Update user (general fields, not canLogin/isActive)
-router.put("/:id", verifyPermission("users:users_list:edit"), updateUser);
+router.put("/:id", verifyPermission("users:rows_buttons:edit"), updateUser);
 
 // Toggle canLogin - enable/disable login credentials
-router.post("/:id/toggle-can-login", verifyPermission("users:users_list:edit"), toggleCanLogin);
+router.post("/:id/toggle-can-login", verifyPermission("users:rows_buttons:edit"), toggleCanLogin);
 
 // Toggle isActive - enable/disable user account
-router.post("/:id/toggle-is-active", verifyPermission("users:users_list:edit"), toggleIsActive);
+router.post("/:id/toggle-is-active", verifyPermission("users:rows_buttons:edit"), toggleIsActive);
 
 // Change user role
-router.post("/:id/change-role", verifyPermission("users:users_list:edit_role"), changeUserRole);
+router.post("/:id/change-role", verifyPermission("users:rows_buttons:edit_role"), changeUserRole);
 
 // Change user password
-router.post("/:id/change-password", verifyPermission("users:users_list:change_password"), changeUserPassword);
+router.post("/:id/change-password", verifyPermission("users:rows_buttons:change_password"), changeUserPassword);
 
 // Soft-delete user (deactivate)
-router.post("/:id/soft-delete", verifyPermission("users:users_list:delete"), softDeleteUser);
+router.post("/:id/soft-delete", verifyPermission("users:rows_buttons:edit"), softDeleteUser);
 
 // Restore user
-router.post("/:id/restore", verifyPermission("users:users_list:delete"), restoreUser);
+router.post("/:id/restore", verifyPermission("users:rows_buttons:edit"), restoreUser);
 
 // Permanently delete user
-router.delete("/:id", verifyPermission("users:users_list:delete"), deleteUserPermanent);
+router.delete("/:id", verifyPermission("users:rows_buttons:edit"), deleteUserPermanent);
 
 export default router;

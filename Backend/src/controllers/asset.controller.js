@@ -22,6 +22,7 @@ import { Purchase } from "../models/purchase.model.js";
 import { Warranty } from "../models/warranty.model.js";
 import { AssetCategory } from "../models/assetcategory.model.js";
 import { AssetType } from "../models/assettype.model.js";
+import { softDeleteOne } from "../utils/softDeleteUtils.js";
 
 const normKey = (val) => String(val || "").trim().toLowerCase();
 
@@ -204,5 +205,80 @@ export const countAssets = asyncHandler(async (req, res) => {
   const total = fixedCount + peripheralCount;
 
   return res.status(200).json(new apiResponse(200, { total }, "Assets count retrieved"));
+});
+
+export const deleteAsset = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  // Find the asset first to determine its type
+  const assetTypes = [CPU, Monitor, Laptop, Printer, Camera, Keyboard, Mouse, Headphone];
+  let asset = null;
+  let AssetModel = null;
+
+  for (const Model of assetTypes) {
+    asset = await Model.findOne({ _id: id, isDeleted: false });
+    if (asset) {
+      AssetModel = Model;
+      break;
+    }
+  }
+
+  if (!asset) {
+    throw new apiError(404, "Asset not found");
+  }
+
+  // Soft delete the asset
+  const deletedAsset = await softDeleteOne(AssetModel, id, userId);
+
+  res.status(200).json(
+    new apiResponse(200, deletedAsset, "Asset deleted successfully")
+  );
+});
+
+export const toggleAssetStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body;
+  const userId = req.user._id;
+
+  if (typeof isActive !== 'boolean') {
+    throw new apiError(400, "isActive must be a boolean value");
+  }
+
+  // Find the asset first to determine its type
+  const assetTypes = [CPU, Monitor, Laptop, Printer, Camera, Keyboard, Mouse, Headphone];
+  let asset = null;
+  let AssetModel = null;
+
+  for (const Model of assetTypes) {
+    asset = await Model.findOne({ _id: id, isDeleted: false });
+    if (asset) {
+      AssetModel = Model;
+      break;
+    }
+  }
+
+  if (!asset) {
+    throw new apiError(404, "Asset not found");
+  }
+
+  // Update the active status
+  asset.isActive = isActive;
+  if (!isActive) {
+    // When deactivating, set deactivation timestamp
+    asset.inactiveAt = new Date();
+    asset.inactiveBy = userId;
+  } else {
+    // When activating, clear deactivation fields
+    asset.inactiveAt = null;
+    asset.inactiveBy = null;
+  }
+
+  await asset.save();
+
+  const statusText = asset.isActive ? "activated" : "deactivated";
+  res.status(200).json(
+    new apiResponse(200, asset, `Asset ${statusText} successfully`)
+  );
 });
 

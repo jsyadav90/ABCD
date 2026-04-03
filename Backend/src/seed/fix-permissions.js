@@ -30,18 +30,17 @@ const fixPermissions = async () => {
   const enterpriseAdminPermissions = [
     // Users Module
     "users:access",
-    "users:users_list:view",
-    "users:users_list:add",
-    "users:users_list:edit",
-    "users:users_list:delete",
-    "users:users_list:disable",
-    "users:users_list:enable",
-    "users:users_list:change_password",
-    "users:users_list:disable_login",
-    "users:users_list:enable_login",
-    "users:users_list:export",
-    "users:users_list:assign_reporting",
-    "users:users_list:edit_role",
+    "users:page_buttons:add",
+    "users:page_buttons:export",
+    "users:rows_buttons:view",
+    "users:rows_buttons:edit",
+    "users:rows_buttons:disable",
+    "users:rows_buttons:enable",
+    "users:rows_buttons:change_password",
+    "users:rows_buttons:disable_login",
+    "users:rows_buttons:enable_login",
+    "users:rows_buttons:assign_reporting",
+    "users:rows_buttons:edit_role",
 
     // Setup Module
     "setup:access",
@@ -52,13 +51,12 @@ const fixPermissions = async () => {
     "setup:branches:view",
     "setup:branches:manage",
 
-    // Assets (limit to Inventory only)
+    // Assets
     "assets:access",
-    "assets:inventory:add",
-    "assets:inventory:edit",
-    "assets:inventory:delete",
-    "assets:inventory:view",
-    "assets:inventory:export",
+    "assets:page_buttons:add",
+    "assets:page_buttons:view",
+    "assets:rows_buttons:view",
+    "assets:rows_buttons:create",
 
     // Reports
     "reports:access",
@@ -81,25 +79,19 @@ const fixPermissions = async () => {
     // Giving them user management rights but maybe restricted setup rights
     const adminPermissions = [
         "users:access",
-        "users:users_list:view",
-        "users:users_list:add",
-        "users:users_list:edit",
-        "users:users_list:disable", // Can disable but not delete
-        "users:users_list:enable",
-        "users:users_list:change_password", // Can reset passwords
-        "users:users_list:export",
-        "users:users_list:assign_reporting",
-        // No role editing, no login disabling
+        "users:page_buttons:add",
+        "users:page_buttons:export",
+        "users:rows_buttons:view",
+        "users:rows_buttons:edit",
+        "users:rows_buttons:disable",
+        "users:rows_buttons:enable",
+        "users:rows_buttons:change_password",
+        "users:rows_buttons:assign_reporting",
 
         "assets:access",
-        "assets:inventory:add",
-        "assets:inventory:edit",
-        "assets:inventory:view",
-        // Assets subset for admin
-        "assets:access",
-        "assets:inventory:add",
-        "assets:inventory:edit",
-        "assets:inventory:view",
+        "assets:page_buttons:add",
+        "assets:rows_buttons:view",
+        "assets:rows_buttons:create",
     ];
 
     const admin = await Role.findOne({ name: "admin" });

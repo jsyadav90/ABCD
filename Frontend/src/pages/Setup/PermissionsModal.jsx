@@ -15,7 +15,7 @@ const hasPermission = (assignedKeys, moduleKey, pageKey, actionKey) => {
 };
 
 const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
-  // Store flat array of permission keys: ["users:users_list:add", "assets:inventory:view", ...]
+  // Store flat array of permission keys: ["users:page_buttons:add", "users:rows_buttons:view", "assets:page_buttons:add", ...]
   const [assignedPermissions, setAssignedPermissions] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");

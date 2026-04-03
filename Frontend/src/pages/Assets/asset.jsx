@@ -16,13 +16,14 @@ import FilterPopup from "../../components/Filter/FilterPopup.jsx";
 import FilterDisplay from "../../components/Filter/FilterDisplay.jsx";
 import { PageLoader } from "../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../components/ErrorBoundary/ErrorNotification.jsx";
-import { fetchAllAssets, fetchAssetCategories } from "../../services/assetApi.js";
+import { fetchAllAssets, fetchAssetCategories, fetchAssetDetailsById, deleteAsset, toggleAssetStatus } from "../../services/assetApi.js";
 import { getBranchName } from "../../utils/branchUtils.js";
 import { getSelectedBranch, onBranchChange } from "../../utils/scope";
 import { authAPI } from "../../services/api.js";
 import { fetchBranchesForDropdown } from "../../services/userApi.js";
 import { getTooltipDetails, highlightText } from "./utils/assetUtils.jsx";
 import { toCapitalizedCase } from "../../utils/string.jsx";
+import { hasPermission } from "../../utils/permissionHelper.js";
 const pageSize = Number(import.meta.env.VITE_PAGE_SIZE) || 20;
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
@@ -47,6 +48,7 @@ const AssetPage = () => {
   const [pendingFilterType, setPendingFilterType] = useState("ALL");
   const [pendingFilterBranch, setPendingFilterBranch] = useState("ALL");
   const [userBranchIds, setUserBranchIds] = useState([]);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const filterButtonRef = useRef(null);
 
   useEffect(() => {
@@ -155,6 +157,21 @@ const AssetPage = () => {
     });
     return off;
   }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Check if click is not on hamburger menu or dropdown
+      if (!e.target.closest(".asset-actions")) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [openMenuId]);
 
 
   useEffect(() => {
@@ -358,6 +375,55 @@ const AssetPage = () => {
     navigate("/assets/add");
   };
 
+  const handleDeleteAsset = async (assetId) => {
+    const asset = assets.find(a => a._id === assetId);
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${asset?.model || asset?.serialNumber || "this asset"}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await deleteAsset(assetId);
+      
+      // Remove from local state
+      setAssets(prev => prev.filter(a => a._id !== assetId));
+      setError(null);
+    } catch (err) {
+      console.error("Delete failed", err);
+      setError(err.message || "Failed to delete asset");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleAssetStatus = async (assetId, isActive) => {
+    const asset = assets.find(a => a._id === assetId);
+    const action = isActive ? "enable" : "disable";
+    const confirmed = window.confirm(
+      `Are you sure you want to ${action} ${asset?.model || asset?.serialNumber || "this asset"}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await toggleAssetStatus(assetId, isActive);
+      
+      // Update local state
+      setAssets(prev => prev.map(a => 
+        a._id === assetId ? { ...a, isActive } : a
+      ));
+      setError(null);
+    } catch (err) {
+      console.error("Status toggle failed", err);
+      setError(err.message || "Failed to update asset status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const capitalizeText = (str) => {
     if (!str) return '';
     return str
@@ -506,9 +572,83 @@ const AssetPage = () => {
       key: "actions",
       render: (row) => (
         <div className="asset-actions">
-          <Button variant="secondary" size="small" onClick={() => navigate(`/assets/${row._id}`)}>
-            View
-          </Button>
+          {/* View Button */}
+          <button
+            className="asset-action-btn asset-action-btn--view"
+            onClick={() => navigate(`/assets/${row._id}`)}
+            title="View asset details"
+          >
+            <span className="material-icons">visibility</span>
+          </button>
+
+          {/* Hamburger Menu */}
+          <button
+            className="asset-hamburger-btn"
+            onClick={() =>
+              setOpenMenuId(openMenuId === row._id ? null : row._id)
+            }
+            title="More actions"
+          >
+            <span className="material-icons">more_vert</span>
+          </button>
+
+          {openMenuId === row._id && (
+            <div className="asset-action-dropdown-menu">
+              {hasPermission("assets:rows_buttons:edit") && (
+                <button
+                  className="asset-action-menu-item"
+                  onClick={() => {
+                    navigate(`/assets/edit/${row._id}`);
+                    setOpenMenuId(null);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+
+              {!row.isActive ? (
+                <>
+                  {hasPermission("assets:rows_buttons:enable") && (
+                    <button
+                      className="asset-action-menu-item asset-action-menu-item--success"
+                      onClick={() => {
+                        handleToggleAssetStatus(row._id, true);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      Enable
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  {hasPermission("assets:rows_buttons:disable") && (
+                    <button
+                      className="asset-action-menu-item asset-action-menu-item--warning"
+                      onClick={() => {
+                        handleToggleAssetStatus(row._id, false);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      Disable
+                    </button>
+                  )}
+                </>
+              )}
+
+              {hasPermission("assets:rows_buttons:delete") && (
+                <button
+                  className="asset-action-menu-item asset-action-menu-item--danger"
+                  onClick={() => {
+                    handleDeleteAsset(row._id);
+                    setOpenMenuId(null);
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
         </div>
       ),
     },

@@ -95,9 +95,9 @@
 	color: #fff !important;
 }
 
-.table__data tbody tr.table__row:hover Button {
+/* .table__data tbody tr.table__row:hover Button {
 	color: #fff !important;
-}
+} */
 
 /* Selected row - overrides alternating colors */
 .table__data tbody tr.table__row--selected {

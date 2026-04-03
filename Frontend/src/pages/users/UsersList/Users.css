@@ -1,3 +1,25 @@
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.users-header h2 {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.users-header__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .users-actions {
   margin-bottom: 1rem;
 }
@@ -102,7 +124,36 @@
 
 .action-menu-container {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: #6c757d;
+}
+
+.action-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.action-btn--view {
+  color: #007bff;
+}
+
+.action-btn--view:hover {
+  background-color: #e7f3ff;
+  color: #0056b3;
 }
 
 .hamburger-btn {

@@ -7,19 +7,21 @@ export const PERMISSION_MODULES = [
     accessKey: "assets:access",
     pages: [
       {
-        key: "templates",
-        label: "Asset Templates",
+        key: "page_buttons",
+        label: "Page Buttons",
         actions: [
-          { key: "view", label: "View Templates" },
-          { key: "manage", label: "Manage Templates" },
+          { key: "add", label: "Add Asset" },
+          { key: "view", label: "View Assets" },
         ],
       },
       {
-        key: "items",
-        label: "Assets",
+        key: "rows_buttons",
+        label: "Rows Buttons",
         actions: [
-          { key: "view", label: "View Assets" },
-          { key: "create", label: "Create Assets" },
+          { key: "edit", label: "Edit Asset" },
+          { key: "delete", label: "Delete Asset" },
+          { key: "disable", label: "Disable Asset" },
+          { key: "enable", label: "Enable Asset" },
         ],
       },
     ],
@@ -31,19 +33,26 @@ export const PERMISSION_MODULES = [
     accessKey: "users:access", 
     pages: [
       {
-        key: "users_list",
-        label: "User List",
+        key: "page_buttons",
+        label: "Page Buttons",
         actions: [
+          // { key: "view", label: "View User Details" },
           { key: "add", label: "Add User" },
+          { key: "export", label: "Export Users" },
+        ],
+      },
+      {
+        key: "rows_buttons",
+        label: "Rows Buttons",
+        actions: [
           { key: "edit", label: "Edit User" },
-          { key: "delete", label: "Delete User" },
-          { key: "view", label: "View User Details" },
+          // { key: "delete", label: "Delete User" },
           { key: "disable", label: "Disable User" },
           { key: "enable", label: "Enable User" },
           { key: "change_password", label: "Change Password" },
           { key: "disable_login", label: "Disable Login" },
           { key: "enable_login", label: "Enable Login" },
-          { key: "export", label: "Export Users" },
+          { key: "only", label: "only for test" },
           { key: "assign_reporting", label: "Assign Reporting Manager" }, // New
           { key: "edit_role", label: "Edit User Role" }, // New
         ],

@@ -174,8 +174,115 @@
   color: #334155;
 }
 .asset-actions {
+  position: relative;
   display: flex;
   gap: 4px;
+}
+
+.asset-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  font-size: 1.125rem;
+}
+
+.asset-action-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.asset-action-btn--view {
+  color: #007bff;
+}
+
+.asset-action-btn--view:hover {
+  background-color: #e7f3ff;
+  color: #0056b3;
+}
+
+.asset-hamburger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  font-size: 1.125rem;
+}
+
+.asset-hamburger-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.asset-action-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 60%;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 120px;
+  /* margin-top: 0.25rem; */
+  overflow: hidden;
+}
+
+.asset-action-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #212529;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.asset-action-menu-item:hover {
+  background-color: #f8f9fa;
+  color: #0056b3;
+}
+
+.asset-action-menu-item--danger {
+  color: #dc3545;
+}
+
+.asset-action-menu-item--danger:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.asset-action-menu-item--warning {
+  color: #ffc107;
+}
+
+.asset-action-menu-item--warning:hover {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.asset-action-menu-item--success {
+  color: #28a745;
+}
+
+.asset-action-menu-item--success:hover {
+  background-color: #d4edda;
+  color: #155724;
 }
 
 /* ============== FILTERS DISPLAY ROW ============== */
