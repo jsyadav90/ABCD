@@ -35,7 +35,7 @@ const cameraSchema = new mongoose.Schema(
     manufacturingDate: { type: Date, default: null },
 
     // Camera Specifications
-    resolution: { type: String, trim: true, default: null }, // e.g., "1080p", "4K", "2MP"
+    resolution: { type: String, trim: true, default: null }, // e.g., 8K UHD (7680×4320), 4K UHD (3840×2160), 1080p Full HD (1920×1080), 720p HD (1280×720), 1440p 2K (2560×1440), 480p (640×480)
     frameRate: { type: Number, default: null }, // FPS (0-240)
     sensorType: { type: String, trim: true, default: null }, // "CMOS" or "CCD"
     fieldOfView: { type: Number, default: null }, // Degrees (0-180)
@@ -43,24 +43,25 @@ const cameraSchema = new mongoose.Schema(
 
     // Audio Features
     builtInMicrophone: { type: String, trim: true, default: null }, // "Yes" / "No"
-    microphoneType: { type: String, trim: true, default: null }, // e.g., "Array Microphone", "Single Mic"
-    noiseReduction: { type: String, trim: true, default: null }, // "Yes" / "No"
+    microphoneType: { type: String, trim: true, default: null }, // e.g., Shown only if builtInMicrophone is "Yes". "Mono", "Stereo", "Omnidirectional", "Cardioid"
+    noiseReduction: { type: String, trim: true, default: null }, // Shown only if builtInMicrophone is "Yes". "Yes" / "No"
 
     // Connectivity
-    connectionType: { type: String, trim: true, default: null }, // "USB", "USB-C", "Wireless"
-    cableLength: { type: Number, default: null }, // meters
-    plugAndPlay: { type: String, trim: true, default: null }, // "Yes" / "No"
+    connectionType: { type: String, trim: true, default: null }, // "USB", "USB-C", "Wireless"  
+    cableLength: { type: Number, default: null }, // shown if connectionType is "USB" or "USB-C", in meters
+    plugAndPlay: { type: String, trim: true, default: null }, // shown if connectionType is "USB" or "USB-C" "Yes" / "No"
 
     // Mounting & Physical
     mountType: { type: String, trim: true, default: null }, // "Monitor Clip", "Tripod Mount", "Wall Mount"
     color: { type: String, trim: true, default: null },
     weight: { type: Number, default: null }, // grams
 
-    // Item State
-    assetStatus: { type: String, trim: true, default: "active" },
-    assetIsCurrently: { type: String, trim: true, default: "inStore" },
-    assetUser: { type: String, trim: true, default: null },
-    assignDate: { type: Date, default: null },
+    // Asset State
+    assetStatus: { type: String, trim: true, default: "active" }, // "active", "inactive", "", ""
+    assetIsCurrently: { type: String, trim: true, default: "inStore" }, // "inStore", "assigned",
+    assetUser: { type: String, trim: true, default: null }, // Shown if assetIsCurrently is "assigned",
+    assignDate: { type: Date, default: null }, // Shown if assetIsCurrently is "assigned",
+    expectedReturnDate: { type: Date, default: null }, // Shown if assetIsCurrently is "assigned",
 
     // Infrastructure fields
     organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", default: null },
