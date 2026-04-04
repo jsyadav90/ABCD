@@ -1,7 +1,7 @@
 Camera type - Conference Camera, PTZ Camera, Webcam
-Connection Type - USB, USB-C, Wireless
-Item is Currently - In Store, In used
-Item Status - Active
+assetSubType - USB, USB-C, Wireless
+assetIsCurrently - In Store, In used
+assetStatus - Active
 
 Plug and Play Support - Yes, No (id Connection Type is USB or USB-C)
 Built-in Microphone - Yes, No
@@ -78,8 +78,6 @@ Branch Id's - 69935a85b680a2e0b7064e4e, 69935a85b680a2e0b7064e51, 69935a85b680a2
     deletedAt: { type: Date, default: null },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     deletedReason: { type: String, trim: true, default: null },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
 
     // Summary field for quick listing
     summary: {
