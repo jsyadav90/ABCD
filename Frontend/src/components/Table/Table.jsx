@@ -1,9 +1,41 @@
-import { useMemo, useState, useEffect } from "react";
+/**
+ * @typedef {Object} TableColumn
+ * @property {string} [key]
+ * @property {string} [accessor]
+ * @property {string} [header]
+ * @property {string} [Header]
+ * @property {boolean} [sortable]
+ * @property {(row: TableRow, search?: string) => any} [render]
+ * @property {(row: TableRow) => string} [tooltip]
+ */
+
+/**
+ * @typedef {Record<string, any> & {
+ *   _id: string;
+ * }} TableRow
+ */
+
+import { useMemo, useState, useEffect, useRef } from "react";
 import "./Table.css";
 import TableSearch from "./TableSearch";
 import TablePagination from "./TablePagination";
 import ColumnSort from "./ColumnSort";
 
+/**
+ * @param {{
+ *   columns: TableColumn[];
+ *   data?: TableRow[];
+ *   pageSize?: number;
+ *   showSearch?: boolean;
+ *   showPagination?: boolean;
+ *   onSelectionChange?: (selectedRows: string[]) => void;
+ *   isRowSelectable?: (row: TableRow) => boolean;
+ *   defaultSortKey?: string | null;
+ *   defaultSortDirection?: "asc" | "desc";
+ *   rowClassName?: (row: TableRow) => string;
+ *   extraActions?: any;
+ * }} props
+ */
 const Table = ({
   columns,
   data = [],
@@ -22,10 +54,10 @@ const Table = ({
     // Initialize page from URL directly to prevent initial render at page 1
     if (!showPagination) return 1;
     const params = new URLSearchParams(window.location.search);
-    const urlPage = parseInt(params.get("page"), 10);
+    const urlPage = parseInt(params.get("page") ?? "1", 10);
     return (urlPage && !isNaN(urlPage) && urlPage > 0) ? urlPage : 1;
   });
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(/** @type {string[]} */ ([]));
 
   // URL state sync for page persistence - ONLY updates when URL changes externally (like popstate)
   useEffect(() => {
@@ -33,7 +65,7 @@ const Table = ({
     
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
-      const urlPage = parseInt(params.get("page"), 10);
+      const urlPage = parseInt(params.get("page") ?? "1", 10);
       if (urlPage && !isNaN(urlPage) && urlPage > 0) {
         setPage(urlPage);
       } else {
@@ -49,8 +81,12 @@ const Table = ({
     key: defaultSortKey,
     direction: defaultSortKey ? defaultSortDirection : null,
   });
+  /** @type {import('react').MutableRefObject<HTMLDivElement | null>} */
+  const tableContainerRef = useRef(null);
 
+  /** @param {string | undefined} key */
   const handleSort = (key) => {
+    if (!key) return;
     setSortConfig((prev) => {
       if (prev.key === key) {
         return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
@@ -104,9 +140,10 @@ const Table = ({
     }
 
     if (sortConfig.key && sortConfig.direction) {
+      const sortKey = sortConfig.key;
       tempData.sort((a, b) => {
-        const aVal = a[sortConfig.key];
-        const bVal = b[sortConfig.key];
+        const aVal = a[sortKey];
+        const bVal = b[sortKey];
 
         if (aVal == null) return 1;
         if (bVal == null) return -1;
@@ -128,8 +165,12 @@ const Table = ({
     onSelectionChange?.(selectedRows);
   }, [selectedRows, onSelectionChange]);
 
+  /** @param {string} str */
   const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+  /** @param {any} text
+   *  @param {string} searchValue
+   */
   const highlightText = (text, searchValue) => {
     if (!searchValue) return text;
     const normalizedSearch = searchValue.trim();
@@ -156,18 +197,26 @@ const Table = ({
     if (!showPagination) return;
 
     const params = new URLSearchParams(window.location.search);
-    const urlPage = parseInt(params.get("page"), 10) || 1;
+    const urlPage = parseInt(params.get("page") ?? "1", 10) || 1;
 
     if (urlPage !== currentPage) {
       if (currentPage === 1) {
         params.delete("page");
       } else {
-        params.set("page", currentPage);
+        params.set("page", String(currentPage));
       }
 
       const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
       window.history.replaceState({}, "", newUrl);
     }
+  }, [currentPage, showPagination]);
+
+  useEffect(() => {
+    if (!showPagination || !tableContainerRef.current) return;
+
+    tableContainerRef.current.scrollTop = 0;
+    tableContainerRef.current.scrollLeft = 0;
+    tableContainerRef.current.scrollIntoView({ block: "start" });
   }, [currentPage, showPagination]);
 
   const tableData = showPagination
@@ -178,8 +227,10 @@ const Table = ({
   const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endIndex = Math.min(totalItems, currentPage * pageSize);
 
+  /** @param {TableRow} row */
   const canSelectRow = (row) => !isRowSelectable || isRowSelectable(row);
 
+  /** @param {TableRow} row */
   const toggleRow = (row) => {
     if (!canSelectRow(row)) return;
     setSelectedRows((prev) =>
@@ -187,6 +238,7 @@ const Table = ({
     );
   };
 
+  /** @param {boolean} checked */
   const toggleAll = (checked) => {
     const selectableRows = tableData.filter(canSelectRow);
     const pageIds = selectableRows.map((row) => row._id);
@@ -207,7 +259,7 @@ const Table = ({
             {showSearch && (
               <TableSearch
                 value={search}
-                onChange={(val) => {
+                onChange={(/** @type {string} */ val) => {
                   setSearch(val);
                   setPage(1);
                 }}
@@ -239,7 +291,7 @@ const Table = ({
         </div>
       )}
 
-      <div className="table__container">
+      <div className="table__container" ref={tableContainerRef}>
         <table className="table__data">
           <thead>
             <tr>
@@ -257,7 +309,10 @@ const Table = ({
               {columns.map((col, i) => (
                 <th
                   key={i}
-                  onClick={() => col.sortable && handleSort(col.key ?? col.accessor)}
+                  onClick={() => {
+                    const sortKey = col.key ?? col.accessor;
+                    if (col.sortable && sortKey) handleSort(sortKey);
+                  }}
                   style={{ cursor: col.sortable ? "pointer" : "default" }}
                 >
                   <span className="th-content">
@@ -311,7 +366,7 @@ const Table = ({
                   
                   return (
                     <td key={i} title={cellTitle}>
-                      {col.render ? col.render(row, search) : highlightText(row[col.key ?? col.accessor], search)}
+                      {col.render ? col.render(row, search) : highlightText(row[col.key ?? col.accessor ?? ""], search)}
                     </td>
                   );
                 })}
