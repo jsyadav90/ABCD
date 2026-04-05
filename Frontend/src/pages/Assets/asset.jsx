@@ -550,7 +550,13 @@ const AssetPage = () => {
         </button>
       )
     },
-    { header: "Type", key: "assetType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU"  : toCapitalizedCase(String(row.assetType || "").trim()), search) },
+    {header: "Asset Tag", key: "assetTag", sortable: true, render: (row, search) => highlightText(row.assetTag, search)},
+
+    { header: "Asset Type", key: "assetType", sortable: true, render: (row, search) => {
+      const typeDisplay = row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU" : toCapitalizedCase(String(row.assetType || "").trim());
+      const subTypeDisplay = row.assetSubType && String(row.assetSubType).trim() ? ` (${String(row.assetSubType).trim()})` : "";
+      return highlightText(typeDisplay + subTypeDisplay, search);
+    } },
 
     // {header: "Sub Type", key: "assetSubType", sortable: true, render: (row, search) => highlightText(row.assetType === "cpu" ? "CPU"  :  toCapitalizedCase(getCategoryName(row.assetCategory || row.assetType)), search)},
 
