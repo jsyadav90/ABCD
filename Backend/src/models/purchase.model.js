@@ -34,7 +34,14 @@ const purchaseSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     inactiveAt: { type: Date, default: null },
     inactiveBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-    inactiveReason: { type: String, trim: true, default: null },
+    inactiveReason: [
+      {
+        reason: { type: String, trim: true },
+        status: { type: Boolean }, // true = active, false = inactive
+        changedAt: { type: Date, default: Date.now },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
     isDeleted: { type: Boolean, default: false, index: true },
     deletedAt: { type: Date, default: null },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },

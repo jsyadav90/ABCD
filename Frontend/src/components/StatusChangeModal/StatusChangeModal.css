@@ -1,0 +1,185 @@
+.status-change-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.status-change-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-change-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.status-change-modal__header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.status-change-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.status-change-modal__close:hover {
+  background: #f0f0f0;
+}
+
+.status-change-modal__content {
+  padding: 1.5rem;
+}
+
+.status-change-modal__content p {
+  margin: 0 0 1rem 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.status-change-modal__content p em {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.status-change-modal__textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.status-change-modal__textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+}
+
+.status-change-modal__error {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.status-change-modal__footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  justify-content: flex-end;
+}
+
+.status-change-modal__btn {
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-change-modal__btn--cancel {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.status-change-modal__btn--cancel:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.status-change-modal__btn--activate {
+  background: #4caf50;
+  color: white;
+}
+
+.status-change-modal__btn--activate:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.status-change-modal__btn--activate:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.status-change-modal__btn--deactivate {
+  background: #f44336;
+  color: white;
+}
+
+.status-change-modal__btn--deactivate:hover:not(:disabled) {
+  background: #da190b;
+}
+
+.status-change-modal__btn--deactivate:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@media screen and (max-width: 600px) {
+  .status-change-modal {
+    width: 95%;
+    max-width: none;
+  }
+
+  .status-change-modal__header {
+    padding: 1rem;
+  }
+
+  .status-change-modal__content {
+    padding: 1rem;
+  }
+
+  .status-change-modal__footer {
+    padding: 1rem;
+  }
+
+  .status-change-modal__btn {
+    flex: 1;
+  }
+}

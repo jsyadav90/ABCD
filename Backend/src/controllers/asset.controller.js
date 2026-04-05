@@ -244,11 +244,15 @@ export const deleteAsset = asyncHandler(async (req, res) => {
 
 export const toggleAssetStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { isActive } = req.body;
+  const { isActive, inactiveReason } = req.body;
   const userId = req.user._id;
 
   if (typeof isActive !== 'boolean') {
     throw new apiError(400, "isActive must be a boolean value");
+  }
+
+  if (!inactiveReason || typeof inactiveReason !== 'string' || inactiveReason.trim() === '') {
+    throw new apiError(400, "Reason is required for status change");
   }
 
   // Find the asset first to determine its type
@@ -270,6 +274,19 @@ export const toggleAssetStatus = asyncHandler(async (req, res) => {
 
   // Update the active status
   asset.isActive = isActive;
+  
+  // Add reason to history
+  if (!asset.inactiveReason) {
+    asset.inactiveReason = [];
+  }
+  
+  asset.inactiveReason.push({
+    reason: inactiveReason.trim(),
+    status: isActive, // true = activated, false = deactivated
+    changedAt: new Date(),
+    changedBy: userId,
+  });
+
   if (!isActive) {
     // When deactivating, set deactivation timestamp
     asset.inactiveAt = new Date();

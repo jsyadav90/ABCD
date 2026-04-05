@@ -16,6 +16,7 @@ import FilterPopup from "../../components/Filter/FilterPopup.jsx";
 import FilterDisplay from "../../components/Filter/FilterDisplay.jsx";
 import { PageLoader } from "../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../components/ErrorBoundary/ErrorNotification.jsx";
+import StatusChangeModal from "../../components/StatusChangeModal/StatusChangeModal.jsx";
 import { fetchAllAssets, fetchAssetCategories, fetchAssetDetailsById, deleteAsset, toggleAssetStatus } from "../../services/assetApi.js";
 import { getBranchName } from "../../utils/branchUtils.js";
 import { getSelectedBranch, onBranchChange } from "../../utils/scope";
@@ -50,6 +51,14 @@ const AssetPage = () => {
   const [userBranchIds, setUserBranchIds] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
   const filterButtonRef = useRef(null);
+
+  // Modal state for status change
+  const [statusChangeModal, setStatusChangeModal] = useState({
+    isOpen: false,
+    assetId: null,
+    assetName: null,
+    newStatus: null,
+  });
 
   useEffect(() => {
     if (isFilterOpen) {
@@ -398,22 +407,27 @@ const AssetPage = () => {
     }
   };
 
-  const handleToggleAssetStatus = async (assetId, isActive) => {
+  const handleToggleAssetStatus = (assetId, isActive) => {
     const asset = assets.find(a => a._id === assetId);
-    const action = isActive ? "enable" : "disable";
-    const confirmed = window.confirm(
-      `Are you sure you want to ${action} ${asset?.model || asset?.serialNumber || "this asset"}?`
-    );
-    if (!confirmed) return;
+    setStatusChangeModal({
+      isOpen: true,
+      assetId,
+      assetName: asset?.model || asset?.serialNumber || "this asset",
+      newStatus: isActive,
+    });
+  };
 
+  const handleStatusChangeConfirm = async (reason) => {
+    const { assetId, newStatus } = statusChangeModal;
+    
     try {
       setLoading(true);
       setError(null);
-      await toggleAssetStatus(assetId, isActive);
+      await toggleAssetStatus(assetId, newStatus, reason);
       
       // Update local state
       setAssets(prev => prev.map(a => 
-        a._id === assetId ? { ...a, isActive } : a
+        a._id === assetId ? { ...a, isActive: newStatus } : a
       ));
       setError(null);
     } catch (err) {
@@ -421,7 +435,12 @@ const AssetPage = () => {
       setError(err.message || "Failed to update asset status");
     } finally {
       setLoading(false);
+      setStatusChangeModal({ isOpen: false, assetId: null, assetName: null, newStatus: null });
     }
+  };
+
+  const handleStatusChangeCancel = () => {
+    setStatusChangeModal({ isOpen: false, assetId: null, assetName: null, newStatus: null });
   };
 
   const capitalizeText = (str) => {
@@ -667,6 +686,13 @@ const AssetPage = () => {
 
   return (
     <div className="asset-page">
+      <StatusChangeModal
+        isOpen={statusChangeModal.isOpen}
+        assetName={statusChangeModal.assetName}
+        newStatus={statusChangeModal.newStatus}
+        onConfirm={handleStatusChangeConfirm}
+        onCancel={handleStatusChangeCancel}
+      />
       <div className="asset">
       {/* <div className="asset-breadcrumbs" aria-label="Breadcrumb">
         <span className="breadcrumb-item">Home</span>

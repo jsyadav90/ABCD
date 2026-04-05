@@ -147,7 +147,7 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
           </div>
           <div className="header-info">
             <div className="header-title">
-              <h1>{asset.assetId}</h1>
+              <h1>{asset.assetTag}</h1>
               <Badge variant={getStatusColor(asset.isActive)}>
                 {getStatusBadge(asset.isActive)}
               </Badge>

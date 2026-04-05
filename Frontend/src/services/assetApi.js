@@ -136,9 +136,9 @@ export const deleteAsset = async (assetId) => {
   }
 }
 
-export const toggleAssetStatus = async (assetId, isActive) => {
+export const toggleAssetStatus = async (assetId, isActive, inactiveReason) => {
   try {
-    const response = await API.patch(`/assets/${assetId}/status`, { isActive })
+    const response = await API.patch(`/assets/${assetId}/status`, { isActive, inactiveReason })
     return response.data?.data || {}
   } catch (error) {
     console.error('Failed to toggle asset status:', error)
