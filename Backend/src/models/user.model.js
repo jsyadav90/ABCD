@@ -159,9 +159,29 @@ const userSchema = new mongoose.Schema(
     },
 
     inactiveReason: {
-      type: String,
-      trim: true,
-      default: null,
+      type: [
+        {
+          reason: {
+            type: String,
+            trim: true,
+            required: true,
+          },
+          status: {
+            type: Boolean,
+            required: true,
+          },
+          changedAt: {
+            type: Date,
+            default: () => new Date(),
+          },
+          changedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+          },
+        }
+      ],
+      default: () => [],
     },
 
     isBlocked: {

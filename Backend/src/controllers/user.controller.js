@@ -240,7 +240,10 @@ export const createUser = asyncHandler(async (req, res) => {
     console.error("âŒ Failed to assign default role:", err);
   }
 
-  const user = await User.create(toCreate);
+  const user = await User.create({
+    ...toCreate,
+    inactiveReason: [],
+  });
 
   // canLogin is always false on creation now, so no need to create credentials here.
   // Admin must enable login explicitly later.
@@ -441,7 +444,15 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
 // Toggle isActive. Business rule: when disabling isActive, also disable canLogin. Enabling isActive does NOT auto-enable canLogin.
 export const toggleIsActive = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { enable } = req.body; // boolean
+  const { enable, inactiveReason } = req.body; // boolean + reason
+
+  if (typeof enable !== 'boolean') {
+    throw new apiError(400, "enable must be a boolean value");
+  }
+
+  if (!inactiveReason || typeof inactiveReason !== 'string' || inactiveReason.trim() === '') {
+    throw new apiError(400, "Reason is required for status change");
+  }
 
   // User cannot change their own isActive status
   if (req.user?.id && String(req.user.id) === String(id)) {
@@ -458,13 +469,34 @@ export const toggleIsActive = asyncHandler(async (req, res) => {
     throw new apiError(403, "Forbidden");
   }
 
+  if (!Array.isArray(user.inactiveReason)) {
+    user.inactiveReason = user.inactiveReason ? [
+      {
+        reason: String(user.inactiveReason),
+        status: !enable,
+        changedAt: user.inactiveAt || new Date(),
+        changedBy: user.inactiveBy || null,
+      }
+    ] : [];
+  }
+
+  user.inactiveReason.push({
+    reason: inactiveReason.trim(),
+    status: enable,
+    changedAt: new Date(),
+    changedBy: req.user._id,
+  });
+
   if (enable) {
     user.isActive = true;
-    // do not change canLogin
+    // do not change canLogin automatically
+    user.inactiveAt = null;
+    user.inactiveBy = null;
   } else {
     user.isActive = false;
-    // if disabling active, also disable login
     user.canLogin = false;
+    user.inactiveAt = new Date();
+    user.inactiveBy = req.user._id;
   }
 
   await user.save();

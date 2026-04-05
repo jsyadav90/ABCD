@@ -122,10 +122,11 @@ export const fetchUsersCount = async () => {
   }
 }
 
-export const disableUser = async (userId) => {
+export const disableUser = async (userId, reason) => {
   try {
     const response = await API.post(`/users/${userId}/toggle-is-active`, {
-      enable: false
+      enable: false,
+      inactiveReason: reason || "User deactivated by admin",
     })
     return response.data
   } catch (error) {
@@ -134,10 +135,11 @@ export const disableUser = async (userId) => {
   }
 }
 
-export const enableUser = async (userId) => {
+export const enableUser = async (userId, reason) => {
   try {
     const response = await API.post(`/users/${userId}/toggle-is-active`, {
-      enable: true
+      enable: true,
+      inactiveReason: reason || "User activated by admin",
     })
     return response.data
   } catch (error) {

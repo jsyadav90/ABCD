@@ -72,6 +72,7 @@ router.put("/:id", verifyPermission("users:rows_buttons:edit"), updateUser);
 router.post("/:id/toggle-can-login", verifyPermission("users:rows_buttons:edit"), toggleCanLogin);
 
 // Toggle isActive - enable/disable user account
+// Request body: { enable: boolean, inactiveReason: string }
 router.post("/:id/toggle-is-active", verifyPermission("users:rows_buttons:edit"), toggleIsActive);
 
 // Change user role
