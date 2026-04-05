@@ -5,7 +5,9 @@ assetStatus - Active
 
 Plug and Play Support - Yes, No (id Connection Type is USB or USB-C)
 Built-in Microphone - Yes, No
-
+assetTypeId - 69c3c264f3df17bd889b549a
+assetType - camera
+assetCategory - 69c3af1d43b8a010e0da3a7a
 Sensor Type - CMOS, CCD 
 organizationId - 507c1f77bcf86cd799439013
 Branch Id's - 69935a85b680a2e0b7064e4e, 69935a85b680a2e0b7064e51, 69935a85b680a2e0b7064e54, 69935a86b680a2e0b7064e57, 69935a86b680a2e0b7064e5a
@@ -14,13 +16,13 @@ Branch Id's - 69935a85b680a2e0b7064e4e, 69935a85b680a2e0b7064e51, 69935a85b680a2
    // Mandatory first fields
     assetCategory: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "AssetCategory",
+      ref: "asset_categories",
       required: true
     },
     assetType: { type: String, required: true, trim: true },
     assetTypeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "assetType",
+      ref: "asset_types",
       default: null
     },
 
@@ -132,5 +134,4 @@ Branch Id's - 69935a85b680a2e0b7064e4e, 69935a85b680a2e0b7064e51, 69935a85b680a2
     amcStartDate: { type: Date, default: null }, // Applicable if amcAvailable is "Yes"
     amcEndDate: { type: Date, default: null }, // Applicable if amcAvailable is "Yes"
     amcStatus: { type: String, enum: ["Active", "Expired"], default: null }, // Calculated field based on amcEndDate and current date.
-
     

@@ -8,7 +8,7 @@
 import express from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyPermission } from "../middlewares/permission.middleware.js";
-import { createAsset, listAssets, getAssetById, countAssets, deleteAsset, toggleAssetStatus } from "../controllers/asset.controller.js";
+import { createAsset, listAssets, getAssetById, countAssets, deleteAsset, toggleAssetStatus, getNextAssetId } from "../controllers/asset.controller.js";
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.use(verifyJWT);
 
 router.post("/", verifyPermission("assets:access"), createAsset);
 router.get("/", verifyPermission("assets:inventory:view"), listAssets);
+router.get("/next-id", verifyPermission("assets:access"), getNextAssetId);
 router.get("/count", 
     // verifyPermission("assets:inventory:view"), 
     countAssets);

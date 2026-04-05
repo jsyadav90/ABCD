@@ -19,8 +19,8 @@ const printerSchema = new mongoose.Schema(
     },
 
     // Basic Information
-    AssetId: { type: String, trim: true, default: null },
-    AssetTag: { type: String, trim: true, default: null },
+    assetId: { type: String, trim: true, default: null },
+    assetTag: { type: String, trim: true, default: null },
     barcode: { type: String, trim: true, default: null },
     assetName: { type: String, trim: true, default: null },
     assetDescription: { type: String, trim: true, default: null },
@@ -132,8 +132,8 @@ printerSchema.index({ serialNumber: 1 }, { sparse: true });
 
 printerSchema.pre("save", function () {
   this.summary = {
-    assetName: this.AssetId || "Printer",
-    AssetTag: this.AssetTag || this.AssetId || "N/A",
+    assetName: this.assetId || this.AssetId || "Printer",
+    AssetTag: this.AssetTag || this.assetId || this.AssetId || "N/A",
     serialNumber: this.serialNumber || "N/A",
     manufacturer: this.manufacturer || "N/A",
     model: this.model || "N/A",

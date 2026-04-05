@@ -14,8 +14,8 @@ export const peripheralConfigs = {
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
         omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
-        overrideFields: [{
-          name: "assetSubType",
+        overrideFields: [{          name: "assetId", readOnly: true, placeholder: "Auto-generated on save", required: false
+        }, {          name: "assetSubType",
           label: "Sub Type",
           placeholder: "Select Camera Type",
           type: "select",
@@ -132,6 +132,7 @@ export const peripheralConfigs = {
       {
         sectionTitle: "Basic Information",
         fields: [
+          { name: "assetId", label: "Asset ID", placeholder: "Auto-generated on save", type: "text", readOnly: true, required: false },
           { name: "name", label: "Headphone Name", type: "text", required: true, maxLength: 80 },
           { name: "model", label: "Model", type: "text", maxLength: 80 },
           { name: "manufacturer", label: "Manufacturer", type: "text", required: true, maxLength: 80 },
@@ -249,7 +250,9 @@ export const peripheralConfigs = {
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
         omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
-        // overrideFields: [{},{},{}  ],
+        overrideFields: [
+          { name: "assetId", readOnly: true, placeholder: "Auto-generated on save", required: false }
+        ],
         // addFields: [{},{},{}],
       }),
       //! Location Information
@@ -293,6 +296,26 @@ export const peripheralConfigs = {
       //! Asset State
       fromGeneric("Asset State",{
         //  omitFields: ["","",""],
+        //  overrideFields: [{},{},{},],
+        //  addFields:[{},{},{},]
+      }),
+    ],
+  },
+
+  mouse: {
+    sections: [
+      //! Basic Information
+      fromGeneric("Basic Information", {
+        // Example: hide description field coming from generic
+        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        overrideFields: [
+          { name: "assetId", readOnly: true, placeholder: "Auto-generated on save", required: false }
+        ],
+        // addFields: [{},{},{}],
+      }),
+      //! Location Information
+      fromGeneric("Location & Other Information",{
+         omitFields: ["organization","rackNumber","rackUnit", "location", "floor", "room", "locationType", "building"],
         //  overrideFields: [{},{},{},],
         //  addFields:[{},{},{},]
       }),

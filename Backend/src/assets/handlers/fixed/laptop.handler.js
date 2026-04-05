@@ -7,6 +7,7 @@ import { Laptop } from "../../../models/fixed/laptop.model.js";
 import { Purchase } from "../../../models/purchase.model.js";
 import { Warranty } from "../../../models/warranty.model.js";
 import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit } from "../../../utils/assetUtils.js";
+import { generateAssetId } from "../../../services/assetIdGenerator.service.js";
 
 const create = async (req) => {
   const body = req.body || {};
@@ -93,8 +94,15 @@ const create = async (req) => {
   // Delete fields from fixedPayload
   [...purchaseFields, ...warrantyFields].forEach((k) => delete fixedPayload[k]);
 
-  // 1. Save Fixed Asset first
-  const fixedDoc = await Laptop.create(fixedPayload);
+  // Generate unique asset ID (A26-00001 format)
+  const generatedAssetId = await generateAssetId();
+
+  // 1. Save Fixed Asset first with generated asset ID
+  const fixedDoc = await Laptop.create({
+    ...fixedPayload,
+    assetId: generatedAssetId,
+    AssetId: generatedAssetId,
+  });
   const assetId = fixedDoc._id;
 
   // 2. Create Purchase Document if any purchase field exists
@@ -154,11 +162,12 @@ const list = async (req) => {
 
   const flattenedItems = items.map((item) => ({
     ...item,
-    AssetName: item.AssetId || item.summary?.AssetName || "N/A",
+    assetId: item.assetId || item.AssetId,
+    AssetName: item.assetId || item.AssetId || item.summary?.AssetName || "N/A",
     manufacturer: item.manufacturer || item.summary?.manufacturer || "N/A",
     model: item.model || item.summary?.model || "N/A",
     serialNumber: item.serialNumber || item.summary?.serialNumber || "N/A",
-    AssetTag: item.AssetId || item.summary?.AssetTag || "N/A",
+    AssetTag: item.assetId || item.AssetId || item.summary?.AssetTag || "N/A",
   }));
 
   return { items: flattenedItems, message: "Assets retrieved" };

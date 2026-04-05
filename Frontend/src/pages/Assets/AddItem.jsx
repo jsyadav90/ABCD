@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Select from '../../components/Select/Select.jsx';
 import './AddAsset.css';
 import FormRenderer from './components/FormRenderer.jsx';
-import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory } from '../../services/assetApi.js';
+import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory, getNextAssetId } from '../../services/assetApi.js';
 import { fetchBranchesForDropdown } from '../../services/userApi.js';
 import { getAssetFieldConfig } from './config/assetFieldConfig.js';
 import { getSelectedBranch } from '../../utils/scope.js';
@@ -92,7 +92,7 @@ const AddAsset = () => {
     return category?.name || '';
   }, [categories, selectedCategory]);
 
-  // Load categories and branches on mount
+  // Load categories, branches, and next asset ID on mount
   useEffect(() => {
     const loadCategoriesAndBranches = async () => {
       try {
@@ -109,6 +109,17 @@ const AddAsset = () => {
       } catch (error) {
         console.error('Failed to load branches:', error);
         setBranches([]);
+      }
+
+      // Load next asset ID
+      try {
+        const nextAssetId = await getNextAssetId();
+        setFormData((prev) => ({
+          ...prev,
+          assetId: nextAssetId,
+        }));
+      } catch (error) {
+        console.error('Failed to load next asset ID:', error);
       }
 
       // Get user's selected branch from dashboard
@@ -172,6 +183,8 @@ const AddAsset = () => {
         setFormData((prev) => ({
           ...prev,
           assetType: selectedAsset,
+          // Preserve assetId if it exists
+          assetId: prev.assetId || '',
         }));
       } catch (error) {
         console.error('Failed to load item field config:', error);
@@ -181,6 +194,24 @@ const AddAsset = () => {
 
     loadConfig();
   }, [selectedAsset, selectedCategoryName]);
+
+  useEffect(() => {
+    if (!selectedAsset) return;
+
+    const loadNextAssetIdForSelectedType = async () => {
+      try {
+        const nextAssetId = await getNextAssetId();
+        setFormData((prev) => ({
+          ...prev,
+          assetId: nextAssetId,
+        }));
+      } catch (error) {
+        console.error('Failed to load next asset ID for selected asset type:', error);
+      }
+    };
+
+    loadNextAssetIdForSelectedType();
+  }, [selectedAsset]);
 
   const categoryOptions = categories.map((cat) => ({
     value: cat._id,
@@ -307,7 +338,8 @@ const AddAsset = () => {
       const result = await createAsset(payload);
 
       // Success
-      setSuccessMessage(`Asset created successfully! ID: ${result._id}`);
+      const assetId = result?.doc?.fixedAsset?.assetId || result?._id;
+      setSuccessMessage(`Asset created successfully! Asset ID: ${assetId}`);
       
       // Reset form after 1.5 seconds and navigate back
       setTimeout(() => {
@@ -406,7 +438,7 @@ const AddAsset = () => {
             />
             <Select
               name="item"
-              value={selectedassetId}
+              value={selectedAssetId}
               onChange={handleItemSelect}
               options={itemOptions}
               placeholder={selectedCategory ? 'Select an item': 'Select a category first'}

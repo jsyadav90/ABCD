@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Select from '../../components/Select/Select.jsx';
 import './AddAsset.css';
 import FormRenderer from './components/FormRenderer.jsx';
-import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory } from '../../services/assetApi.js';
+import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory, getNextAssetId } from '../../services/assetApi.js';
 import { fetchBranchesForDropdown } from '../../services/userApi.js';
 import { getAssetFieldConfig } from './config/assetFieldConfig.js';
 import { getSelectedBranch } from '../../utils/scope.js';
@@ -92,6 +92,21 @@ const AddAsset = () => {
     return category?.name || '';
   }, [categories, selectedCategory]);
 
+  const buildBaseFormData = () => {
+    const baseData = {};
+    if (selectedCategoryName) {
+      baseData.assetcategory = selectedCategoryName;
+    }
+    if (isBranchFieldDisabled && userSelectedBranch) {
+      baseData.branch = userSelectedBranch;
+      baseData.branchId = userSelectedBranch;
+    }
+    if (formData.assetId) {
+      baseData.assetId = formData.assetId;
+    }
+    return baseData;
+  };
+
   // Load categories and branches on mount
   useEffect(() => {
     const loadCategoriesAndBranches = async () => {
@@ -100,6 +115,8 @@ const AddAsset = () => {
         setCategories(categoryData);
       } catch (error) {
         console.error('Failed to load categories:', error);
+        setCategories([]);
+        setErrorMessage('Unable to load asset categories. Please refresh the page.');
       }
 
       // Load branches for dropdown
@@ -109,6 +126,17 @@ const AddAsset = () => {
       } catch (error) {
         console.error('Failed to load branches:', error);
         setBranches([]);
+      }
+
+      // Load next asset ID preview
+      try {
+        const nextAssetId = await getNextAssetId();
+        setFormData((prev) => ({
+          ...prev,
+          assetId: nextAssetId,
+        }));
+      } catch (error) {
+        console.error('Failed to load next asset ID:', error);
       }
 
       // Get user's selected branch from dashboard
@@ -133,6 +161,7 @@ const AddAsset = () => {
       setSelectedAsset('');
       setSelectedAssetId('');
       setSections([]);
+      setFormData(buildBaseFormData());
       return;
     }
 
@@ -143,10 +172,12 @@ const AddAsset = () => {
         setSelectedAsset('');
         setSelectedAssetId('');
         setSections([]);
+        setFormData(buildBaseFormData());
       } catch (error) {
         console.error('Failed to load item types:', error);
         setassetTypes([]);
         setSections([]);
+        setFormData(buildBaseFormData());
       }
     };
 
@@ -156,12 +187,18 @@ const AddAsset = () => {
   useEffect(() => {
     if (!selectedAsset) {
       setSections([]);
-      setFormData((prev) => ({ ...prev, assetType: '' }));
+      setFormData(buildBaseFormData());
       return;
     }
 
     const loadConfig = async () => {
       try {
+        setFormData({
+          ...buildBaseFormData(),
+          assetType: selectedAsset,
+          assetTypeId: selectedAssetId,
+        });
+
         const config = await getAssetFieldConfig(selectedAsset);
         let formSections = config.sections || [];
 
@@ -169,10 +206,6 @@ const AddAsset = () => {
         formSections = await resolveLookupOptions(formSections);
 
         setSections(formSections);
-        setFormData((prev) => ({
-          ...prev,
-          assetType: selectedAsset,
-        }));
       } catch (error) {
         console.error('Failed to load item field config:', error);
         setSections([]);
@@ -293,9 +326,9 @@ const AddAsset = () => {
       // All validations passed - prepare payload
       const { assetcategory: _ignored, ...filteredFormData } = formData;
       const payload = {
-        AssetType: selectedAsset, // normalized name for backend handler routing
-        AssetTypeId: selectedAssetId, // ObjectId for proper M2M relationship
-        AssetCategory: selectedCategory, // ObjectId reference to asset category
+        assetType: selectedAsset, // normalized name for backend handler routing
+        assetTypeId: selectedAssetId, // ObjectId for proper M2M relationship
+        assetCategory: selectedCategory, // ObjectId reference to asset category
         branchId: filteredFormData.branchId || filteredFormData.branch, // Include branch ObjectId
         ...filteredFormData,
       };

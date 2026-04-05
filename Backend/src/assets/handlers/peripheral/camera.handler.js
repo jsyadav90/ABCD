@@ -1,6 +1,6 @@
 /**
  * Camera Peripheral Handler
- * Description: Camera-specific create/list/getById logics. 
+ * Description: Camera-specific create/list/getById logics.
  * Handles all camera fields from frontend and creates Fixed Asset, Purchase, and Warranty documents.
  * All optional fields are preserved in the fixed asset document.
  */
@@ -8,6 +8,7 @@ import { Camera } from "../../../models/peripheral/camera.model.js";
 import { Purchase } from "../../../models/purchase.model.js";
 import { Warranty } from "../../../models/warranty.model.js";
 import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit } from "../../../utils/assetUtils.js";
+import { generateAssetId } from "../../../services/assetIdGenerator.service.js";
 
 const create = async (req) => {
   const body = req.body || {};
@@ -105,8 +106,14 @@ const create = async (req) => {
     }
   });
 
-  // 1. Save Fixed Asset (Camera)
-  const fixedDoc = await Camera.create(fixedPayload);
+  // Generate unique asset ID (A26-00001 format)
+  const generatedAssetId = await generateAssetId();
+
+  // 1. Save Fixed Asset (Camera) with generated asset ID
+  const fixedDoc = await Camera.create({
+    ...fixedPayload,
+    assetId: generatedAssetId,
+  });
   const assetId = fixedDoc._id;
 
   // 2. Create Purchase Document if any purchase field exists
@@ -169,11 +176,12 @@ const list = async (req) => {
   // Map fields for UI consistency
   const flattenedItems = items.map((item) => ({
     ...item,
-    AssetName: item.AssetId || item.summary?.AssetName || "N/A",
+    assetId: item.assetId || item.AssetId,
+    AssetName: item.assetId || item.AssetId || item.summary?.AssetName || "N/A",
     manufacturer: item.manufacturer || item.summary?.manufacturer || "N/A",
     model: item.model || item.summary?.model || "N/A",
     serialNumber: item.serialNumber || item.summary?.serialNumber || "N/A",
-    AssetTag: item.AssetId || item.summary?.AssetTag || "N/A",
+    AssetTag: item.assetId || item.AssetId || item.summary?.AssetTag || "N/A",
   }));
   
   return { items: flattenedItems, message: "Camera assets retrieved" };

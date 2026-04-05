@@ -33,10 +33,21 @@ export const fetchAllAssets = async (limit = 1000) => {
 export const fetchAssetCategories = async () => {
   try {
     const response = await API.get('/assetcategories/active/list')
-    return response.data?.data?.items || []
+    const items = response.data?.data?.items || []
+    if (items.length > 0) return items
+
+    // If active list returned no categories, fall back to full categories list
+    const fallbackResponse = await API.get('/assetcategories')
+    return fallbackResponse.data?.data?.items || []
   } catch (error) {
     console.error('Failed to fetch asset categories:', error)
-    throw new Error(error.response?.data?.message || 'Failed to fetch asset categories')
+    try {
+      const fallbackResponse = await API.get('/assetcategories')
+      return fallbackResponse.data?.data?.items || []
+    } catch (fallbackError) {
+      console.error('Fallback asset category fetch failed:', fallbackError)
+      throw new Error(fallbackError.response?.data?.message || 'Failed to fetch asset categories')
+    }
   }
 }
 
@@ -67,6 +78,16 @@ export const fetchAssetDetailsById = async (assetId, assetType = "CPU") => {
   } catch (error) {
     console.error('Failed to fetch asset details:', error)
     throw new Error(error.response?.data?.message || 'Failed to fetch asset details')
+  }
+}
+
+export const getNextAssetId = async () => {
+  try {
+    const response = await API.get('/assets/next-id')
+    return response.data?.data?.nextAssetId || ''
+  } catch (error) {
+    console.error('Failed to fetch next asset ID:', error)
+    throw new Error(error.response?.data?.message || 'Failed to fetch next asset ID')
   }
 }
 

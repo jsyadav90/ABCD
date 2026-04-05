@@ -36,12 +36,12 @@ const getHandler = (AssetType) => {
 };
 
 export const createAsset = asyncHandler(async (req, res) => {
-  const { AssetType: assetTypeName, AssetCategory: assetCategoryId } = req.body;
+  const { assetType: assetTypeName, assetCategory: assetCategoryId } = req.body;
   if (!assetTypeName || !String(assetTypeName).trim()) {
-    throw new apiError(400, "AssetType is required");
+    throw new apiError(400, "assetType is required");
   }
   if (!assetCategoryId || !String(assetCategoryId).trim()) {
-    throw new apiError(400, "AssetCategory is required");
+    throw new apiError(400, "assetCategory is required");
   }
 
   // Validate AssetCategory exists
@@ -205,6 +205,12 @@ export const countAssets = asyncHandler(async (req, res) => {
   const total = fixedCount + peripheralCount;
 
   return res.status(200).json(new apiResponse(200, { total }, "Assets count retrieved"));
+});
+
+export const getNextAssetId = asyncHandler(async (req, res) => {
+  const { getNextAssetId } = await import("../services/assetIdGenerator.service.js");
+  const nextId = await getNextAssetId();
+  return res.status(200).json(new apiResponse(200, { nextAssetId: nextId }, "Next asset ID retrieved"));
 });
 
 export const deleteAsset = asyncHandler(async (req, res) => {
