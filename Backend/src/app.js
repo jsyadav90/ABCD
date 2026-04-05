@@ -15,6 +15,7 @@ import { apiError } from "./utils/apiError.js";
 import lookupRoutes from "./routes/lookup.routes.js";
 import assetTypeRoutes from "./routes/assettype.routes.js";
 import vendorRoutes from "./routes/vendor.routes.js";
+import assetTagConfigRoutes from "./routes/assetTagConfig.routes.js";
 import { setSecurityHeaders, issueCsrfToken, csrfGuard } from "./middlewares/security.middleware.js";
 
 // Load environment variables
@@ -78,6 +79,7 @@ app.use("/api/v1/purchases", purchaseRoutes);
 app.use("/api/v1/warranties", warrantyRoutes);
 app.use("/api/v1/lookups", lookupRoutes);
 app.use("/api/v1/assettypes", assetTypeRoutes);
+app.use("/api/v1/asset-tag-config", assetTagConfigRoutes);
 app.use("/api/v1/vendors", vendorRoutes);
 
 /* ===============================

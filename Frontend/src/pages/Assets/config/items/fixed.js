@@ -18,7 +18,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -185,7 +185,7 @@ export const fixedConfigs = {
        //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -261,7 +261,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -466,7 +466,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),

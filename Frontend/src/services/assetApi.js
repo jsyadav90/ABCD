@@ -145,3 +145,14 @@ export const toggleAssetStatus = async (assetId, isActive) => {
     throw new Error(error.response?.data?.message || 'Failed to toggle asset status')
   }
 }
+
+export const getNextAssetTag = async (assetTypeId) => {
+  try {
+    const response = await API.get(`/asset-tag-config/preview/${assetTypeId}`)
+    return response.data?.data?.nextAssetTag || ''
+  } catch (error) {
+    console.error('Failed to fetch next asset tag:', error)
+    // If no config found, return default message
+    return 'Enter asset code'
+  }
+}

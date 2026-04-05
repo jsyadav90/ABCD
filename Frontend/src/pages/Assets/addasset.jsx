@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Select from '../../components/Select/Select.jsx';
 import './AddAsset.css';
 import FormRenderer from './components/FormRenderer.jsx';
-import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory, getNextAssetId } from '../../services/assetApi.js';
+import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLookupsByCategory, getNextAssetId, getNextAssetTag } from '../../services/assetApi.js';
 import { fetchBranchesForDropdown } from '../../services/userApi.js';
 import { getAssetFieldConfig } from './config/assetFieldConfig.js';
 import { getSelectedBranch } from '../../utils/scope.js';
@@ -276,7 +276,7 @@ const AddAsset = () => {
     return validationErrors;
   };
 
-  const handleItemSelect = (e) => {
+  const handleItemSelect = async (e) => {
     const selectedId = e.target.value;
     const selectedAssetObj = assetTypes.find(item => item._id === selectedId);
     
@@ -284,6 +284,21 @@ const AddAsset = () => {
       const normalizedName = normalizeTypeKey(selectedAssetObj.name || selectedAssetObj._id);
       setSelectedAsset(normalizedName); // normalized name for config lookup
       setSelectedAssetId(selectedId); // ObjectId for data persistence
+
+      // Fetch next asset tag for the selected asset type
+      try {
+        const nextAssetTag = await getNextAssetTag(selectedId);
+        setFormData((prev) => ({
+          ...prev,
+          assetTag: nextAssetTag,
+        }));
+      } catch (error) {
+        console.error('Failed to load next asset tag:', error);
+        setFormData((prev) => ({
+          ...prev,
+          assetTag: 'Enter asset code',
+        }));
+      }
     }
   };
 
