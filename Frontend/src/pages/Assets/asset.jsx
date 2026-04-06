@@ -56,7 +56,8 @@ const AssetPage = () => {
   const [statusChangeModal, setStatusChangeModal] = useState({
     isOpen: false,
     assetId: null,
-    assetName: null,
+    entityType: 'asset',
+    entityName: null,
     newStatus: null,
   });
 
@@ -412,7 +413,8 @@ const AssetPage = () => {
     setStatusChangeModal({
       isOpen: true,
       assetId,
-      assetName: asset?.model || asset?.serialNumber || "this asset",
+      entityType: 'asset',
+      entityName: asset?.assetTag || asset?.serialNumber || "this asset",
       newStatus: isActive,
     });
   };
@@ -435,12 +437,12 @@ const AssetPage = () => {
       setError(err.message || "Failed to update asset status");
     } finally {
       setLoading(false);
-      setStatusChangeModal({ isOpen: false, assetId: null, assetName: null, newStatus: null });
+      setStatusChangeModal({ isOpen: false, assetId: null, entityType: 'asset', entityName: null, newStatus: null });
     }
   };
 
   const handleStatusChangeCancel = () => {
-    setStatusChangeModal({ isOpen: false, assetId: null, assetName: null, newStatus: null });
+    setStatusChangeModal({ isOpen: false, assetId: null, entityType: 'asset', entityName: null, newStatus: null });
   };
 
   const capitalizeText = (str) => {
@@ -571,7 +573,7 @@ const AssetPage = () => {
     },
     {header: "Asset Tag", key: "assetTag", sortable: true, render: (row, search) => highlightText(row.assetTag, search)},
 
-    { header: "Asset Type", key: "assetType", sortable: true, render: (row, search) => {
+    { header: "Asset Type / Sub Type", key: "assetType", sortable: true, render: (row, search) => {
       const typeDisplay = row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU" : toCapitalizedCase(String(row.assetType || "").trim());
       const subTypeDisplay = row.assetSubType && String(row.assetSubType).trim() ? ` (${String(row.assetSubType).trim()})` : "";
       return highlightText(typeDisplay + subTypeDisplay, search);
@@ -688,7 +690,8 @@ const AssetPage = () => {
     <div className="asset-page">
       <StatusChangeModal
         isOpen={statusChangeModal.isOpen}
-        assetName={statusChangeModal.assetName}
+        entityType={statusChangeModal.entityType}
+        entityName={statusChangeModal.entityName}
         newStatus={statusChangeModal.newStatus}
         onConfirm={handleStatusChangeConfirm}
         onCancel={handleStatusChangeCancel}

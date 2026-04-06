@@ -2,15 +2,16 @@ import { useState } from "react";
 import "./StatusChangeModal.css";
 
 /**
- * Modal to prompt user for reason when changing asset status
+ * Modal to prompt user for reason when changing status of assets or users
  * @param {Object} props
  * @param {boolean} props.isOpen - Whether modal is open
- * @param {string} props.assetName - Name/model of asset
+ * @param {string} props.entityType - Type of entity ('asset' or 'user')
+ * @param {string} props.entityName - Name/model of entity
  * @param {boolean} props.newStatus - New status (true = activate, false = deactivate)
  * @param {Function} props.onConfirm - Callback with reason when confirmed
  * @param {Function} props.onCancel - Callback when cancelled
  */
-const StatusChangeModal = ({ isOpen, assetName, newStatus, onConfirm, onCancel }) => {
+const StatusChangeModal = ({ isOpen, entityType = 'asset', entityName, newStatus, onConfirm, onCancel }) => {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
 
@@ -34,12 +35,13 @@ const StatusChangeModal = ({ isOpen, assetName, newStatus, onConfirm, onCancel }
 
   const action = newStatus ? "activate" : "deactivate";
   const actionCapitalized = newStatus ? "Activate" : "Deactivate";
+  const entityTypeCapitalized = entityType.charAt(0).toUpperCase() + entityType.slice(1);
 
   return (
     <div className="status-change-modal-overlay">
       <div className="status-change-modal">
         <div className="status-change-modal__header">
-          <h2>{actionCapitalized} Asset</h2>
+          <h2>{actionCapitalized} {entityTypeCapitalized}</h2>
           <button
             className="status-change-modal__close"
             onClick={handleCancel}
@@ -51,7 +53,7 @@ const StatusChangeModal = ({ isOpen, assetName, newStatus, onConfirm, onCancel }
 
         <div className="status-change-modal__content">
           <p>
-            You are about to <strong>{action}</strong> <em>{assetName}</em>.
+            You are about to <strong>{action}</strong> <em>{entityName}</em>.
           </p>
           <p>Please provide a reason for this action:</p>
 
@@ -60,7 +62,7 @@ const StatusChangeModal = ({ isOpen, assetName, newStatus, onConfirm, onCancel }
             placeholder={`Enter reason for ${action}...`}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            rows="4"
+            rows="2"
           />
 
           {error && <div className="status-change-modal__error">{error}</div>}

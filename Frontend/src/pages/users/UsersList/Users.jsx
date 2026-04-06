@@ -17,6 +17,7 @@ import FilterDisplay from "../../../components/Filter/FilterDisplay.jsx";
 import { hasPermission } from "../../../utils/permissionHelper";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
 import { ErrorNotification } from "../../../components/ErrorBoundary/ErrorNotification.jsx";
+import StatusChangeModal from "../../../components/StatusChangeModal/StatusChangeModal.jsx";
 import "./Users.css";
 import {
   fetchAllUsers,
@@ -82,6 +83,15 @@ const Users = () => {
     newManagerId: "",
     isSubmitting: false,
     error: ""
+  });
+
+  // Status Change Modal State
+  const [statusChangeModal, setStatusChangeModal] = useState({
+    isOpen: false,
+    userId: null,
+    entityType: 'user',
+    entityName: null,
+    newStatus: null,
   });
 
   // Filter state
@@ -223,38 +233,15 @@ const Users = () => {
     }
   }, [openMenuId]);
 
-  const handleDisableRow = async (id) => {
+  const handleDisableRow = (id) => {
     const user = allUsers.find((u) => u._id === id);
-    const confirmed = window.confirm(
-      `Are you sure you want to disable ${user?.name || "this user"}?`,
-    );
-    if (!confirmed) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Step 1: If user has canLogin enabled, disable it first
-      if (user?.canLogin) {
-        await toggleCanLogin(id, false);
-      }
-
-      // Step 2: Deactivate user (isActive: false)
-      await disableUser(id);
-
-      setAllUsers((prev) =>
-        prev.map((u) =>
-          u._id === id
-            ? { ...u, isActive: false, status: "Inactive", canLogin: false }
-            : u,
-        ),
-      );
-    } catch (err) {
-      console.error("Disable failed", err);
-      setError(err.message || "Failed to disable user");
-    } finally {
-      setLoading(false);
-    }
+    setStatusChangeModal({
+      isOpen: true,
+      userId: id,
+      entityType: 'user',
+      entityName: user?.name || user?.displayUserId || "this user",
+      newStatus: false,
+    });
   };
 
   const handleToggleLogin = async (id, canLogin) => {
@@ -284,29 +271,60 @@ const Users = () => {
     }
   };
 
-  const handleEnableRow = async (id) => {
+  const handleEnableRow = (id) => {
     const user = allUsers.find((u) => u._id === id);
-    const confirmed = window.confirm(
-      `Are you sure you want to enable ${user?.name || "this user"}?`,
-    );
-    if (!confirmed) return;
+    setStatusChangeModal({
+      isOpen: true,
+      userId: id,
+      entityType: 'user',
+      entityName: user?.name || user?.displayUserId || "this user",
+      newStatus: true,
+    });
+  };
+
+  const handleStatusChangeConfirm = async (reason) => {
+    const { userId, newStatus } = statusChangeModal;
+    const user = allUsers.find((u) => u._id === userId);
 
     try {
       setLoading(true);
       setError(null);
-      // Enable user but keep canLogin as-is (do not force it to true)
-      await enableUser(id);
-      setAllUsers((prev) =>
-        prev.map((u) =>
-          u._id === id ? { ...u, isActive: true, status: "Active" } : u,
-        ),
-      );
+
+      if (!newStatus) {
+        // Disabling user
+        // Step 1: If user has canLogin enabled, disable it first
+        if (user?.canLogin) {
+          await toggleCanLogin(userId, false);
+        }
+        // Step 2: Deactivate user (isActive: false)
+        await disableUser(userId, reason);
+        setAllUsers((prev) =>
+          prev.map((u) =>
+            u._id === userId
+              ? { ...u, isActive: false, status: "Inactive", canLogin: false }
+              : u,
+          ),
+        );
+      } else {
+        // Enabling user
+        await enableUser(userId, reason);
+        setAllUsers((prev) =>
+          prev.map((u) =>
+            u._id === userId ? { ...u, isActive: true, status: "Active" } : u,
+          ),
+        );
+      }
     } catch (err) {
-      console.error("Enable failed", err);
-      setError(err.message || "Failed to enable user");
+      console.error("Status change failed", err);
+      setError(err.message || "Failed to change user status");
     } finally {
       setLoading(false);
+      setStatusChangeModal({ isOpen: false, userId: null, entityType: 'user', entityName: null, newStatus: null });
     }
+  };
+
+  const handleStatusChangeCancel = () => {
+    setStatusChangeModal({ isOpen: false, userId: null, entityType: 'user', entityName: null, newStatus: null });
   };
 
   // Open change password modal
@@ -1231,6 +1249,16 @@ const Users = () => {
              </div>
           </Modal>
         )}
+
+        {/* Status Change Modal */}
+        <StatusChangeModal
+          isOpen={statusChangeModal.isOpen}
+          entityType={statusChangeModal.entityType}
+          entityName={statusChangeModal.entityName}
+          newStatus={statusChangeModal.newStatus}
+          onConfirm={handleStatusChangeConfirm}
+          onCancel={handleStatusChangeCancel}
+        />
       </div>
     </div>
   );
