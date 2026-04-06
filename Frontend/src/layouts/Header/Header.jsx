@@ -126,6 +126,20 @@ const Header = ({ onToggleSidebar }) => {
 
         <button
           type="button"
+          className="notification-bell material-icons"
+          aria-label="Open notifications"
+          title="Notifications"
+          onClick={() => {
+            // Placeholder for future notification logic
+            console.log('Notification bell clicked');
+          }}
+        >
+          notifications
+          <span className="notification-count" aria-hidden="true">3</span>
+        </button>
+
+        <button
+          type="button"
           className="material-icons search-icon-out"
           onClick={handleSearchToggle}
           aria-label="Toggle search"

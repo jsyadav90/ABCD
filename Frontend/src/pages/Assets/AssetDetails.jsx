@@ -22,6 +22,7 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("specifications");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchAssetDetails = async () => {
@@ -40,6 +41,23 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
 
     fetchAssetDetails();
   }, [id]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMenuOpen && !event.target.closest('.header-actions')) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   const getStatusBadge = (status) => {
     const isActive = status !== false;
@@ -167,8 +185,10 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
               </span>
             </p>
             <p className="header-meta">
-              Serial: <strong>{asset.serialNumber?.toUpperCase() || "N/A"}</strong> | 
-              Added: <strong>{formatDate(asset.createdAt)}</strong>
+              <span>Serial: <strong>{asset.serialNumber?.toUpperCase() || "N/A"}</strong></span> |  
+              
+              <span className="header-meta-item"> Added: <strong>{formatDate(asset.createdAt)}</strong></span>
+              
             </p>
           </div>
         </div>
@@ -183,15 +203,43 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
             )}
           </div>
           <div className="header-actions">
-            <Button variant="secondary" size="small" onClick={() => navigate(`/assets/edit/${id}`)}>
-              <span className="material-icons" style={{fontSize: '18px', marginRight: '4px'}}>edit</span>Edit
-            </Button>
-            <Button variant="secondary" size="small">
-              <span className="material-icons" style={{fontSize: '18px', marginRight: '4px'}}>send</span>Transfer
-            </Button>
-            <Button variant="danger" size="small">
-              <span className="material-icons" style={{fontSize: '18px', marginRight: '4px'}}>delete</span>Retire
-            </Button>
+              <span className="material-icons edit-icon "  onClick={() => navigate(`/assets/edit/${id}`)}>edit</span>
+            {/* <Button variant="secondary" size="small" onClick={() => navigate(`/assets/edit/${id}`)}>
+            </Button> */}
+            
+            {/* Hamburger Menu */}
+            <button
+              className="asset-details-hamburger-btn"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              title="More actions"
+            >
+              <span className="material-icons">more_vert</span>
+            </button>
+
+            {isMenuOpen && (
+              <div className="asset-details-action-dropdown-menu">
+                <button
+                  className="asset-details-action-menu-item"
+                  onClick={() => {
+                    // Handle Transfer action
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <span className="material-icons" style={{fontSize: '16px', marginRight: '8px'}}>send</span>
+                  Transfer
+                </button>
+                <button
+                  className="asset-details-action-menu-item asset-details-action-menu-item--danger"
+                  onClick={() => {
+                    // Handle Retire action
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <span className="material-icons" style={{fontSize: '16px', marginRight: '8px'}}>delete</span>
+                  Retire
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

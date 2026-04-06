@@ -546,9 +546,36 @@ const AssetPage = () => {
   const tableExtraActions = null;
 
   const columns = [
+    
+    
+    // { 
+    //   header: "Asset ID", 
+    //   key: "assetId", 
+    //   sortable: true,
+    //   render: (row, search) => (
+    //     <button
+    //       onClick={() => {
+    //         localStorage.setItem('lastassetType', row.assetType || 'cpu');
+    //         navigate(`/assets/${row._id}`);
+    //       }}
+    //       style={{
+    //         background: 'none',
+    //         border: 'none',
+    //         // color: '#0284c7',
+    //         cursor: 'pointer',
+    //         fontSize: 'inherit',
+    //         fontWeight: 'inherit',
+    //         padding: 0,
+    //       }}
+    //       title={getTooltipDetails(row)}
+    //     >
+    //       {highlightText(row.assetId, search)}
+    //     </button>
+    //   )
+    // },
     { 
-      header: "Asset ID", 
-      key: "assetId", 
+      header: "Asset Tag", 
+      key: "assetTag", 
       sortable: true,
       render: (row, search) => (
         <button
@@ -567,11 +594,13 @@ const AssetPage = () => {
           }}
           title={getTooltipDetails(row)}
         >
-          {highlightText(row.assetId, search)}
+          {highlightText(row.assetTag, search)}
         </button>
       )
     },
-    {header: "Asset Tag", key: "assetTag", sortable: true, render: (row, search) => highlightText(row.assetTag, search)},
+
+    { header:"Asset ID", key: "assetId", sortable: true, render: (row, search) => highlightText(row.assetId, search)},
+    // {header: "Asset Tag", key: "assetTag", sortable: true, render: (row, search) => highlightText(row.assetTag, search)},
 
     { header: "Asset Type / Sub Type", key: "assetType", sortable: true, render: (row, search) => {
       const typeDisplay = row.assetType === "cpu" || row.assetType === "Cpu" || row.assetType === "CPU" ? "CPU" : toCapitalizedCase(String(row.assetType || "").trim());

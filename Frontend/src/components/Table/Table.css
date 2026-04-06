@@ -63,6 +63,14 @@
 	padding: 0.5rem;
 	border: 1px solid #ddd;
 	text-align: left;
+	min-width: 100px;
+}
+
+.table__data th,
+.table__data td:first-child {
+	text-align: center;
+	min-width: 30px;
+
 }
 
 .table__data th {
