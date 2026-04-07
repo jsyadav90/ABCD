@@ -131,14 +131,94 @@
  * Hierarchical structure with connecting lines
  */
 
-.permission-tree-container {
+.permission-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 1rem;
+}
+
+.permission-toolbar__selector,
+.permission-toolbar__search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.permission-toolbar label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.permission-toolbar select,
+.permission-toolbar input[type="text"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.permission-summary-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius:0.75rem;
+  background: #fafafa;
+  padding:  0.50rem  1rem;
+  margin-bottom: 1rem;
+  -webkit-border-radius:0.75rem;
+  -moz-border-radius:0.75rem;
+  -ms-border-radius:0.75rem;
+  -o-border-radius:0.75rem;
+}
+
+.permission-summary-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.permission-summary-card strong {
+  font-size: 1rem;
+  color: #111827;
+}
+
+.permission-model .modal-body {
+  max-height: calc(90vh - 7.5rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 0;
+}
+
+.permission-model .permission-toolbar,
+.permission-model .permission-summary-card,
+.permission-model .permission-preview-container,
+.permission-model .permission-tree-container {
+  flex-shrink: 0;
+}
+
+.permission-model .permission-tree-container {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background-color: #fff;
-  margin-top: 1rem;
-  max-height: 60vh;
-  overflow-y: auto;
+  margin-top: 0;
   padding: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .tree-root {
@@ -151,6 +231,15 @@
 .tree-module {
   position: relative;
 }
+
+.permission-model .modal-header{
+  padding: 0.5rem 1.25rem !important;
+}
+.permission-model .modal-footer{
+  padding: 0.5rem 1.25rem !important;
+}
+
+
 
 .module-header {
   display: flex;
@@ -251,13 +340,6 @@
 
 .tree-action:hover {
   color: #111827;
-}
-
-/* Select All Special Style */
-.tree-action.select-all {
-  font-weight: 500;
-  color: #2563eb;
-  margin-bottom: 0.25rem;
 }
 
 /* Checkbox Styling */

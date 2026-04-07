@@ -23,6 +23,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
 
   const [previewMode, setPreviewMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedModuleKey, setSelectedModuleKey] = useState("all");
 
   useEffect(() => {
     if (role && isOpen) {
@@ -50,6 +51,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       setExpandedModules(allExpanded);
       setPreviewMode(false);
       setSearchTerm("");
+      setSelectedModuleKey("all");
     }
   }, [role, isOpen]);
 
@@ -75,9 +77,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       if (moduleMatches || matchingPages.length > 0) {
         return {
           ...module,
-          // If module matches, keep all pages? Or strictly filter?
-          // Usually better to show relevant context. 
-          // If module matches, show all pages. If only page matches, show only matching pages.
           pages: moduleMatches ? module.pages : matchingPages
         };
       }
@@ -85,6 +84,16 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       return null;
     }).filter(Boolean);
   }, [searchTerm]);
+
+  const selectedModules = useMemo(() => {
+    if (selectedModuleKey === "all") return filteredModules;
+    return filteredModules.filter((module) => module.key === selectedModuleKey);
+  }, [filteredModules, selectedModuleKey]);
+
+  const moduleOptions = useMemo(() => [
+    { key: "all", label: "All Categories" },
+    ...PERMISSION_MODULES.map((module) => ({ key: module.key, label: module.label })),
+  ], []);
 
   // Auto-expand on search
   useEffect(() => {
@@ -109,27 +118,37 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       const fullKey = `${moduleKey}:${pageKey}:${actionKey}`;
       const exists = prev.includes(fullKey);
 
-      if (exists) {
-        return prev.filter((k) => k !== fullKey);
-      } else {
-        return [...prev, fullKey];
-      }
-    });
-  };
-
-  const handlePageToggle = (moduleKey, pageKey, actions, isChecked) => {
-    setAssignedPermissions((prev) => {
-      if (prev.includes("*")) return prev;
-
       let newKeys = [...prev];
-      actions.forEach((action) => {
-        const fullKey = `${moduleKey}:${pageKey}:${action.key}`;
-        if (isChecked) {
-          if (!newKeys.includes(fullKey)) newKeys.push(fullKey);
-        } else {
-          newKeys = newKeys.filter((k) => k !== fullKey);
+
+      if (actionKey === "view") {
+        // When toggling the view action, also toggle all other actions in this page
+        const pageModule = PERMISSION_MODULES.find(m => m.key === moduleKey);
+        const page = pageModule?.pages.find(p => p.key === pageKey);
+
+        if (page) {
+          if (exists) {
+            // Unchecking view - remove view and all actions
+            newKeys = newKeys.filter((k) => !k.startsWith(`${moduleKey}:${pageKey}:`));
+          } else {
+            // Checking view - add view and all actions
+            newKeys.push(fullKey);
+            page.actions.forEach((action) => {
+              const actionKey = `${moduleKey}:${pageKey}:${action.key}`;
+              if (!newKeys.includes(actionKey)) {
+                newKeys.push(actionKey);
+              }
+            });
+          }
         }
-      });
+      } else {
+        // For other actions, just toggle them individually
+        if (exists) {
+          newKeys = newKeys.filter((k) => k !== fullKey);
+        } else {
+          newKeys.push(fullKey);
+        }
+      }
+
       return newKeys;
     });
   };
@@ -215,8 +234,8 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       isOpen={isOpen}
       title={`Manage Rights - ${role?.displayName || "Role"}`}
       onClose={onClose}
-      // @ts-ignore
-      width="900px"
+      size="xl"
+      className="permission-model"
       footer={
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "space-between", width: "100%" }}>
           <Button 
@@ -253,20 +272,49 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       )}
 
       {!previewMode && (
-        <div style={{ marginBottom: "1rem" }}>
-          <input
-            type="text"
-            placeholder="Search modules, pages, or actions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              borderRadius: "4px",
-              border: "1px solid #d1d5db",
-              fontSize: "0.9rem"
-            }}
-          />
+        <div className="permission-toolbar">
+          <div className="permission-toolbar__selector">
+            <label htmlFor="permission-category-select">View category</label>
+            <select
+              id="permission-category-select"
+              value={selectedModuleKey}
+              onChange={(e) => setSelectedModuleKey(e.target.value)}
+            >
+              {moduleOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="permission-toolbar__search">
+            <label htmlFor="permission-search-input">Search rights</label>
+            <input
+              id="permission-search-input"
+              type="text"
+              placeholder="Search modules, pages, or actions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      {!previewMode && (
+        <div className="permission-summary-card">
+          <div>
+            <span className="summary-label">Selected category</span>
+            <strong>{selectedModuleKey === "all" ? "All Categories" : moduleOptions.find(option => option.key === selectedModuleKey)?.label}</strong>
+          </div>
+          <div>
+            <span className="summary-label">Matched sections</span>
+            <strong>{selectedModules.length}</strong>
+          </div>
+          <div>
+            <span className="summary-label">Search active</span>
+            <strong>{searchTerm.trim() ? "Yes" : "No"}</strong>
+          </div>
         </div>
       )}
 
@@ -304,7 +352,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
               );
             })}
             
-            {/* Show message if no modules accessible */}
             {!isSuperAdmin && !PERMISSION_MODULES.some(m => m.accessKey && assignedPermissions.includes(m.accessKey)) && (
                <div style={{color: '#6b7280', fontStyle: 'italic'}}>No modules accessible.</div>
             )}
@@ -313,13 +360,13 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       ) : (
         <div className="permission-tree-container">
           <div className="tree-root">
-            {filteredModules.length === 0 && (
+            {selectedModules.length === 0 && (
                 <div style={{ padding: "1rem", textAlign: "center", color: "#6b7280" }}>
                   No matching rights found.
                 </div>
             )}
 
-            {filteredModules.map((module) => (
+            {selectedModules.map((module) => (
               <div key={module.key} className="tree-module">
                 {/* Module Header */}
                 <div 
@@ -354,13 +401,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
                       // Check if the "view" action is assigned
                       const isViewAssigned = hasPermission(assignedPermissions, module.key, page.key, "view");
 
-                      // All Actions Logic for Select All
-                      // "Select All" should toggle all actions in this page
-                      const allPageActions = page.actions;
-                      const isAllActionsSelected = allPageActions.every(a => 
-                        hasPermission(assignedPermissions, module.key, page.key, a.key)
-                      );
-
                       const isDisabled = !isModuleAccessGranted || isSuperAdmin;
 
                       return (
@@ -380,22 +420,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
 
                           {/* Actions Children */}
                           <div className="submodule-children">
-                            {/* Select All Item */}
-                            <div className="tree-action select-all">
-                               <label className="checkbox-label" title={`Select all ${page.label} actions`}>
-                                  <input
-                                    type="checkbox"
-                                    checked={isAllActionsSelected}
-                                    disabled={isDisabled || !isViewAssigned}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked;
-                                      handlePageToggle(module.key, page.key, allPageActions, isChecked);
-                                    }}
-                                  />
-                                  <span>Select All</span>
-                               </label>
-                            </div>
-
                             {/* Individual Actions */}
                             {page.actions.map((action) => (
                               <div key={action.key} className="tree-action">
@@ -404,7 +428,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
                                     type="checkbox"
                                     checked={hasPermission(assignedPermissions, module.key, page.key, action.key)}
                                     disabled={isDisabled || !isViewAssigned}
-                                    onChange={() => 
+                                    onChange={() =>
                                       handleActionToggle(module.key, page.key, action.key)
                                     }
                                   />
