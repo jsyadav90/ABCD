@@ -117,7 +117,10 @@ const Dashboard = () => {
         const saved = getSelectedBranch();
         let selectedValue = "";
 
-        if (saved && (saved === "__ALL__" || availableOpts.some(o => o.value === saved))) {
+        const isSavedAllAllowed = saved === "__ALL__" && availableOpts.length > 1;
+        const isSavedBranchValid = availableOpts.some(o => o.value === saved);
+
+        if (saved && (isSavedAllAllowed || isSavedBranchValid)) {
           selectedValue = saved;
         } else {
           selectedValue = availableOpts.length > 1 ? "__ALL__" : (availableOpts[0]?.value || "");

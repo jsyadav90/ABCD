@@ -21,6 +21,7 @@ export const getCurrentUserPermissions = () => {
       try {
         const parsed = JSON.parse(permissionsStr);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // console.log(`[PERMISSION] Found ${parsed.length} permissions in localStorage:`, parsed.slice(0, 5), parsed.length > 5 ? '...' : '');
           return parsed;
         }
       } catch (e) {
@@ -34,6 +35,7 @@ export const getCurrentUserPermissions = () => {
       try {
         const parsed = JSON.parse(authData);
         if (parsed.permissions && Array.isArray(parsed.permissions)) {
+          console.log(`[PERMISSION] Found ${parsed.permissions.length} permissions in legacy authData:`, parsed.permissions.slice(0, 5), parsed.permissions.length > 5 ? '...' : '');
           return parsed.permissions;
         }
       } catch (e) {
@@ -41,6 +43,7 @@ export const getCurrentUserPermissions = () => {
       }
     }
 
+    console.log(`[PERMISSION] No permissions found in localStorage`);
     return [];
   } catch (error) {
     console.error("Error fetching permissions from localStorage:", error);
@@ -118,16 +121,21 @@ export const hasPermission = (permissionKey) => {
   const permissions = getCurrentUserPermissions();
 
   if (!permissions || permissions.length === 0) {
+    console.log(`[PERMISSION] No permissions found for user`);
     return false;
   }
 
   // Wildcard check - SUPER_ADMIN has "*"
   if (permissions.includes("*")) {
+    // console.log(`[PERMISSION] User has wildcard permission, allowing: ${permissionKey}`);
     return true;
   }
 
   // Exact permission match
-  return permissions.includes(permissionKey);
+  const hasPerm = permissions.includes(permissionKey);
+  // console.log(`[PERMISSION] Checking "${permissionKey}": ${hasPerm ? 'ALLOWED' : 'DENIED'} (user has ${permissions.length} permissions)`);
+  
+  return hasPerm;
 };
 
 /**

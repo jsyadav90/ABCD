@@ -23,10 +23,12 @@ export const verifyPermission = (requiredPermission) => {
 
     // 3. Resolve permission keys from:
     // - rolePermissionKeys attached by verifyJWT
-    // - userPermissionKeys (user-specific)
+    // - userPermissionKeys (user-specific extra)
+    // - removedPermissions (permissions to remove from role)
     // - fallback: fetch role by id
     let roleKeys = Array.isArray(req.user.rolePermissionKeys) ? req.user.rolePermissionKeys : [];
     let userKeys = Array.isArray(req.user.userPermissionKeys) ? req.user.userPermissionKeys : [];
+    let removedKeys = Array.isArray(req.user.removedPermissions) ? req.user.removedPermissions : [];
     
     // DEBUG: Log what we're getting
     console.log(`Ÿ” PERMISSION CHECK DEBUG:`);
@@ -35,6 +37,7 @@ export const verifyPermission = (requiredPermission) => {
     console.log(`   Required: ${requiredPermission}`);
     console.log(`   roleKeys length: ${roleKeys.length}`);
     console.log(`   userKeys length: ${userKeys.length}`);
+    console.log(`   removedKeys length: ${removedKeys.length}`);
     console.log(`   roleKeys includes required: ${roleKeys.includes(requiredPermission)}`);
     
     if (roleKeys.length === 0 && req.user.roleId) {
@@ -49,7 +52,7 @@ export const verifyPermission = (requiredPermission) => {
       }
     }
     
-    const permissions = Array.from(new Set([...(roleKeys || []), ...(userKeys || [])]));
+    const permissions = Array.from(new Set([...roleKeys, ...userKeys].filter(p => !removedKeys.includes(p))));
     console.log(`   Final permissions: ${permissions.length}`);
     console.log(`   Has required: ${permissions.includes(requiredPermission) ? '[OK] YES' : '[X] NO'}`);
 

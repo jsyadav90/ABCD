@@ -517,7 +517,7 @@ export const toggleIsActive = asyncHandler(async (req, res) => {
 
 export const changeUserRole = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { roleId, role } = req.body;
+  const { roleId, role, extraPermissions, removedPermissions } = req.body;
 
   const user = await User.findById(id);
   
@@ -544,8 +544,16 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     user.roleId = found._id;
   }
 
+  // Update individual permissions if provided
+  if (Array.isArray(extraPermissions)) {
+    user.extraPermissions = extraPermissions;
+  }
+  if (Array.isArray(removedPermissions)) {
+    user.removedPermissions = removedPermissions;
+  }
+
   await user.save();
-  return res.status(200).json(new apiResponse(200, user, "User role changed successfully"));
+  return res.status(200).json(new apiResponse(200, user, "User role and permissions updated successfully"));
 });
 
 export const softDeleteUser = asyncHandler(async (req, res) => {
@@ -594,7 +602,7 @@ export const deleteUserPermanent = asyncHandler(async (req, res) => {
 export const getRolesForDropdown = asyncHandler(async (req, res) => {
   try {
     // Fetch all roles (both system and custom)
-    let roles = await Role.find({}, "name displayName description category").lean().sort({ priority: -1 });
+    let roles = await Role.find({}, "name displayName description category permissionKeys").lean().sort({ priority: -1 });
     
     if (!roles || roles.length === 0) {
       const Organization = (await import("../models/organization.model.js")).Organization;
@@ -637,6 +645,7 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
       name: role.name,
       displayName: role.displayName,
       description: role.description,
+      permissionKeys: Array.isArray(role.permissionKeys) ? role.permissionKeys : [],
     }));
     return res.status(200).json(new apiResponse(200, formattedRoles, "Roles retrieved successfully"));
   } catch (error) {

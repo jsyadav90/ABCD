@@ -45,13 +45,13 @@ const router = express.Router();
 router.use(verifyJWT);
 
 // Get dropdown data for roles - Required for Add/Edit forms
-router.get("/dropdown/roles", verifyPermission("users:rows_buttons:view"), getRolesForDropdown);
+router.get("/dropdown/roles", verifyPermission("users:access"), getRolesForDropdown);
 
 // Get dropdown data for branches
-router.get("/dropdown/branches", verifyPermission("users:rows_buttons:view"), getBranchesForDropdown);
+router.get("/dropdown/branches", getBranchesForDropdown);
 
 // Get dropdown data for users (managers)
-router.get("/dropdown/users", verifyPermission("users:rows_buttons:view"), getUsersForDropdown);
+router.get("/dropdown/users", verifyPermission("users:access"), getUsersForDropdown);
 
 // Create a new user
 router.post("/", verifyPermission("users:page_buttons:add"), createUser);
@@ -60,10 +60,10 @@ router.post("/", verifyPermission("users:page_buttons:add"), createUser);
 router.get("/next-id", verifyPermission("users:page_buttons:add"), getNextUserId);
 
 // List all users with filters and pagination
-router.get("/", verifyPermission("users:rows_buttons:view"), listUsers);
+router.get("/", verifyPermission("users:access"), listUsers);
 
 // Get user by ID
-router.get("/:id", verifyPermission("users:rows_buttons:view"), getUserById);
+router.get("/:id", verifyPermission("users:access"), getUserById);
 
 // Update user (general fields, not canLogin/isActive)
 router.put("/:id", verifyPermission("users:rows_buttons:edit"), updateUser);

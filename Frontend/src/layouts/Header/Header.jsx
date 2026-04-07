@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { fetchBranchesForDropdown } from "../../services/userApi";
-import { getSelectedBranch, getSelectedBranchName, onBranchChange } from "../../utils/scope";
+import { getSelectedBranch, getSelectedBranchName, onBranchChange, setSelectedBranch } from "../../utils/scope";
 import "./Header.css";
 
 const Header = ({ onToggleSidebar }) => {
@@ -11,7 +11,19 @@ const Header = ({ onToggleSidebar }) => {
   const { user } = useAuth();
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranchState] = useState(getSelectedBranch());
-  const [selectedBranchName, setSelectedBranchNameState] = useState(getSelectedBranchName());
+  const [selectedBranchLabel, setSelectedBranchLabelState] = useState(getSelectedBranchName());
+
+  const getBranchLabel = (branch) => {
+    if (!branch) return "";
+    return branch.branchName || branch.name || branch.code || branch.branchCode || "";
+  };
+
+  const findBranchLabel = (branchId) => {
+    const branch = branches.find(
+      (item) => String(item._id) === String(branchId) || String(item.id) === String(branchId) || String(item.branchId) === String(branchId)
+    );
+    return getBranchLabel(branch);
+  };
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -30,16 +42,29 @@ const Header = ({ onToggleSidebar }) => {
   useEffect(() => {
     const unsubscribe = onBranchChange((branchId, branchName) => {
       setSelectedBranchState(branchId);
-      setSelectedBranchNameState(branchName);
+      setSelectedBranchLabelState(branchName);
     });
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (!selectedBranch || selectedBranch === "__ALL__" || selectedBranchLabel) return;
+    const branchLabel = findBranchLabel(selectedBranch);
+    if (branchLabel) {
+      setSelectedBranchLabelState(branchLabel);
+      setSelectedBranch(selectedBranch, branchLabel);
+    }
+  }, [branches, selectedBranch, selectedBranchLabel]);
 
   const getLogoText = () => {
     if (selectedBranch === "__ALL__") {
       return "A";
     }
-    return selectedBranchName || "A";
+
+    const branchLabel = selectedBranchLabel || findBranchLabel(selectedBranch);
+    if (branchLabel) return branchLabel;
+    if (selectedBranch && selectedBranch !== "__ALL__") return selectedBranch;
+    return "A";
   };
 
   const handleSearchToggle = () => {

@@ -15,6 +15,7 @@ import Modal from "../../../components/Modal/Modal.jsx";
 import FilterPopup from "../../../components/Filter/FilterPopup.jsx";
 import FilterDisplay from "../../../components/Filter/FilterDisplay.jsx";
 import { hasPermission } from "../../../utils/permissionHelper";
+import { PERMISSION_MODULES } from "../../../constants/permissions";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
 import StatusChangeModal from "../../../components/StatusChangeModal/StatusChangeModal.jsx";
 import "./Users.css";
@@ -71,6 +72,13 @@ const Users = () => {
     userName: "",
     currentRoleId: "",
     newRoleId: "",
+    activeTab: "role", // "role" or "otherRights"
+    extraPermissions: [],
+    removedPermissions: [],
+    assignedPermissions: [], // Current assigned permissions for UI
+    expandedModules: {},
+    searchTerm: "",
+    selectedModuleKey: "all",
     isSubmitting: false,
     error: ""
   });
@@ -244,6 +252,39 @@ const Users = () => {
     const timer = setTimeout(() => setError(null), 3000);
     return () => clearTimeout(timer);
   }, [error]);
+
+  // Update assignedPermissions when role or permissions change
+  useEffect(() => {
+    if (editRoleModal.isOpen && editRoleModal.newRoleId) {
+      const role = roles.find(r => r._id === editRoleModal.newRoleId);
+      const rolePerms = role ? role.permissionKeys || [] : [];
+      const effectivePerms = [...new Set([...rolePerms, ...editRoleModal.extraPermissions].filter(p => !editRoleModal.removedPermissions.includes(p)))];
+      
+      setEditRoleModal(prev => ({
+        ...prev,
+        assignedPermissions: effectivePerms
+      }));
+    }
+  }, [editRoleModal.newRoleId, editRoleModal.extraPermissions, editRoleModal.removedPermissions, roles, editRoleModal.isOpen]);
+
+  // Filtered modules for permissions UI
+  const filteredModules = useMemo(() => {
+    if (!editRoleModal.searchTerm.trim()) return PERMISSION_MODULES;
+
+    const searchLower = editRoleModal.searchTerm.toLowerCase();
+    return PERMISSION_MODULES.map(module => {
+      const filteredPages = module.pages.map(page => {
+        const filteredActions = page.actions.filter(action =>
+          action.label.toLowerCase().includes(searchLower) ||
+          page.label.toLowerCase().includes(searchLower) ||
+          module.label.toLowerCase().includes(searchLower)
+        );
+        return filteredActions.length > 0 ? { ...page, actions: filteredActions } : null;
+      }).filter(Boolean);
+
+      return filteredPages.length > 0 ? { ...module, pages: filteredPages } : null;
+    }).filter(Boolean);
+  }, [editRoleModal.searchTerm]);
 
   const handleDisableRow = (id) => {
     const user = allUsers.find((u) => u._id === id);
@@ -477,12 +518,31 @@ const Users = () => {
 
   // --- Edit Role Handlers ---
   const handleOpenEditRole = async (row) => {
+    // Get current role permissions for initial display
+    const currentRoleId = row.roleId?._id || row.roleId || "";
+    const role = roles.find(r => r._id === currentRoleId);
+    const rolePerms = role
+      ? role.permissionKeys || []
+      : Array.isArray(row.roleId?.permissionKeys)
+        ? row.roleId.permissionKeys
+        : [];
+    const extraPerms = row.extraPermissions || [];
+    const removedPerms = row.removedPermissions || [];
+    const effectivePerms = [...new Set([...rolePerms, ...extraPerms].filter(p => !removedPerms.includes(p)))];
+
     setEditRoleModal({
       isOpen: true,
       userId: row._id,
       userName: row.name,
-      currentRoleId: row.roleId?._id || "",
-      newRoleId: row.roleId?._id || "",
+      currentRoleId,
+      newRoleId: currentRoleId,
+      activeTab: "role",
+      extraPermissions: extraPerms,
+      removedPermissions: removedPerms,
+      assignedPermissions: effectivePerms, // Show role permissions as checked by default
+      expandedModules: {},
+      searchTerm: "",
+      selectedModuleKey: "all",
       isSubmitting: false,
       error: ""
     });
@@ -500,6 +560,14 @@ const Users = () => {
         setEditRoleModal(prev => ({...prev, error: "Please select a role"}));
         return;
     }
+
+    // If we're on the otherRights tab, save permissions
+    if (editRoleModal.activeTab === "otherRights") {
+      await handleSavePermissions();
+      return;
+    }
+
+    // Otherwise, just save the role change
     try {
         setEditRoleModal(prev => ({...prev, isSubmitting: true, error: ""}));
         await changeUserRole(editRoleModal.userId, editRoleModal.newRoleId);
@@ -552,6 +620,69 @@ const Users = () => {
       } catch (err) {
         setAssignReportingModal(prev => ({...prev, isSubmitting: false, error: err.message}));
       }
+  };
+
+  // Permission handling functions for inline permissions UI
+  const toggleModuleExpand = (moduleKey) => {
+    setEditRoleModal(prev => ({
+      ...prev,
+      expandedModules: {
+        ...prev.expandedModules,
+        [moduleKey]: !prev.expandedModules[moduleKey]
+      }
+    }));
+  };
+
+  const togglePermission = (permissionKey) => {
+    setEditRoleModal(prev => {
+      const isCurrentlyAssigned = prev.assignedPermissions.includes(permissionKey);
+      const newAssignedPermissions = isCurrentlyAssigned
+        ? prev.assignedPermissions.filter(p => p !== permissionKey)
+        : [...prev.assignedPermissions, permissionKey];
+
+      return {
+        ...prev,
+        assignedPermissions: newAssignedPermissions
+      };
+    });
+  };
+
+  const handlePermissionSearch = (searchTerm) => {
+    setEditRoleModal(prev => ({ ...prev, searchTerm }));
+  };
+
+  const handleModuleFilter = (moduleKey) => {
+    setEditRoleModal(prev => ({ ...prev, selectedModuleKey: moduleKey }));
+  };
+
+  const handleSavePermissions = async () => {
+    try {
+      setEditRoleModal(prev => ({ ...prev, isSubmitting: true, error: "" }));
+
+      // Get current role permissions
+      const role = roles.find(r => r._id === editRoleModal.newRoleId);
+      const rolePerms = role ? role.permissionKeys || [] : [];
+
+      // Calculate extra and removed permissions
+      const extraPermissions = editRoleModal.assignedPermissions.filter(p => !rolePerms.includes(p));
+      const removedPermissions = rolePerms.filter(p => !editRoleModal.assignedPermissions.includes(p));
+
+      // Save the changes
+      await changeUserRole(editRoleModal.userId, editRoleModal.newRoleId, extraPermissions, removedPermissions);
+
+      // Update local state
+      setAllUsers(prev => prev.map(u =>
+        u._id === editRoleModal.userId
+          ? { ...u, roleId: editRoleModal.newRoleId, extraPermissions, removedPermissions }
+          : u
+      ));
+
+      setSuccessMessage("User role and permissions updated successfully");
+      setEditRoleModal(prev => ({ ...prev, isOpen: false }));
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setEditRoleModal(prev => ({ ...prev, isSubmitting: false, error: err.message }));
+    }
   };
 
   // Highlight text utility function
@@ -740,7 +871,7 @@ const Users = () => {
         return row.canLogin ? "Yes" : "No";
       },
     },
-    { header: "Remarks", key: "remarks" },
+    // { header: "Remarks", key: "remarks" },
     {
       header: "Actions",
       key: "actions",
@@ -1561,28 +1692,166 @@ const Users = () => {
           <Modal
             isOpen={editRoleModal.isOpen}
             onClose={() => setEditRoleModal(prev => ({ ...prev, isOpen: false }))}
-            title="Edit User Role"
+            title="Edit User Role & Permissions"
             footer={<></>}
+            size="xl"
           >
-             <div style={{ padding: "1rem", minWidth: "400px" }}>
+             <div style={{ padding: "1rem", minWidth: "600px" }}>
                 <p style={{ marginBottom: "1rem" }}>User: <strong>{editRoleModal.userName}</strong></p>
-                <div style={{ marginBottom: "1.5rem" }}>
-                    <Select
-                        label="Select Role"
-                        name="newRoleId"
-                        value={editRoleModal.newRoleId}
-                        onChange={(e) => setEditRoleModal(prev => ({ ...prev, newRoleId: e.target.value, error: "" }))}
-                        onBlur={() => {}}
-                        options={roles.map(r => ({ value: r._id, label: r.displayName || r.name }))}
-                        error={editRoleModal.error}
-                    />
+
+                {/* Tabs */}
+                <div style={{ display: "flex", borderBottom: "1px solid #ddd", marginBottom: "1rem" }}>
+                  <button
+                    onClick={() => setEditRoleModal(prev => ({ ...prev, activeTab: "role" }))}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      background: editRoleModal.activeTab === "role" ? "#f8f9fa" : "transparent",
+                      borderBottom: editRoleModal.activeTab === "role" ? "2px solid #007bff" : "none",
+                      cursor: "pointer",
+                      fontWeight: editRoleModal.activeTab === "role" ? "bold" : "normal"
+                    }}
+                  >
+                    Role
+                  </button>
+                  <button
+                    onClick={() => setEditRoleModal(prev => ({ ...prev, activeTab: "otherRights" }))}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      background: editRoleModal.activeTab === "otherRights" ? "#f8f9fa" : "transparent",
+                      borderBottom: editRoleModal.activeTab === "otherRights" ? "2px solid #007bff" : "none",
+                      cursor: "pointer",
+                      fontWeight: editRoleModal.activeTab === "otherRights" ? "bold" : "normal"
+                    }}
+                  >
+                    Other Rights
+                  </button>
                 </div>
+
+                {/* Role Tab */}
+                {editRoleModal.activeTab === "role" && (
+                  <div>
+                    <div style={{ marginBottom: "1.5rem" }}>
+                        <Select
+                            label="Select Role"
+                            name="newRoleId"
+                            value={editRoleModal.newRoleId}
+                            onChange={(e) => setEditRoleModal(prev => ({ ...prev, newRoleId: e.target.value, error: "" }))}
+                            onBlur={() => {}}
+                            options={roles.map(r => ({ value: r._id, label: r.displayName || r.name }))}
+                            error={editRoleModal.error}
+                        />
+                    </div>
+                  </div>
+                )}
+
+                {/* Other Rights Tab */}
+                {editRoleModal.activeTab === "otherRights" && (
+                  <div>
+                    {/* Search and Filter Controls */}
+                    <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "center" }}>
+                      <div style={{ flex: 1 }}>
+                        <Input
+                          type="text"
+                          placeholder="Search permissions..."
+                          value={editRoleModal.searchTerm}
+                          onChange={(e) => handlePermissionSearch(e.target.value)}
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+                      <div>
+                        <Select
+                          value={editRoleModal.selectedModuleKey}
+                          onChange={(e) => handleModuleFilter(e.target.value)}
+                          options={[
+                            { value: "all", label: "All Modules" },
+                            ...PERMISSION_MODULES.map(m => ({ value: m.key, label: m.label }))
+                          ]}
+                          style={{ minWidth: "150px" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Permissions Tree */}
+                    <div style={{ maxHeight: "400px", overflowY: "auto", border: "1px solid #ddd", borderRadius: "4px", padding: "1rem" }}>
+                      {filteredModules
+                        .filter(module => editRoleModal.selectedModuleKey === "all" || module.key === editRoleModal.selectedModuleKey)
+                        .map(module => (
+                        <div key={module.key} style={{ marginBottom: "1rem" }}>
+                          <div
+                            onClick={() => toggleModuleExpand(module.key)}
+                            style={{
+                              cursor: "pointer",
+                              fontWeight: "bold",
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "0.5rem"
+                            }}
+                          >
+                            <span style={{ marginRight: "0.5rem" }}>
+                              {editRoleModal.expandedModules[module.key] ? "▼" : "▶"}
+                            </span>
+                            {module.label}
+                          </div>
+
+                          {editRoleModal.expandedModules[module.key] && (
+                            <div style={{ marginLeft: "1rem" }}>
+                              {module.pages.map(page => (
+                                <div key={page.key} style={{ marginBottom: "0.5rem" }}>
+                                  <div style={{ fontWeight: "bold", marginBottom: "0.25rem" }}>
+                                    {page.label}
+                                  </div>
+                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.5rem" }}>
+                                    {page.actions.map(action => {
+                                      const permissionKey = `${module.key}:${page.key}:${action.key}`;
+                                      const isChecked = editRoleModal.assignedPermissions.includes(permissionKey);
+                                      return (
+                                        <label
+                                          key={action.key}
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            cursor: "pointer",
+                                            padding: "0.25rem",
+                                            borderRadius: "4px",
+                                            background: isChecked ? "#e3f2fd" : "transparent"
+                                          }}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => togglePermission(permissionKey)}
+                                            style={{ marginRight: "0.5rem" }}
+                                          />
+                                          {action.label}
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Buttons */}
                 <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
                     <Button variant="secondary" onClick={() => setEditRoleModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
                     <Button onClick={handleSubmitEditRole} disabled={editRoleModal.isSubmitting}>
-                        {editRoleModal.isSubmitting ? "Saving..." : "Save Role"}
+                        {editRoleModal.isSubmitting ? "Saving..." : "Save"}
                     </Button>
                 </div>
+
+                {editRoleModal.error && (
+                  <div style={{ color: "red", marginTop: "0.5rem", fontSize: "0.875rem" }}>
+                    {editRoleModal.error}
+                  </div>
+                )}
              </div>
           </Modal>
         )}

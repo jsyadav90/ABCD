@@ -14,7 +14,7 @@ const hasPermission = (assignedKeys, moduleKey, pageKey, actionKey) => {
   return assignedKeys.includes(fullKey);
 };
 
-const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
+const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   // Store flat array of permission keys: ["users:page_buttons:add", "users:rows_buttons:view", "assets:page_buttons:add", ...]
   const [assignedPermissions, setAssignedPermissions] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -206,18 +206,22 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess }) => {
       // If super admin, ensure we keep "*"
       const finalKeys = assignedPermissions.includes("*") ? ["*"] : assignedPermissions;
 
-      // Construct payload
-      // We save both permissionKeys (flat) and permissions (structured) for backward compatibility if needed
-      // But primarily we rely on permissionKeys now
-      const payload = {
-        permissionKeys: finalKeys,
-        // Optional: construct structured permissions if backend still strictly requires it
-        // permissions: ... 
-      };
+      if (onSave) {
+        // Custom save handler (for user permissions)
+        const updatedRole = { ...role, permissionKeys: finalKeys };
+        onSave(updatedRole);
+        onSaveSuccess();
+        onClose();
+      } else {
+        // Default save to API
+        const payload = {
+          permissionKeys: finalKeys,
+        };
 
-      await roleAPI.update(role._id || role.id, payload);
-      onSaveSuccess();
-      onClose();
+        await roleAPI.update(role._id || role.id, payload);
+        onSaveSuccess();
+        onClose();
+      }
     } catch (err) {
       const message =
         err.response?.data?.message || err.message || "Failed to update rights";

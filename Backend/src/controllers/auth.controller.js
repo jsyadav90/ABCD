@@ -470,7 +470,7 @@ export const profileController = asyncHandler(async (req, res) => {
     // Build permissions array safely
     let permissions = [];
     
-    // Add user-specific permissions
+    // Add user-specific permissions (legacy field)
     if (Array.isArray(userDoc.permissions) && userDoc.permissions.length > 0) {
       permissions = [...userDoc.permissions];
     }
@@ -478,6 +478,17 @@ export const profileController = asyncHandler(async (req, res) => {
     // Add role-based permissions
     if (roleData && Array.isArray(roleData.permissionKeys) && roleData.permissionKeys.length > 0) {
       permissions = [...permissions, ...roleData.permissionKeys];
+    }
+
+    // Apply individual user permission modifications
+    // Add extra permissions
+    if (Array.isArray(userDoc.extraPermissions) && userDoc.extraPermissions.length > 0) {
+      permissions = [...permissions, ...userDoc.extraPermissions];
+    }
+    
+    // Remove permissions
+    if (Array.isArray(userDoc.removedPermissions) && userDoc.removedPermissions.length > 0) {
+      permissions = permissions.filter(p => !userDoc.removedPermissions.includes(p));
     }
     
     // Super admin gets wildcard permission

@@ -111,6 +111,20 @@ const userSchema = new mongoose.Schema(
 
     permissions: [String],
 
+    // Individual user permissions beyond role
+    extraPermissions: {
+      type: [String],
+      default: [],
+      note: 'Additional permissions granted to this user individually'
+    },
+
+    // Permissions removed from role for this user
+    removedPermissions: {
+      type: [String],
+      default: [],
+      note: 'Permissions from role that are removed for this user'
+    },
+
     reportingTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

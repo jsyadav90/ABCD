@@ -201,10 +201,12 @@ export const changeUserPassword = async (userId, newPassword) => {
   }
 }
 
-export const changeUserRole = async (userId, roleId) => {
+export const changeUserRole = async (userId, roleId, extraPermissions = [], removedPermissions = []) => {
   try {
     const response = await API.post(`/users/${userId}/change-role`, {
-      roleId: roleId
+      roleId: roleId,
+      extraPermissions: extraPermissions,
+      removedPermissions: removedPermissions
     })
     return response.data?.data || response.data
   } catch (error) {
