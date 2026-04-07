@@ -257,7 +257,11 @@ export const authAPI = {
   getDevices: () =>
     API.get('/auth/devices'),
   validateToken: (token) =>
-    API.post('/auth/validate', { token })
+    API.post('/auth/validate', { token }),
+  lockAccount: (userId, reason) =>
+    API.post('/auth/lock-account', { userId, reason }),
+  unlockAccount: (userId) =>
+    API.post('/auth/unlock-account', { userId })
 }
 
 // User API endpoints

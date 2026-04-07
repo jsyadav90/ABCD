@@ -90,9 +90,10 @@ export const authService = {
         const remainingTime = Math.ceil(
           (userLogin.lockUntil - new Date()) / (1000 * 60)
         );
+        const lockDuration = userLogin.lockLevel === 2 ? 30 : 15;
         throw new apiError(
           429,
-          `Account is locked. Try again in ${remainingTime} minutes.`
+          `Account is locked due to multiple failed login attempts. Try again in ${remainingTime} minutes.`
         );
       }
 
@@ -112,14 +113,23 @@ export const authService = {
         // Increment failed attempts
         userLogin.failedLoginAttempts = (userLogin.failedLoginAttempts || 0) + 1;
 
-        // Lock account based on failed attempts
-        if (userLogin.failedLoginAttempts >= 5) {
-          userLogin.lockLevel = 1; // Temporary lock (15 minutes)
+        // Progressive lock escalation based on failed attempts and current lock level
+        if (userLogin.failedLoginAttempts >= 15 && userLogin.lockLevel >= 2) {
+          // Permanent lock after 15 total failed attempts and already at level 2
+          userLogin.isPermanentlyLocked = true;
+          userLogin.lockLevel = 3;
+        } else if (userLogin.failedLoginAttempts >= 10 && userLogin.lockLevel >= 1) {
+          // 30-minute lock after 10 total failed attempts and already at level 1
+          userLogin.lockLevel = 2;
+          userLogin.lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+        } else if (userLogin.failedLoginAttempts >= 5) {
+          // 15-minute lock after 5 failed attempts
+          userLogin.lockLevel = 1;
           userLogin.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
         }
 
         await userLogin.save();
-        console.error(`[LOGIN] Password mismatch for ${loginIdStr}. Attempts: ${userLogin.failedLoginAttempts}`);
+        console.error(`[LOGIN] Password mismatch for ${loginIdStr}. Attempts: ${userLogin.failedLoginAttempts}, Lock Level: ${userLogin.lockLevel}`);
         throw new apiError(401, "Invalid login credentials");
       }
 
@@ -131,7 +141,7 @@ export const authService = {
 
       // Only allow login when canLogin and isActive are true
       if (!user.canLogin || !user.isActive) {
-        throw new apiError(403, "User is not allowed to login");
+        throw new apiError(401, "Invalid login credentials");
       }
 
       const orgId = user.organizationId;
@@ -244,9 +254,18 @@ export const authService = {
         // Increment failed attempts
         userLogin.failedLoginAttempts = (userLogin.failedLoginAttempts || 0) + 1;
 
-        // Lock account based on failed attempts
-        if (userLogin.failedLoginAttempts >= 5) {
-          userLogin.lockLevel = 1; // Temporary lock (15 minutes)
+        // Progressive lock escalation based on failed attempts and current lock level
+        if (userLogin.failedLoginAttempts >= 15 && userLogin.lockLevel >= 2) {
+          // Permanent lock after 15 total failed attempts and already at level 2
+          userLogin.isPermanentlyLocked = true;
+          userLogin.lockLevel = 3;
+        } else if (userLogin.failedLoginAttempts >= 10 && userLogin.lockLevel >= 1) {
+          // 30-minute lock after 10 total failed attempts and already at level 1
+          userLogin.lockLevel = 2;
+          userLogin.lockUntil = new Date(Date.now() + 30 * 60 * 1000);
+        } else if (userLogin.failedLoginAttempts >= 5) {
+          // 15-minute lock after 5 failed attempts
+          userLogin.lockLevel = 1;
           userLogin.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
         }
 
@@ -274,6 +293,11 @@ export const authService = {
       const userResponse = await User.findById(userLogin.user)
         .select("-password")
         .populate("roleId");
+
+      // Double-check login and active flags one more time before success
+      if (!userResponse?.canLogin || !userResponse?.isActive) {
+        throw new apiError(401, "Invalid login credentials");
+      }
 
       let permissions = [];
 

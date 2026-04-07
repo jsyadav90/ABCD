@@ -14,9 +14,9 @@ import './Login.css'
 
 const Login = () => {
   const navigate = useNavigate()
-  const { login, reauth, error, clearError, isAuthenticated, needsReauth, user } = useAuth()
+  const { login, reauth, clearError, isAuthenticated, needsReauth, user } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [validationError, setValidationError] = useState('')
+  const [flashMessage, setFlashMessage] = useState(null)
   const [isReauthMode, setIsReauthMode] = useState(false)
   const [fromReauthMode, setFromReauthMode] = useState(false)
   const [formData, setFormData] = useState({
@@ -41,7 +41,7 @@ const Login = () => {
       [name]: value
     }))
     clearError()
-    setValidationError('')
+    setFlashMessage(null)
   }
 
   const switchToNormalLogin = () => {
@@ -49,7 +49,7 @@ const Login = () => {
     setFromReauthMode(true)
     setFormData({ loginId: '', password: '' })
     clearError()
-    setValidationError('')
+    setFlashMessage(null)
   }
 
   const switchBackToReauth = () => {
@@ -57,20 +57,32 @@ const Login = () => {
     setFromReauthMode(false)
     setFormData({ loginId: '', password: '' })
     clearError()
-    setValidationError('')
+    setFlashMessage(null)
   }
 
   const validateForm = () => {
     if (!isReauthMode && !formData.loginId.trim()) {
-      setValidationError('Username, email, or user ID is required')
+      setFlashMessage({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Username, email, or user ID is required'
+      })
       return false
     }
     if (!formData.password) {
-      setValidationError('Password is required')
+      setFlashMessage({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Password is required'
+      })
       return false
     }
     if (formData.password.length < 6) {
-      setValidationError('Password must be at least 6 characters')
+      setFlashMessage({
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Password must be at least 8 characters'
+      })
       return false
     }
     return true
@@ -84,7 +96,7 @@ const Login = () => {
     }
 
     setLoading(true)
-    setValidationError('')
+    setFlashMessage(null)
 
     let result
     if (isReauthMode) {
@@ -98,31 +110,44 @@ const Login = () => {
     if (result.success) {
       navigate('/dashboard')
     } else {
-      // Ensure error is visible if login failed
       console.error('[LOGIN-PAGE] Login failed:', result.error)
-      // Force re-render of error display
-      if (!error && result.error) {
-        setValidationError(result.error)
-      }
+      setFlashMessage({
+        type: 'danger',
+        title: 'Authentication Error',
+        message: result.error || 'Invalid login credentials'
+      })
     }
 
     setLoading(false)
   }
+
+  useEffect(() => {
+    if (!flashMessage) return
+
+    const timer = setTimeout(() => {
+      clearError()
+      setFlashMessage(null)
+    }, 4000)
+
+    return () => clearTimeout(timer)
+  }, [flashMessage, clearError])
 
   return (
     <AuthLayout 
       title={isReauthMode ? "Session Expired" : "Welcome Back"} 
       subtitle={isReauthMode ? "Please enter your password to continue" : "Sign in to your account"}
     >
-      {error && (
-        <Alert type="danger" title="Authentication Error">
-          {error}
-        </Alert>
-      )}
-
-      {validationError && (
-        <Alert type="warning" title="Validation Error">
-          {validationError}
+      {flashMessage && (
+        <Alert
+          type={flashMessage.type}
+          title={flashMessage.title}
+          className="flash-alert"
+          onClose={() => {
+            clearError()
+            setFlashMessage(null)
+          }}
+        >
+          {flashMessage.message}
         </Alert>
       )}
 

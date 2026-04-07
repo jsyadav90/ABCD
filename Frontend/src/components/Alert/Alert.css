@@ -79,3 +79,22 @@
 .alert-info .alert-close {
   color: #0c5460;
 }
+
+.alert.flash-alert {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: min(360px, calc(100% - 2rem));
+  z-index: 1100;
+  margin: 0;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 576px) {
+  .alert.flash-alert {
+    left: 0.75rem;
+    right: 0.75rem;
+    top: 0.75rem;
+    width: auto;
+  }
+}

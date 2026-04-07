@@ -15,6 +15,7 @@ import {
   profileController,
 } from "../controllers/auth.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyPermission } from "../middlewares/permission.middleware.js";
 
 const router = express.Router();
 
@@ -66,10 +67,10 @@ router.post("/change-password", verifyJWT, changePasswordController);
 //! Admin routes
 // Purpose: Lock a user's account (admin only)
 // POST /lock-account { userId, reason }
-router.post("/lock-account", verifyJWT, lockAccountController);
+router.post("/lock-account", verifyJWT, verifyPermission("users:rows_buttons:lock_account"), lockAccountController);
 
 // Purpose: Unlock a user's account (admin only)
 // POST /unlock-account { userId }
-router.post("/unlock-account", verifyJWT, unlockAccountController);
+router.post("/unlock-account", verifyJWT, verifyPermission("users:rows_buttons:unlock_account"), unlockAccountController);
 
 export default router;

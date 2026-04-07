@@ -16,7 +16,6 @@ import FilterPopup from "../../../components/Filter/FilterPopup.jsx";
 import FilterDisplay from "../../../components/Filter/FilterDisplay.jsx";
 import { hasPermission } from "../../../utils/permissionHelper";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
-import { ErrorNotification } from "../../../components/ErrorBoundary/ErrorNotification.jsx";
 import StatusChangeModal from "../../../components/StatusChangeModal/StatusChangeModal.jsx";
 import "./Users.css";
 import {
@@ -43,6 +42,8 @@ const Users = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [bulkActionsOpen, setBulkActionsOpen] = useState(false);
+  const bulkActionsRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -225,13 +226,24 @@ const Users = () => {
       if (!e.target.closest(".action-menu-container")) {
         setOpenMenuId(null);
       }
+      // Check if click is not on bulk actions or dropdown
+      if (!e.target.closest(".bulk-actions-container")) {
+        setBulkActionsOpen(false);
+      }
     };
 
-    if (openMenuId) {
+    if (openMenuId || bulkActionsOpen) {
       document.addEventListener("click", handleClickOutside);
       return () => document.removeEventListener("click", handleClickOutside);
     }
-  }, [openMenuId]);
+  }, [openMenuId, bulkActionsOpen]);
+
+  // Auto-hide error message after 3 seconds
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => setError(null), 3000);
+    return () => clearTimeout(timer);
+  }, [error]);
 
   const handleDisableRow = (id) => {
     const user = allUsers.find((u) => u._id === id);
@@ -266,6 +278,63 @@ const Users = () => {
     } catch (err) {
       console.error("Toggle login failed", err);
       setError(err.message || "Failed to toggle login");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLockAccount = async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await authAPI.lockAccount(id, "Manual lock by admin");
+
+      // Update local state: set isLocked to true
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          u._id === id
+            ? {
+                ...u,
+                isLocked: true,
+                lockLevel: 3, // Permanent lock
+              }
+            : u,
+        ),
+      );
+      setSuccessMessage("Account locked successfully");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Lock account failed", err);
+      setError(err.message || "Failed to lock account");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnlockAccount = async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await authAPI.unlockAccount(id);
+
+      // Update local state: set isLocked to false and reset lock fields
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          u._id === id
+            ? {
+                ...u,
+                isLocked: false,
+                lockLevel: 0,
+                failedLoginAttempts: 0,
+              }
+            : u,
+        ),
+      );
+      setSuccessMessage("Account unlocked successfully");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Unlock account failed", err);
+      setError(err.message || "Failed to unlock account");
     } finally {
       setLoading(false);
     }
@@ -666,7 +735,10 @@ const Users = () => {
       header: "Can Login",
       key: "canLogin",
       sortable: true,
-      render: (row) => (row.canLogin ? "Yes" : "No"),
+      render: (row) => {
+        if (row.isLocked) return "Locked";
+        return row.canLogin ? "Yes" : "No";
+      },
     },
     { header: "Remarks", key: "remarks" },
     {
@@ -755,7 +827,7 @@ const Users = () => {
                           Inactive
                         </button>
                       )}
-                      {row.canLogin ? (
+                      {row.canLogin && !row.isLocked ? (
                         <>
                           {hasPermission("users:rows_buttons:disable_login") && (
                             <button
@@ -769,7 +841,7 @@ const Users = () => {
                             </button>
                           )}
                         </>
-                      ) : (
+                      ) : !row.isLocked && (
                         <>
                           {hasPermission("users:rows_buttons:enable_login") && (
                             <button
@@ -784,12 +856,37 @@ const Users = () => {
                           )}
                         </>
                       )}
+
+                      {/* Lock/Unlock buttons */}
+                      {row.canLogin && !row.isLocked && hasPermission("users:rows_buttons:lock_account") && (
+                        <button
+                          className="action-menu-item action-menu-item--danger"
+                          onClick={() => {
+                            handleLockAccount(row._id);
+                            setOpenMenuId(null);
+                          }}
+                        >
+                          Lock Login
+                        </button>
+                      )}
+
+                      {row.isLocked && hasPermission("users:rows_buttons:unlock_account") && (
+                        <button
+                          className="action-menu-item action-menu-item--success"
+                          onClick={() => {
+                            handleUnlockAccount(row._id);
+                            setOpenMenuId(null);
+                          }}
+                        >
+                          Unlock Login
+                        </button>
+                      )}
                     </>
                   )}
                 </>
               )}
 
-              {row.canLogin && hasPermission("users:rows_buttons:change_password") && (
+              {row.canLogin && !row.isLocked && hasPermission("users:rows_buttons:change_password") && (
                 <button
                   className="action-menu-item action-menu-item--info"
                   onClick={() => {
@@ -863,6 +960,11 @@ const Users = () => {
   ];
 
   const handleBulkDisable = async () => {
+    if (selectedRows.length === 0) {
+      setError("Please select at least one user to disable");
+      return;
+    }
+
     // Exclude current user from bulk disable
     const safeIds = selectedRows.filter((id) => String(id) !== String(currentUser?.id));
     const usersToDisable = allUsers.filter((u) => safeIds.includes(u._id));
@@ -896,9 +998,158 @@ const Users = () => {
       );
 
       setSelectedRows([]);
+      setBulkActionsOpen(false);
+      setSuccessMessage(`${safeIds.length} user(s) disabled successfully`);
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       console.error("Bulk disable failed", err);
       setError(err.message || "Bulk disable failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkEnable = async () => {
+    if (selectedRows.length === 0) {
+      setError("Please select at least one user to enable");
+      return;
+    }
+
+    const usersToEnable = allUsers.filter((u) => selectedRows.includes(u._id) && !u.isActive);
+
+    if (usersToEnable.length === 0) {
+      setError("No inactive users selected");
+      return;
+    }
+
+    const userListText = usersToEnable
+      .map((u) => `${u.name} (${u.userId})`)
+      .join("\n");
+
+    const confirmed = window.confirm(
+      `Are you sure you want to enable the following users?\n\n${userListText}`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await Promise.all(usersToEnable.map((u) => enableUser(u._id)));
+
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          usersToEnable.some((enabledUser) => enabledUser._id === u._id)
+            ? { ...u, isActive: true, status: "Active" }
+            : u,
+        ),
+      );
+
+      setSelectedRows([]);
+      setBulkActionsOpen(false);
+      setSuccessMessage(`${usersToEnable.length} user(s) enabled successfully`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Bulk enable failed", err);
+      setError(err.message || "Bulk enable failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkLock = async () => {
+    if (selectedRows.length === 0) {
+      setError("Please select at least one user to lock");
+      return;
+    }
+
+    // Exclude current user from bulk lock
+    const safeIds = selectedRows.filter((id) => String(id) !== String(currentUser?.id));
+    const usersToLock = allUsers.filter((u) => safeIds.includes(u._id) && u.canLogin && !u.isLocked);
+
+    if (usersToLock.length === 0) {
+      setError("No eligible users selected for locking. Users must be active, have login enabled, and not already locked.");
+      return;
+    }
+
+    const userListText = usersToLock
+      .map((u) => `${u.name} (${u.userId})`)
+      .join("\n");
+
+    const confirmed = window.confirm(
+      `Are you sure you want to lock the following user accounts?\n\n${userListText}\n\nThis will permanently lock their accounts.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await Promise.all(usersToLock.map((u) => authAPI.lockAccount(u._id, "Bulk lock by admin")));
+
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          usersToLock.some((lockedUser) => lockedUser._id === u._id)
+            ? { ...u, isLocked: true, lockLevel: 3 }
+            : u,
+        ),
+      );
+
+      setSelectedRows([]);
+      setBulkActionsOpen(false);
+      setSuccessMessage(`${usersToLock.length} account(s) locked successfully`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Bulk lock failed", err);
+      setError(err.message || "Bulk lock failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkUnlock = async () => {
+    if (selectedRows.length === 0) {
+      setError("Please select at least one user to unlock");
+      return;
+    }
+
+    const usersToUnlock = allUsers.filter((u) => selectedRows.includes(u._id) && u.isLocked);
+
+    if (usersToUnlock.length === 0) {
+      setError("No locked users selected for unlocking");
+      return;
+    }
+
+    const userListText = usersToUnlock
+      .map((u) => `${u.name} (${u.userId})`)
+      .join("\n");
+
+    const confirmed = window.confirm(
+      `Are you sure you want to unlock the following user accounts?\n\n${userListText}`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await Promise.all(usersToUnlock.map((u) => authAPI.unlockAccount(u._id)));
+
+      setAllUsers((prev) =>
+        prev.map((u) =>
+          usersToUnlock.some((unlockedUser) => unlockedUser._id === u._id)
+            ? { ...u, isLocked: false, lockLevel: 0, failedLoginAttempts: 0 }
+            : u,
+        ),
+      );
+
+      setSelectedRows([]);
+      setBulkActionsOpen(false);
+      setSuccessMessage(`${usersToUnlock.length} account(s) unlocked successfully`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Bulk unlock failed", err);
+      setError(err.message || "Bulk unlock failed");
     } finally {
       setLoading(false);
     }
@@ -915,12 +1166,6 @@ const Users = () => {
     <div className="user-details-page" style={{ padding: "1rem 1rem" }}>
       <div className="users-page">
         <SetPageTitle title="Users | ABCD" />
-        {error && (
-          <ErrorNotification
-            error={new Error(error)}
-            onClose={() => setError(null)}
-          />
-        )}
 
         <div className="users-header">
           <h2>Users</h2>
@@ -946,14 +1191,62 @@ const Users = () => {
               </Button>
             )}
 
-            {selectedRows.length > 1 && hasPermission("users:rows_buttons:disable") && (
+            {/* More Actions Dropdown - Always visible */}
+            <div className="bulk-actions-container" ref={bulkActionsRef}>
               <Button
-                onClick={handleBulkDisable}
-                className="btn-md delete-btn"
+                onClick={() => setBulkActionsOpen(!bulkActionsOpen)}
+                className="users-actions__btn users-actions__btn--secondary"
               >
-                Disable
+                More Actions
+                <span className="material-icons" style={{fontSize: "1.2rem", marginLeft: "5px", verticalAlign: "middle"}}>
+                  {bulkActionsOpen ? 'expand_less' : 'expand_more'}
+                </span>
               </Button>
-            )}
+
+              {bulkActionsOpen && (
+                <div className="bulk-actions-dropdown">
+                  {hasPermission("users:rows_buttons:disable") && (
+                    <button
+                      className="bulk-action-item bulk-action-item--danger"
+                      onClick={handleBulkDisable}
+                    >
+                      <span className="material-icons">person_off</span>
+                      Disable {selectedRows.length > 0 ? `(${selectedRows.length})` : ''}
+                    </button>
+                  )}
+
+                  {hasPermission("users:rows_buttons:enable_login") && (
+                    <button
+                      className="bulk-action-item bulk-action-item--success"
+                      onClick={handleBulkEnable}
+                    >
+                      <span className="material-icons">person_add</span>
+                      Enable {selectedRows.length > 0 ? `(${selectedRows.length})` : ''}
+                    </button>
+                  )}
+
+                  {hasPermission("users:rows_buttons:lock_account") && (
+                    <button
+                      className="bulk-action-item bulk-action-item--danger"
+                      onClick={handleBulkLock}
+                    >
+                      <span className="material-icons">lock</span>
+                      Lock Login {selectedRows.length > 0 ? `(${selectedRows.length})` : ''}
+                    </button>
+                  )}
+
+                  {hasPermission("users:rows_buttons:unlock_account") && (
+                    <button
+                      className="bulk-action-item bulk-action-item--success"
+                      onClick={handleBulkUnlock}
+                    >
+                      <span className="material-icons">lock_open</span>
+                      Unlock {selectedRows.length > 0 ? `(${selectedRows.length})` : ''}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1015,9 +1308,90 @@ const Users = () => {
               padding: "12px 16px",
               borderRadius: "4px",
               zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              minWidth: "300px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
             }}
           >
-            ✓ {successMessage}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "1.2rem" }}>✓</span>
+              <span>{successMessage}</span>
+            </div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#155724",
+                cursor: "pointer",
+                fontSize: "1.2rem",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={(e) => (e.target.style.opacity = "0.7")}
+              onMouseLeave={(e) => (e.target.style.opacity = "1")}
+              title="Close message"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Error Flash Message */}
+        {error && (
+          <div
+            style={{
+              position: "fixed",
+              top: "20px",
+              right: "20px",
+              backgroundColor: "#f8d7da",
+              border: "1px solid #f5c6cb",
+              color: "#721c24",
+              padding: "12px 16px",
+              borderRadius: "4px",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              minWidth: "300px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "1.2rem" }}>⚠</span>
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#721c24",
+                cursor: "pointer",
+                fontSize: "1.2rem",
+                padding: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+                transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={(e) => (e.target.style.opacity = "0.7")}
+              onMouseLeave={(e) => (e.target.style.opacity = "1")}
+              title="Close message"
+            >
+              ✕
+            </button>
           </div>
         )}
 

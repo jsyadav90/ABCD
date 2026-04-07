@@ -347,11 +347,23 @@ export const listUsers = asyncHandler(async (req, res) => {
     User.countDocuments(filter),
   ]);
 
+  // Get UserLogin data for lock status
+  const userIds = itemsRaw.map(u => u._id);
+  const userLogins = await UserLogin.find({ user: { $in: userIds } }).select('user failedLoginAttempts lockLevel lockUntil isPermanentlyLocked').lean();
+  const loginMap = new Map(userLogins.map(ul => [ul.user.toString(), ul]));
+
   // Map role name for compatibility with frontend which expects `role` string
-  const items = itemsRaw.map((it) => ({
-    ...it,
-    role: it.roleId?.displayName || it.roleId?.name || null,
-  }));
+  const items = itemsRaw.map((it) => {
+    const loginData = loginMap.get(it._id.toString());
+    return {
+      ...it,
+      role: it.roleId?.displayName || it.roleId?.name || null,
+      // Add lock status information
+      isLocked: loginData ? (loginData.isPermanentlyLocked || (loginData.lockUntil && new Date() < loginData.lockUntil)) : false,
+      lockLevel: loginData?.lockLevel || 0,
+      failedLoginAttempts: loginData?.failedLoginAttempts || 0,
+    };
+  });
 
   return res.status(200).json(new apiResponse(200, { items, meta: { page, limit, total } }, "Users retrieved successfully"));
 });
@@ -428,8 +440,8 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
 
     user.canLogin = true;
   } else {
-    // disable login: remove any UserLogin record so credentials no longer work
-    const deleteResult = await UserLogin.deleteOne({ user: user._id });
+    // disable login: keep UserLogin record intact, just set canLogin flag to false
+    // This preserves login history and allows re-enabling later
     user.canLogin = false;
   }
 

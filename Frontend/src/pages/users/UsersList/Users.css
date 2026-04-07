@@ -288,3 +288,59 @@
 } */
 
 /* Filter display row styles are in FilterDisplay.css - shared component */
+
+/* Bulk Actions Styles */
+.bulk-actions-container {
+  position: relative;
+}
+
+.bulk-actions-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 220px;
+  z-index: 1000;
+  margin-top: 0.25rem;
+  overflow: hidden;
+}
+
+.bulk-action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #333;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.bulk-action-item:hover {
+  background-color: #f8f9fa;
+}
+
+.bulk-action-item--danger {
+  color: #dc3545;
+}
+
+.bulk-action-item--danger:hover {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.bulk-action-item--success {
+  color: #28a745;
+}
+
+.bulk-action-item--success:hover {
+  background-color: #d4edda;
+  color: #1e7e34;
+}
