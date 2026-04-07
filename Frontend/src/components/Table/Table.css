@@ -43,6 +43,7 @@
 .table__container {
 	overflow-x: auto;
 	max-height: 58vh;
+	min-height: 200px;
 }
 
 /* ================= TABLE ================= */
@@ -60,10 +61,10 @@
 
 .table__data th,
 .table__data td {
-	padding: 0 0.5rem;
+	padding:  0.5rem;
 	border: 1px solid #ddd;
 	text-align: left;
-	min-width: fit-content;
+	min-width: 150px;
 }
 
 .table__data th,
