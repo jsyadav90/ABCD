@@ -233,6 +233,57 @@ export const AuthProvider = ({ children }) => {
     return null
   }, [hasValidToken])
 
+  const refreshProfileFromServer = useCallback(async () => {
+    if (!isAuthenticated || needsReauth || !hasValidToken()) {
+      return null
+    }
+
+    try {
+      const data = await fetchProfileWithRetry(2)
+      if (!data) {
+        return null
+      }
+
+      const updatedUser = {
+        id: data.user._id || data.user.id,
+        userId: data.user.userId,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        roleId: data.user.roleId,
+        organizationId: data.user.organizationId || null,
+        branchIds: Array.isArray(data.user.branchId)
+          ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b))
+          : []
+      }
+
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+
+      if (Array.isArray(data.permissions)) {
+        localStorage.setItem('permissions', JSON.stringify(data.permissions))
+      } else if (updatedUser?.role === 'super_admin') {
+        localStorage.setItem('permissions', JSON.stringify(['*']))
+      }
+
+      return data
+    } catch (err) {
+      console.warn('[AUTH] refreshProfileFromServer failed:', err?.message)
+      return null
+    }
+  }, [fetchProfileWithRetry, hasValidToken, isAuthenticated, needsReauth])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshProfileFromServer()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [refreshProfileFromServer])
+
   const login = useCallback(async (loginId, password) => {
     try {
       setLoading(true)

@@ -52,22 +52,22 @@ const roleSchema = new mongoose.Schema(
     },
 
     // Permissions - Simplified for Master Prompt
-    permissions: [
-      {
-        _id: false,
-        resource: {
-          type: String,
-          required: true,
-          lowercase: true,
-          example: "users, reports, dashboard",
-        },
-        actions: {
-          type: [String],
-          default: [],
-          example: ["create", "read", "update", "delete"],
-        },
-      },
-    ],
+    // permissions: [
+    //   {
+    //     _id: false,
+    //     resource: {
+    //       type: String,
+    //       required: true,
+    //       lowercase: true,
+    //       example: "users, reports, dashboard",
+    //     },
+    //     actions: {
+    //       type: [String],
+    //       default: [],
+    //       example: ["create", "read", "update", "delete"],
+    //     },
+    //   },
+    // ],
 
     permissionKeys: {
       type: [String],
@@ -323,42 +323,6 @@ roleSchema.statics.initializeSystemRoles = async function (createdBy) {
       createdBy,
       permissions: [],
       permissionKeys: ["*"],
-    },
-    {
-      name: "enterprise_admin",
-      displayName: "Enterprise Administrator",
-      description: "Full organization-level access",
-      category: "system",
-      priority: 2,
-      isActive: true,
-      isDefault: false,
-      createdBy,
-      permissions: [],
-      permissionKeys: [],
-    },
-    {
-      name: "admin",
-      displayName: "Administrator",
-      description: "Department/branch level admin",
-      category: "system",
-      priority: 3,
-      isActive: true,
-      isDefault: false,
-      createdBy,
-      permissions: [],
-      permissionKeys: [],
-    },
-    {
-      name: "user",
-      displayName: "Standard User",
-      description: "Regular user with basic permissions",
-      category: "system",
-      priority: 100,
-      isActive: true,
-      isDefault: true,
-      createdBy,
-      permissions: [],
-      permissionKeys: [],
     },
   ];
 

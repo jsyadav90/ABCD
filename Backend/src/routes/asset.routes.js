@@ -15,12 +15,12 @@ const router = express.Router();
 router.use(verifyJWT);
 
 router.post("/", verifyPermission("assets:access"), createAsset);
-router.get("/", verifyPermission("assets:inventory:view"), listAssets);
+router.get("/", verifyPermission("assets:access"), listAssets);
 router.get("/next-id", verifyPermission("assets:access"), getNextAssetId);
 router.get("/count", 
-    // verifyPermission("assets:inventory:view"), 
+    // verifyPermission("assets:access"), 
     countAssets);
-router.get("/:id", verifyPermission("assets:inventory:view"), getAssetById);
+router.get("/:id", verifyPermission("assets:access"), getAssetById);
 router.delete("/:id", verifyPermission("assets:rows_buttons:delete"), deleteAsset);
 router.patch("/:id/status", verifyPermission("assets:rows_buttons:edit"), toggleAssetStatus);
 

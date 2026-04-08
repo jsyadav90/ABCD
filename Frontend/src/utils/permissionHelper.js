@@ -132,10 +132,23 @@ export const hasPermission = (permissionKey) => {
   }
 
   // Exact permission match
-  const hasPerm = permissions.includes(permissionKey);
-  // console.log(`[PERMISSION] Checking "${permissionKey}": ${hasPerm ? 'ALLOWED' : 'DENIED'} (user has ${permissions.length} permissions)`);
-  
-  return hasPerm;
+  if (permissions.includes(permissionKey)) {
+    return true;
+  }
+
+  // If module access is requested, allow access when any permission exists for that module
+  if (typeof permissionKey === "string" && permissionKey.endsWith(":access")) {
+    const moduleKey = permissionKey.slice(0, -":access".length);
+    return permissions.some((permission) => {
+      return (
+        typeof permission === "string" &&
+        permission.startsWith(`${moduleKey}:`) &&
+        permission !== `${moduleKey}:access`
+      );
+    });
+  }
+
+  return false;
 };
 
 /**
@@ -368,16 +381,43 @@ export const canAccessScope = (resourceBranchId, resourceEnterpriseId) => {
 };
 
 /**
+ * Check if user has access to a module or any module-level permission
+ * 
+ * @param {string} moduleKey - Module key (e.g., "users", "assets")
+ * @returns {boolean}
+ */
+export const hasModuleAccess = (moduleKey) => {
+  const permissions = getCurrentUserPermissions();
+
+  if (!permissions || permissions.length === 0) {
+    return false;
+  }
+
+  if (permissions.includes("*")) {
+    return true;
+  }
+
+  if (permissions.includes(`${moduleKey}:access`)) {
+    return true;
+  }
+
+  return permissions.some((permission) => {
+    return (
+      typeof permission === "string" &&
+      permission.startsWith(`${moduleKey}:`) &&
+      permission !== `${moduleKey}:access`
+    );
+  });
+};
+
+/**
  * Check if user can access a specific module
  * 
  * @param {string} moduleKey - Module key (e.g., "users", "assets")
  * @returns {boolean}
  */
 export const canAccessModule = (moduleKey) => {
-  if (isSuperAdmin()) return true;
-  
-  // Check specifically for module access permission (e.g., "users:access")
-  return hasPermission(`${moduleKey}:access`);
+  return hasModuleAccess(moduleKey);
 };
 
 /**

@@ -495,6 +495,10 @@ export const profileController = asyncHandler(async (req, res) => {
     if (roleName === "super_admin" && !permissions.includes("*")) {
       permissions.push("*");
     }
+
+    // Enterprise admin should use stored role permissions and individual overrides
+    // Do not force a hardcoded permission set here.
+    // Any extraPermissions / removedPermissions on the user record must be respected.
     
     // Remove duplicates and sort
     permissions = Array.from(new Set(permissions)).sort();

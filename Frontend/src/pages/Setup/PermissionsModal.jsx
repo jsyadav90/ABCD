@@ -149,6 +149,19 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
         }
       }
 
+      // Auto-add module access key if any action is selected and access key exists
+      const module = PERMISSION_MODULES.find(m => m.key === moduleKey);
+      if (module?.accessKey && newKeys.some(k => k.startsWith(`${moduleKey}:`))) {
+        if (!newKeys.includes(module.accessKey)) {
+          newKeys.push(module.accessKey);
+        }
+      }
+
+      // Auto-remove module access key if no actions remain
+      if (module?.accessKey && !newKeys.some(k => k.startsWith(`${moduleKey}:`) && k !== module.accessKey)) {
+        newKeys = newKeys.filter(k => k !== module.accessKey);
+      }
+
       return newKeys;
     });
   };
