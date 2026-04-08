@@ -70,6 +70,17 @@ export const createRole = asyncHandler(async (req, res) => {
     throw new apiError(409, "A role with this name already exists");
   }
 
+  if (isDefault === true) {
+    await Role.updateMany(
+      {
+        organizationId: organizationId || null,
+        isDeleted: false,
+        isDefault: true,
+      },
+      { isDefault: false }
+    );
+  }
+
   const doc = await Role.create({
     name: name.toLowerCase(),
     displayName,
@@ -98,6 +109,9 @@ export const updateRole = asyncHandler(async (req, res) => {
     isActive,
     isDefault,
     permissionKeys,
+    newDefaultRoleId,
+    makeNewDefault,
+    clearUsers,
   } = req.body;
 
   const role = await Role.findById(id);
@@ -122,12 +136,96 @@ export const updateRole = asyncHandler(async (req, res) => {
     role.priority = priority;
   }
 
+  const wasActive = role.isActive === true;
+  const willBeInactive = typeof isActive === "boolean" ? isActive === false : false;
+
+  if (wasActive && willBeInactive && role.isDefault === true) {
+    role.isDefault = false;
+  }
+
   if (typeof isActive === "boolean") {
     role.isActive = isActive;
   }
 
+  if (wasActive && willBeInactive) {
+    let assignedToReplacement = false;
+
+    if (newDefaultRoleId) {
+      const replacementRole = await Role.findById(newDefaultRoleId);
+      if (replacementRole && replacementRole.isActive && !replacementRole.isDeleted) {
+        if (makeNewDefault === true) {
+          replacementRole.isDefault = true;
+          await replacementRole.save();
+
+          await Role.updateMany(
+            {
+              _id: { $ne: replacementRole._id },
+              organizationId: role.organizationId || null,
+              isDeleted: false,
+              isDefault: true,
+            },
+            { isDefault: false }
+          );
+        }
+
+        await User.updateMany({ roleId: role._id }, { roleId: replacementRole._id });
+        assignedToReplacement = true;
+      }
+    }
+
+    if (!assignedToReplacement) {
+      if (clearUsers === true) {
+        await User.updateMany({ roleId: role._id }, { roleId: null });
+      } else {
+        const defaultRole = await Role.findOne({
+          _id: { $ne: role._id },
+          organizationId: role.organizationId || null,
+          isDeleted: false,
+          isDefault: true,
+          isActive: true,
+        }).lean();
+
+        let fallbackRole = defaultRole;
+
+        if (!fallbackRole) {
+          fallbackRole = await Role.findOne({
+            name: "user",
+            organizationId: role.organizationId || null,
+            isDeleted: false,
+            isActive: true,
+          }).lean();
+        }
+
+        if (!fallbackRole) {
+          fallbackRole = await Role.findOne({
+            _id: { $ne: role._id },
+            organizationId: role.organizationId || null,
+            isDeleted: false,
+            isActive: true,
+          }).sort({ priority: 1 }).lean();
+        }
+
+        if (fallbackRole) {
+          await User.updateMany({ roleId: role._id }, { roleId: fallbackRole._id });
+        }
+      }
+    }
+  }
+
   if (typeof isDefault === "boolean") {
     role.isDefault = isDefault;
+  }
+
+  if (isDefault === true) {
+    await Role.updateMany(
+      {
+        _id: { $ne: role._id },
+        organizationId: role.organizationId || null,
+        isDeleted: false,
+        isDefault: true,
+      },
+      { isDefault: false }
+    );
   }
 
   if (Array.isArray(permissionKeys)) {

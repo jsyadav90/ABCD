@@ -1,3 +1,30 @@
-ab m chahta hu ki user ko individual rights bhi de sku. matlab ek user jo role mila h usme jo bhi rights h vo sabhi rights to usse mile hi mgr unke alava kisi ek user ko alg se bhi koi rights de sku. vo rights un kisi bhi use ko show na ho jinhe vo same role mile ho. yanhi ek kinhi 2 users ko same role milah branch admin, mgr m chahta hu ki unme se kisi ek role change kiye bina d koi extra role kisi ek user ko de sku. 
+jab m bydefault role ko inactive krta hu to mujhe 'Prompts user to choose a new default by number' ki format me puchhta h or jab m isse ek number de kar save krta u to eror show krta h save hi nhi ho rha . 
 
-ikse liye jo role edit ka button aata h user page ke table me, jab us per click kiya jata h to ek popup open hota h use thoda update kro usme uper top me 2 tab bnao role  or other rights ke. rol select krne per roles select krne honge or other rights select krne per sabhi roles fatch ho akaaye jse abhi setuppage me role ko rights diye jate h same vhi sabhi role show ho usi UI me. or make sure ki jo role diya gya u uske sabhi role by defaults selected ho jinhe check or uncheck kiya ja skta h. yanh kisi perticulare role se ki perticulare user ke liye rights htaye bhi ja skte h or alg se rights diye bhi ja skte h. make sure ki inka effect setup page per jo main roles h unme na pde.
+1. ek to ye final save nhi ho rha h
+2. dusra ye ki m ase "Prompts user to choose a new default by number" nhi chahta. m chahta hu ki yaha ek selection field aaye or sabhi active roles show ho . m jise select kru vo  save ho ajaye.
+3. or agr bydefault role ko inactive krte time m use bydefauot checkbx se bhi hta deta hu to bhi ek confermation dikhaye ki kya m 
+
+
+
+
+
+fir se update kro
+
+1. check kro ki koi role bydefault true h ya nhi, agr nhi to jaha "Roles & User Management Rights" likha h role & right tab ke section me, uske nhiche ek chhoti se size me ek warring de ki tere is no default role. etc...
+2. jitne bhi role h unme se keval ek hi role bydefault ho skta h.
+3. agr m kisi default role ke hote huye kisi dusre role ho default select krat hu to save krne se phle muhe ye confermation ya alert show kre ki "X" role is default, do you want to make role "Y" default. if no, then save cencaled or if yes than save and only role "Y" is default.
+4. agr m kisi role ko inactive krta hu to un sbhi usrs ko apne aap default role mil jayega. mge save krne se phle mujhe alere show kre ki role "X" is default, and role sabi user ko mil jayega, do you want to continue, etc..
+5. agr m default role ko hi inactive krta hu to mujhe save per click kren ke baad or save krne se phle ek confermation msg show kre or 
+    a. konsa role aap is role ke user ko dena chahte h - select field with active roles 
+    b. do you want to make it default - check box 
+
+    agr m inme se koi bhi field fill na kru to save ho jaye. isse us role ki kisi bhi user ko koi hi role assign nhi hoga, or koi hi roile defaulr role nhi bnega. 
+
+
+
+
+
+
+
+
+Default rle ko inactive krne per uske DB me isDefault:false nhi hota h 

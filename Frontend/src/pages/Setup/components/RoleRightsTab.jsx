@@ -28,6 +28,12 @@ const RoleRightsTab = ({ setToast }) => {
   // New State for enhancements
   const [nameValidationMsg, setNameValidationMsg] = useState("");
   const [copyFromRoleId, setCopyFromRoleId] = useState("");
+  const [deactivateDefaultModalOpen, setDeactivateDefaultModalOpen] = useState(false);
+  const [roleToDeactivate, setRoleToDeactivate] = useState(null);
+  const [replacementRoleId, setReplacementRoleId] = useState("");
+  const [replacementMakeDefault, setReplacementMakeDefault] = useState(false);
+  const [deactivateModalError, setDeactivateModalError] = useState("");
+  const [pendingSavePayload, setPendingSavePayload] = useState(null);
 
   const loadRoles = async () => {
     try {
@@ -185,6 +191,66 @@ const RoleRightsTab = ({ setToast }) => {
     }));
   };
 
+  const confirmDefaultRoleOverride = () => {
+    if (!roleForm.isDefault) return true;
+
+    const existingDefault = roles.find((r) => {
+      if (r.isDefault !== true) return false;
+
+      if (!editingRole) return true;
+
+      const existingId = String(r._id || r.id || "");
+      const editingId = String(editingRole._id || editingRole.id || "");
+      return existingId !== editingId;
+    });
+
+    if (!existingDefault) return true;
+
+    const existingLabel = existingDefault.displayName || existingDefault.name || "another role";
+
+    return window.confirm(
+      `Role "${existingLabel}" is already the default role. ` +
+      `Do you want to make "${roleForm.displayName || roleForm.name}" the new default instead?`
+    );
+  };
+
+  const hasActiveDefaultRole = () =>
+    roles.some((r) => r.isDefault === true && r.isActive === true);
+
+  const needsReplacementDialog = (role) => {
+    if (!role) return false;
+    if (!hasActiveDefaultRole()) return true;
+    if (role.isDefault === true) return true;
+    return false;
+  };
+
+  const openDeactivateDefaultModal = (role, payload = null) => {
+    setRoleToDeactivate(role);
+    setPendingSavePayload(payload);
+    setReplacementRoleId("");
+    setReplacementMakeDefault(false);
+    setDeactivateModalError("");
+    setDeactivateDefaultModalOpen(true);
+  };
+
+  const closeDeactivateDefaultModal = () => {
+    setDeactivateDefaultModalOpen(false);
+    setRoleToDeactivate(null);
+    setPendingSavePayload(null);
+    setReplacementRoleId("");
+    setReplacementMakeDefault(false);
+    setDeactivateModalError("");
+  };
+
+  const confirmRoleInactivation = () => {
+    if (!editingRole || editingRole.isActive === false || roleForm.isActive !== false) return true;
+
+    return window.confirm(
+      `Role "${editingRole.displayName || editingRole.name}" is currently active and will be deactivated. ` +
+      `All users assigned to this role will be reassigned to the default role. Do you want to continue?`
+    );
+  };
+
   const saveRole = async () => {
     if (!roleForm.name.trim() || !roleForm.displayName.trim()) {
       setRoleFormError("Role name and display name are required");
@@ -197,8 +263,9 @@ const RoleRightsTab = ({ setToast }) => {
     }
 
     try {
-      setSavingRole(true);
-      setRoleFormError("");
+      if (!confirmDefaultRoleOverride()) {
+        return;
+      }
 
       const payload = {
         name: roleForm.name.trim().toLowerCase(),
@@ -210,6 +277,23 @@ const RoleRightsTab = ({ setToast }) => {
         permissions: [],
         permissionKeys: roleForm.permissionKeys || [],
       };
+
+      if (
+        editingRole &&
+        editingRole.isActive === true &&
+        roleForm.isActive === false &&
+        needsReplacementDialog(editingRole)
+      ) {
+        openDeactivateDefaultModal(editingRole, payload);
+        return;
+      }
+
+      if (!confirmRoleInactivation()) {
+        return;
+      }
+
+      setSavingRole(true);
+      setRoleFormError("");
 
       if (editingRole) {
         await roleAPI.update(editingRole._id || editingRole.id, payload);
@@ -230,10 +314,46 @@ const RoleRightsTab = ({ setToast }) => {
     }
   };
 
+  const handleDeactivateDefaultRoleSubmit = async () => {
+    if (!roleToDeactivate) return;
+
+    const payload = pendingSavePayload
+      ? { ...pendingSavePayload }
+      : { isActive: false, isDefault: false };
+
+    if (replacementRoleId) {
+      payload.newDefaultRoleId = replacementRoleId;
+      if (replacementMakeDefault) {
+        payload.makeNewDefault = true;
+      }
+    } else {
+      payload.clearUsers = true;
+    }
+
+    setSavingRole(true);
+    setDeactivateModalError("");
+
+    try {
+      await roleAPI.update(roleToDeactivate._id || roleToDeactivate.id, payload);
+      setToast({ type: "success", message: "Role disabled successfully" });
+      closeDeactivateDefaultModal();
+      closeRoleModal();
+      await loadRoles();
+    } catch (error) {
+      const message =
+        error.response?.data?.message || error.message || "Failed to disable role";
+      setDeactivateModalError(message);
+    } finally {
+      setSavingRole(false);
+    }
+  };
+
   const handlePermissionsSaveSuccess = async () => {
     setToast({ type: "success", message: "Rights updated successfully" });
     await loadRoles();
   };
+
+  const hasDefaultRole = roles.some((r) => r.isDefault === true && r.isActive === true);
 
   const deleteRole = async (/** @type {{ _id: any; id: any; }} */ role) => {
     if (!window.confirm("Are you sure you want to delete this role?")) {
@@ -256,10 +376,10 @@ const RoleRightsTab = ({ setToast }) => {
       header: "Role",
       key: "displayName",
     },
-    {
-      header: "System Name",
-      key: "name",
-    },
+      // {
+      //   header: "System Name",
+      //   key: "name",
+      // },
     {
       header: "Category",
       key: "category",
@@ -273,17 +393,6 @@ const RoleRightsTab = ({ setToast }) => {
       header: "Default",
       key: "isDefault",
       render: (/** @type {{ isDefault: any; }} */ row) => (row.isDefault ? "Yes" : "No"),
-    },
-    {
-      header: "Rights Summary",
-      key: "permissions",
-      render: (/** @type {{ name: string; permissionKeys: string | string[]; }} */ row) => {
-        if (row.name === "super_admin" || (row.permissionKeys && row.permissionKeys.includes("*"))) return "All Access (*)";
-        
-        // Show count of permissions
-        const count = row.permissionKeys?.length || 0;
-        return `${count} Right${count !== 1 ? 's' : ''}`;
-      },
     },
     {
       header: "Actions",
@@ -308,16 +417,30 @@ const RoleRightsTab = ({ setToast }) => {
             <Button
               size="sm"
               variant="warning"
-              onClick={async () => {
-                try {
-                  await roleAPI.update(row._id || row.id, { isActive: false });
-                  setToast({ type: "success", message: "Role disabled successfully" });
-                  await loadRoles();
-                } catch (error) {
-                  const message =
-                    error.response?.data?.message || error.message || "Failed to disable role";
-                  setToast({ type: "danger", message });
+              onClick={() => {
+                if (needsReplacementDialog(row)) {
+                  openDeactivateDefaultModal(row, { isActive: false, isDefault: false });
+                  return;
                 }
+
+                const confirm = window.confirm(
+                  `Role "${row.displayName || row.name}" will be deactivated. ` +
+                  `All users currently assigned to this role will be reassigned to the default role. Continue?`
+                );
+
+                if (!confirm) return;
+
+                (async () => {
+                  try {
+                    await roleAPI.update(row._id || row.id, { isActive: false });
+                    setToast({ type: "success", message: "Role disabled successfully" });
+                    await loadRoles();
+                  } catch (error) {
+                    const message =
+                      error.response?.data?.message || error.message || "Failed to disable role";
+                    setToast({ type: "danger", message });
+                  }
+                })();
               }}
             >
               Disable
@@ -345,6 +468,20 @@ const RoleRightsTab = ({ setToast }) => {
           Add Role
         </Button>
       </div>
+
+      {!hasDefaultRole && (
+        <div style={{
+          marginBottom: "1rem",
+          padding: "0.75rem 1rem",
+          borderRadius: "8px",
+          background: "#fff4e5",
+          border: "1px solid #f0c27b",
+          color: "#92400e",
+          fontSize: "0.95rem",
+        }}>
+          Warning: There is currently no default role assigned. Please set one so users reassigned from inactive roles have a fallback.
+        </div>
+      )}
 
       {rolesError && (
         <div className="setup-error">
@@ -474,6 +611,81 @@ const RoleRightsTab = ({ setToast }) => {
               onChange={handleRoleInputChange}
               placeholder="Describe what this role can do"
             />
+          </div>
+        </Modal>
+      )}
+
+      {deactivateDefaultModalOpen && (
+        <Modal
+          isOpen={deactivateDefaultModalOpen}
+          title={
+            roleToDeactivate
+              ? `Deactivate Role: ${roleToDeactivate.displayName || roleToDeactivate.name}`
+              : "Deactivate Role"
+          }
+          onClose={closeDeactivateDefaultModal}
+          size="md"
+          footer={
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+              <Button variant="secondary" onClick={closeDeactivateDefaultModal} disabled={savingRole}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleDeactivateDefaultRoleSubmit} disabled={savingRole}>
+                Confirm
+              </Button>
+            </div>
+          }
+        >
+          <div style={{ marginBottom: "1rem" }}>
+            <p style={{ margin: 0 }}>
+              You are deactivating the role <strong>{roleToDeactivate?.displayName || roleToDeactivate?.name}</strong>.
+            </p>
+            <p style={{ margin: "0.5rem 0 0" }}>
+              Select a replacement role for users currently assigned to this role. If you leave the selection empty, those users will become unassigned and no new default role will be created.
+            </p>
+            {(!hasDefaultRole || roleToDeactivate?.isDefault) && (
+              <p style={{ margin: "0.5rem 0 0", color: "#92400e" }}>
+                Since there is no active default role after this change, you can choose a replacement role and optionally make it the new default.
+              </p>
+            )}
+          </div>
+          <div style={{ display: "grid", gap: "1rem" }}>
+            <div>
+              <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 600 }}>
+                Replacement Role
+              </label>
+              <select
+                className="setup-input"
+                value={replacementRoleId}
+                onChange={(e) => setReplacementRoleId(e.target.value)}
+                style={{ width: "100%", padding: "0.6rem", borderRadius: "4px", border: "1px solid #d1d5db" }}
+              >
+                <option value="">-- No replacement role --</option>
+                {roles
+                  .filter((r) => r.isActive && String(r._id || r.id) !== String(roleToDeactivate?._id || roleToDeactivate?.id || ""))
+                  .map((role) => (
+                    <option key={role._id || role.id} value={role._id || role.id}>
+                      {role.displayName || role.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={replacementMakeDefault}
+                onChange={() => setReplacementMakeDefault((prev) => !prev)}
+              />
+              Do you want to make the replacement role the new default?
+            </label>
+            <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>
+              Note: if you leave the replacement field empty, affected users will not be reassigned to any role and no new default role will be created.
+            </div>
+            {deactivateModalError && (
+              <div className="setup-error" style={{ marginTop: "0.5rem" }}>
+                <Alert type="danger" message={deactivateModalError} />
+              </div>
+            )}
           </div>
         </Modal>
       )}

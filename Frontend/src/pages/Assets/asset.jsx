@@ -733,9 +733,13 @@ const AssetPage = () => {
       </div> */}
         <div className="asset-header">
           <h1>Assets</h1>
+
+          {hasPermission("assets:page_buttons:add") && (
           <Button variant="primary" aria-label="Add Asset" onClick={goAddAsset}>
             Add Asset
           </Button>
+          
+        )}
         </div>
 
       {/* Summary Cards */}

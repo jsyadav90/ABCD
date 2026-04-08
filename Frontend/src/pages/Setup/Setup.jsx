@@ -19,7 +19,7 @@ const Setup = () => {
 
   useEffect(() => {
     if (!toast.message) return;
-    const timeout = setTimeout(() => setToast({ type: "", message: "" }), 4000);
+    const timeout = setTimeout(() => setToast({ type: "", message: "" }), 3000);
     return () => clearTimeout(timeout);
   }, [toast]);
 

@@ -111,47 +111,68 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
     }));
   };
 
+  // Toggle all actions in a page
+  const handlePageToggle = (moduleKey, pageKey, isChecked) => {
+    setAssignedPermissions((prev) => {
+      if (prev.includes("*")) return prev;
+
+      let newKeys = [...prev];
+      const pageModule = PERMISSION_MODULES.find(m => m.key === moduleKey);
+      const page = pageModule?.pages.find(p => p.key === pageKey);
+
+      if (page) {
+        if (isChecked) {
+          // Check all actions in this page
+          page.actions.forEach((action) => {
+            const fullKey = `${moduleKey}:${pageKey}:${action.key}`;
+            if (!newKeys.includes(fullKey)) {
+              newKeys.push(fullKey);
+            }
+          });
+        } else {
+          // Uncheck all actions in this page
+          newKeys = newKeys.filter((k) => !k.startsWith(`${moduleKey}:${pageKey}:`));
+        }
+      }
+
+      // Auto-add module access key if any action is selected
+      const module = PERMISSION_MODULES.find(m => m.key === moduleKey);
+      if (module?.accessKey && newKeys.some(k => k.startsWith(`${moduleKey}:`) && k !== module.accessKey)) {
+        if (!newKeys.includes(module.accessKey)) {
+          newKeys.push(module.accessKey);
+        }
+      }
+
+      // Auto-remove module access key if no actions remain
+      if (module?.accessKey && !newKeys.some(k => k.startsWith(`${moduleKey}:`) && k !== module.accessKey)) {
+        newKeys = newKeys.filter(k => k !== module.accessKey);
+      }
+
+      return newKeys;
+    });
+  };
+
+  // Toggle individual action
   const handleActionToggle = (moduleKey, pageKey, actionKey) => {
     setAssignedPermissions((prev) => {
-      if (prev.includes("*")) return prev; // Super admin cannot be edited here usually
+      if (prev.includes("*")) return prev;
 
       const fullKey = `${moduleKey}:${pageKey}:${actionKey}`;
       const exists = prev.includes(fullKey);
 
       let newKeys = [...prev];
 
-      if (actionKey === "view") {
-        // When toggling the view action, also toggle all other actions in this page
-        const pageModule = PERMISSION_MODULES.find(m => m.key === moduleKey);
-        const page = pageModule?.pages.find(p => p.key === pageKey);
-
-        if (page) {
-          if (exists) {
-            // Unchecking view - remove view and all actions
-            newKeys = newKeys.filter((k) => !k.startsWith(`${moduleKey}:${pageKey}:`));
-          } else {
-            // Checking view - add view and all actions
-            newKeys.push(fullKey);
-            page.actions.forEach((action) => {
-              const actionKey = `${moduleKey}:${pageKey}:${action.key}`;
-              if (!newKeys.includes(actionKey)) {
-                newKeys.push(actionKey);
-              }
-            });
-          }
-        }
+      if (exists) {
+        // Remove the action
+        newKeys = newKeys.filter((k) => k !== fullKey);
       } else {
-        // For other actions, just toggle them individually
-        if (exists) {
-          newKeys = newKeys.filter((k) => k !== fullKey);
-        } else {
-          newKeys.push(fullKey);
-        }
+        // Add the action
+        newKeys.push(fullKey);
       }
 
-      // Auto-add module access key if any action is selected and access key exists
+      // Auto-add module access key if any action is selected
       const module = PERMISSION_MODULES.find(m => m.key === moduleKey);
-      if (module?.accessKey && newKeys.some(k => k.startsWith(`${moduleKey}:`))) {
+      if (module?.accessKey && newKeys.some(k => k.startsWith(`${moduleKey}:`) && k !== module.accessKey)) {
         if (!newKeys.includes(module.accessKey)) {
           newKeys.push(module.accessKey);
         }
@@ -199,15 +220,37 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   const isModuleFullySelected = (assignedKeys, module) => {
     if (assignedKeys.includes("*")) return true;
     
-    // Simply check if the accessKey is present
-    // If we want "fully selected" to mean ALL children too, we can do that,
-    // but typically for a "master switch" we just care if the master switch is ON.
-    // However, the prompt implies unchecking it blocks access.
-    // Let's reflect the state of the accessKey itself.
     if (module.accessKey) {
         return assignedKeys.includes(module.accessKey);
     }
     return false;
+  };
+
+  // Check if a page has all its actions selected
+  const isPageFullySelected = (assignedKeys, moduleKey, page) => {
+    if (assignedKeys.includes("*")) return true;
+    
+    return page.actions.every(action => {
+      const fullKey = `${moduleKey}:${page.key}:${action.key}`;
+      return assignedKeys.includes(fullKey);
+    });
+  };
+
+  // Check if a page has some of its actions selected
+  const isPagePartiallySelected = (assignedKeys, moduleKey, page) => {
+    if (assignedKeys.includes("*")) return true;
+    
+    const hasAny = page.actions.some(action => {
+      const fullKey = `${moduleKey}:${page.key}:${action.key}`;
+      return assignedKeys.includes(fullKey);
+    });
+
+    const hasAll = page.actions.every(action => {
+      const fullKey = `${moduleKey}:${page.key}:${action.key}`;
+      return assignedKeys.includes(fullKey);
+    });
+
+    return hasAny && !hasAll;
   };
 
   const handleSave = async () => {
@@ -415,21 +458,19 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
                     {module.pages.map((page) => {
                       const isModuleAccessGranted = isModuleFullySelected(assignedPermissions, module);
                       
-                      // Check if the "view" action is assigned
-                      const isViewAssigned = hasPermission(assignedPermissions, module.key, page.key, "view");
-
-                      const isDisabled = !isModuleAccessGranted || isSuperAdmin;
+                      // Check if page is fully selected
+                      const isPageSelected = isPageFullySelected(assignedPermissions, module.key, page);
 
                       return (
                         <div key={page.key} className="tree-submodule">
-                          {/* Submodule Header (acts as View toggle + Expand usually, but here just a list item) */}
+                          {/* Submodule Header - Page level checkbox to toggle all actions in this page */}
                           <div className="submodule-header">
-                            <label className="checkbox-label" title="Enable Submodule Access (View)">
+                            <label className="checkbox-label" title={`Toggle all actions for ${page.label}`}>
                               <input
                                 type="checkbox"
-                                checked={isViewAssigned}
-                                disabled={isDisabled}
-                                onChange={() => handleActionToggle(module.key, page.key, "view")}
+                                checked={isPageSelected}
+                                disabled={!isModuleAccessGranted || isSuperAdmin}
+                                onChange={(e) => handlePageToggle(module.key, page.key, e.target.checked)}
                               />
                               <span>{page.label}</span>
                             </label>
@@ -438,21 +479,25 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
                           {/* Actions Children */}
                           <div className="submodule-children">
                             {/* Individual Actions */}
-                            {page.actions.map((action) => (
-                              <div key={action.key} className="tree-action">
-                                <label className="checkbox-label" title={action.label}>
-                                  <input
-                                    type="checkbox"
-                                    checked={hasPermission(assignedPermissions, module.key, page.key, action.key)}
-                                    disabled={isDisabled || !isViewAssigned}
-                                    onChange={() =>
-                                      handleActionToggle(module.key, page.key, action.key)
-                                    }
-                                  />
-                                  <span>{action.label}</span>
-                                </label>
-                              </div>
-                            ))}
+                            {page.actions.map((action) => {
+                              const isActionChecked = hasPermission(assignedPermissions, module.key, page.key, action.key);
+                              
+                              return (
+                                <div key={action.key} className="tree-action">
+                                  <label className="checkbox-label" title={action.label}>
+                                    <input
+                                      type="checkbox"
+                                      checked={isActionChecked}
+                                      disabled={!isModuleAccessGranted || isSuperAdmin}
+                                      onChange={() =>
+                                        handleActionToggle(module.key, page.key, action.key)
+                                      }
+                                    />
+                                    <span>{action.label}</span>
+                                  </label>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );

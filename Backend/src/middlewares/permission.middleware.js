@@ -48,7 +48,7 @@ export const verifyPermission = (requiredPermission) => {
           roleKeys = roleDoc.permissionKeys;
         }
       } catch (e) {
-        console.log(`   âš ï¸ DB lookup failed: ${e.message}`);
+        console.log(`DB lookup failed: ${e.message}`);
       }
     }
     
