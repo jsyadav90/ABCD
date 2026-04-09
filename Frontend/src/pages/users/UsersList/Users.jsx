@@ -298,7 +298,28 @@ const Users = () => {
   };
 
   const handleToggleLogin = async (id, canLogin) => {
+    const action = canLogin ? "enable login for" : "disable login for";
+    const confirmed = window.confirm(`Are you sure you want to ${action} this user?`);
+    if (!confirmed) return;
+
     try {
+      const user = allUsers.find((u) => u._id === id);
+      if (canLogin) {
+        const hasRole = !!(user?.roleId || user?.role);
+        const hasBranch = Array.isArray(user?.branchId)
+          ? user.branchId.length > 0
+          : !!user?.branchId;
+
+        if (!hasRole || !hasBranch) {
+          const missing = [];
+          if (!hasRole) missing.push("role");
+          if (!hasBranch) missing.push("branch");
+          throw new Error(
+            `Cannot enable login: user must have ${missing.join(" and ")} assigned before login can be enabled.`
+          );
+        }
+      }
+
       setLoading(true);
       setError(null);
       const res = await toggleCanLogin(id, canLogin);
@@ -325,6 +346,11 @@ const Users = () => {
   };
 
   const handleLockAccount = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to lock this user account? This will prevent the user from logging in."
+    );
+    if (!confirmed) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -353,6 +379,11 @@ const Users = () => {
   };
 
   const handleUnlockAccount = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to unlock this user account?"
+    );
+    if (!confirmed) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -568,6 +599,9 @@ const Users = () => {
     }
 
     // Otherwise, just save the role change
+    const confirmed = window.confirm("Are you sure you want to update this user's role?");
+    if (!confirmed) return;
+
     try {
         setEditRoleModal(prev => ({...prev, isSubmitting: true, error: ""}));
         await changeUserRole(editRoleModal.userId, editRoleModal.newRoleId);
@@ -656,6 +690,9 @@ const Users = () => {
   };
 
   const handleSavePermissions = async () => {
+    const confirmed = window.confirm("Are you sure you want to save permission changes for this user?");
+    if (!confirmed) return;
+
     try {
       setEditRoleModal(prev => ({ ...prev, isSubmitting: true, error: "" }));
 

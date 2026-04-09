@@ -27,4 +27,4 @@ fir se update kro
 
 
 
-Default rle ko inactive krne per uske DB me isDefault:false nhi hota h 
+Default role ko inactive krne per uske DB me isDefault:false nhi hota h 

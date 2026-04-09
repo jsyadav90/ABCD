@@ -372,6 +372,16 @@ export const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const payload = { ...req.body };
 
+  if (payload.roleId === "" || payload.roleId === null) {
+    throw new apiError(400, "Role is required");
+  }
+
+  if (payload.branchId !== undefined) {
+    if (!Array.isArray(payload.branchId) || payload.branchId.length === 0) {
+      throw new apiError(400, "At least one branch must be selected");
+    }
+  }
+
   // Prevent direct overwrite of login-related flags without using specific endpoints
   delete payload.canLogin;
   delete payload.isActive;
@@ -425,6 +435,21 @@ export const toggleCanLogin = asyncHandler(async (req, res) => {
   }
 
   if (enable) {
+    const hasRole = !!user.roleId;
+    const hasBranch = Array.isArray(user.branchId)
+      ? user.branchId.length > 0
+      : !!user.branchId;
+
+    if (!hasRole || !hasBranch) {
+      const missing = [];
+      if (!hasRole) missing.push("role");
+      if (!hasBranch) missing.push("branch");
+      throw new apiError(
+        400,
+        `Cannot enable login: user must have ${missing.join(" and ")} assigned.`
+      );
+    }
+
     // If a UserLogin already exists for this user, leave it
     let existingLogin = await UserLogin.findOne({ user: user._id });
     if (!existingLogin) {
@@ -531,8 +556,11 @@ export const changeUserRole = asyncHandler(async (req, res) => {
 
   if (roleId) {
     const found = await Role.findById(roleId);
-    if (!found) {
+    if (!found || found.isDeleted) {
       throw new apiError(400, "Role not found");
+    }
+    if (!found.isActive) {
+      throw new apiError(400, "Cannot assign an inactive role");
     }
     user.roleId = roleId;
   } else if (role) {
@@ -540,6 +568,9 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     const found = await Role.findOne({ name: role, isDeleted: false });
     if (!found) {
       throw new apiError(400, "Role not found by name");
+    }
+    if (!found.isActive) {
+      throw new apiError(400, "Cannot assign an inactive role");
     }
     user.roleId = found._id;
   }
@@ -601,43 +632,55 @@ export const deleteUserPermanent = asyncHandler(async (req, res) => {
 // Fetch all roles for dropdown (returns id, name, and displayName)
 export const getRolesForDropdown = asyncHandler(async (req, res) => {
   try {
-    // Fetch all roles (both system and custom)
-    let roles = await Role.find({}, "name displayName description category permissionKeys").lean().sort({ priority: -1 });
-    
+    // Fetch only active roles for dropdown lists
+    let roles = await Role.find(
+      { isDeleted: false, isActive: true },
+      "name displayName description category permissionKeys"
+    )
+      .lean()
+      .sort({ priority: -1 });
+
     if (!roles || roles.length === 0) {
-      const Organization = (await import("../models/organization.model.js")).Organization;
-      const UserModel = (await import("../models/user.model.js")).User;
-      
-      // Ensure organization exists
-      let org = await Organization.findOne({ code: "ABCD" });
-      if (!org) {
-        org = await Organization.create({
-          name: "ABCD",
-          code: "ABCD",
-          sortName: "ABCD",
-          contactInfo: { primaryEmail: "abcd@local" },
-          status: "ACTIVE",
-          createdBy: seedUser._id,
-        });
+      const totalRoleCount = await Role.countDocuments({ isDeleted: false });
+      if (totalRoleCount === 0) {
+        const Organization = (await import("../models/organization.model.js")).Organization;
+        const UserModel = (await import("../models/user.model.js")).User;
+
+        // Ensure organization exists
+        let org = await Organization.findOne({ code: "ABCD" });
+        if (!org) {
+          org = await Organization.create({
+            name: "ABCD",
+            code: "ABCD",
+            sortName: "ABCD",
+            contactInfo: { primaryEmail: "abcd@local" },
+            status: "ACTIVE",
+          });
+        }
+
+        // Ensure a seed user exists to act as creator
+        let seedUser = await UserModel.findOne({ userId: "seed-super-admin", organizationId: org._id });
+        if (!seedUser) {
+          seedUser = await UserModel.create({
+            userId: "seed-super-admin",
+            name: "Seed Super Admin",
+            organizationId: org._id,
+            canLogin: false,
+            isActive: true,
+          });
+        }
+
+        // Initialize system roles
+        await Role.initializeSystemRoles(seedUser._id);
+
+        // Re-fetch active roles
+        roles = await Role.find(
+          { isDeleted: false, isActive: true },
+          "name displayName description category permissionKeys"
+        )
+          .lean()
+          .sort({ priority: -1 });
       }
-      
-      // Ensure a seed user exists to act as creator
-      let seedUser = await UserModel.findOne({ userId: "seed-super-admin", organizationId: org._id });
-      if (!seedUser) {
-        seedUser = await UserModel.create({
-          userId: "seed-super-admin",
-          name: "Seed Super Admin",
-          organizationId: org._id,
-          canLogin: false,
-          isActive: true,
-        });
-      }
-      
-      // Initialize system roles
-      await Role.initializeSystemRoles(seedUser._id);
-      
-      // Re-fetch roles
-      roles = await Role.find({}, "name displayName description category").lean().sort({ priority: -1 });
     }
 
     const formattedRoles = roles.map((role) => ({
@@ -647,6 +690,7 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
       description: role.description,
       permissionKeys: Array.isArray(role.permissionKeys) ? role.permissionKeys : [],
     }));
+
     return res.status(200).json(new apiResponse(200, formattedRoles, "Roles retrieved successfully"));
   } catch (error) {
     console.error('âŒ Error in getRolesForDropdown:', error.message);

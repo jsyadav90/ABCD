@@ -70,6 +70,17 @@ export const createRole = asyncHandler(async (req, res) => {
     throw new apiError(409, "A role with this name already exists");
   }
 
+  // Check for duplicate displayName
+  const existingDisplayName = await Role.findOne({
+    displayName: displayName,
+    organizationId: organizationId || null,
+    isDeleted: false,
+  });
+
+  if (existingDisplayName) {
+    throw new apiError(409, "A role with this display name already exists");
+  }
+
   if (isDefault === true) {
     await Role.updateMany(
       {
@@ -120,6 +131,34 @@ export const updateRole = asyncHandler(async (req, res) => {
     throw new apiError(404, "Role not found");
   }
 
+  // Check for duplicate name if name is being changed
+  if (role.category !== "system" && typeof name === "string" && name.trim()) {
+    const existingName = await Role.findOne({
+      name: name.toLowerCase(),
+      organizationId: role.organizationId || null,
+      isDeleted: false,
+      _id: { $ne: role._id },
+    });
+
+    if (existingName) {
+      throw new apiError(409, "A role with this name already exists");
+    }
+  }
+
+  // Check for duplicate displayName if displayName is being changed
+  if (typeof displayName === "string" && displayName.trim()) {
+    const existingDisplayName = await Role.findOne({
+      displayName: displayName,
+      organizationId: role.organizationId || null,
+      isDeleted: false,
+      _id: { $ne: role._id },
+    });
+
+    if (existingDisplayName) {
+      throw new apiError(409, "A role with this display name already exists");
+    }
+  }
+
   if (role.category !== "system" && typeof name === "string" && name.trim()) {
     role.name = name.toLowerCase();
   }
@@ -139,8 +178,10 @@ export const updateRole = asyncHandler(async (req, res) => {
   const wasActive = role.isActive === true;
   const willBeInactive = typeof isActive === "boolean" ? isActive === false : false;
 
+  let forcedDefaultToFalse = false;
   if (wasActive && willBeInactive && role.isDefault === true) {
     role.isDefault = false;
+    forcedDefaultToFalse = true;
   }
 
   if (typeof isActive === "boolean") {
@@ -175,7 +216,7 @@ export const updateRole = asyncHandler(async (req, res) => {
 
     if (!assignedToReplacement) {
       if (clearUsers === true) {
-        await User.updateMany({ roleId: role._id }, { roleId: null });
+        await User.updateMany({ roleId: role._id }, { roleId: null, canLogin: false });
       } else {
         const defaultRole = await Role.findOne({
           _id: { $ne: role._id },
@@ -207,12 +248,14 @@ export const updateRole = asyncHandler(async (req, res) => {
 
         if (fallbackRole) {
           await User.updateMany({ roleId: role._id }, { roleId: fallbackRole._id });
+        } else {
+          await User.updateMany({ roleId: role._id }, { roleId: null, canLogin: false });
         }
       }
     }
   }
 
-  if (typeof isDefault === "boolean") {
+  if (typeof isDefault === "boolean" && !forcedDefaultToFalse) {
     role.isDefault = isDefault;
   }
 

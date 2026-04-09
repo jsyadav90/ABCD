@@ -24,10 +24,11 @@ const RoleRightsTab = ({ setToast }) => {
   });
   const [roleFormError, setRoleFormError] = useState("");
   const [savingRole, setSavingRole] = useState(false);
-  
-  // New State for enhancements
-  const [nameValidationMsg, setNameValidationMsg] = useState("");
   const [copyFromRoleId, setCopyFromRoleId] = useState("");
+  
+  // New State for displayName validation
+  const [displayNameValidationMsg, setDisplayNameValidationMsg] = useState("");
+  const [nameValidationMsg, setNameValidationMsg] = useState("");
   const [deactivateDefaultModalOpen, setDeactivateDefaultModalOpen] = useState(false);
   const [roleToDeactivate, setRoleToDeactivate] = useState(null);
   const [replacementRoleId, setReplacementRoleId] = useState("");
@@ -60,6 +61,9 @@ const RoleRightsTab = ({ setToast }) => {
     const timer = setTimeout(() => {
       if (!roleModalOpen) return;
 
+      let nameValidationMessage = "";
+      let displayNameValidationMessage = "";
+
       if (roleForm.name) {
         // Check for duplicate internal name
         const nameExists = roles.some(
@@ -69,19 +73,29 @@ const RoleRightsTab = ({ setToast }) => {
         );
 
         if (nameExists) {
-          setNameValidationMsg(
-            "This role name already exists. Please choose a different name."
-          );
-        } else {
-          setNameValidationMsg("");
+          nameValidationMessage = "This role name already exists. Please choose a different name.";
         }
-      } else {
-        setNameValidationMsg("");
       }
+
+      if (roleForm.displayName) {
+        // Check for duplicate display name
+        const displayNameExists = roles.some(
+          (r) =>
+            r.displayName === roleForm.displayName &&
+            (!editingRole || r._id !== editingRole._id)
+        );
+
+        if (displayNameExists) {
+          displayNameValidationMessage = "This display name already exists. Please choose a different display name.";
+        }
+      }
+
+      setNameValidationMsg(nameValidationMessage);
+      setDisplayNameValidationMsg(displayNameValidationMessage);
     }, 500); // 500ms debounce delay
 
     return () => clearTimeout(timer);
-  }, [roleForm.name, roles, editingRole, roleModalOpen]);
+  }, [roleForm.name, roleForm.displayName, roles, editingRole, roleModalOpen]);
 
   const openCreateRoleModal = () => {
     setEditingRole(null);
@@ -97,6 +111,7 @@ const RoleRightsTab = ({ setToast }) => {
     });
     setRoleFormError("");
     setNameValidationMsg("");
+    setDisplayNameValidationMsg("");
     setCopyFromRoleId("");
     setRoleModalOpen(true);
   };
@@ -115,6 +130,7 @@ const RoleRightsTab = ({ setToast }) => {
     });
     setRoleFormError("");
     setNameValidationMsg("");
+    setDisplayNameValidationMsg("");
     setRoleModalOpen(true);
   };
 
@@ -257,7 +273,7 @@ const RoleRightsTab = ({ setToast }) => {
       return;
     }
 
-    if (nameValidationMsg) {
+    if (nameValidationMsg || displayNameValidationMsg) {
       setRoleFormError("Please fix validation errors before saving.");
       return;
     }
@@ -513,7 +529,7 @@ const RoleRightsTab = ({ setToast }) => {
               <Button variant="secondary" onClick={closeRoleModal} disabled={savingRole}>
                 Cancel
               </Button>
-              <Button variant="primary" onClick={saveRole} disabled={savingRole}>
+              <Button variant="primary" onClick={saveRole} disabled={savingRole || !!nameValidationMsg || !!displayNameValidationMsg}>
                 {editingRole ? "Save Changes" : "Create Role"}
               </Button>
             </div>
@@ -534,6 +550,11 @@ const RoleRightsTab = ({ setToast }) => {
               placeholder="e.g., User Administrator"
               required
             />
+            {displayNameValidationMsg && (
+              <span style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "-0.5rem", marginBottom: "1rem" }}>
+                {displayNameValidationMsg}
+              </span>
+            )}
             {!editingRole && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <Input

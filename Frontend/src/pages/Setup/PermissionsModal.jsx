@@ -20,8 +20,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [expandedModules, setExpandedModules] = useState({});
-
-  const [previewMode, setPreviewMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedModuleKey, setSelectedModuleKey] = useState("all");
 
@@ -49,7 +47,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
       const allExpanded = {};
       PERMISSION_MODULES.forEach(m => allExpanded[m.key] = true);
       setExpandedModules(allExpanded);
-      setPreviewMode(false);
       setSearchTerm("");
       setSelectedModuleKey("all");
     }
@@ -298,18 +295,12 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
       className="permission-model"
       footer={
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "space-between", width: "100%" }}>
-          <Button 
-            variant="info" 
-            onClick={() => setPreviewMode(!previewMode)}
-          >
-            {previewMode ? "Edit Rights" : "Preview Sidebar"}
-          </Button>
-
+          <div />
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <Button variant="secondary" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
-            {!isSuperAdmin && !previewMode && (
+            {!isSuperAdmin && (
               <Button variant="primary" onClick={handleSave} disabled={saving}>
                 {saving ? "Saving..." : "Save Rights"}
               </Button>
@@ -331,8 +322,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
         <Alert type="info" message="This role has Super Admin privileges (Full Access). Individual rights cannot be modified." />
       )}
 
-      {!previewMode && (
-        <div className="permission-toolbar">
+      <div className="permission-toolbar">
           <div className="permission-toolbar__selector">
             <label htmlFor="permission-category-select">View category</label>
             <select
@@ -359,9 +349,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
             />
           </div>
         </div>
-      )}
 
-      {!previewMode && (
         <div className="permission-summary-card">
           <div>
             <span className="summary-label">Selected category</span>
@@ -376,48 +364,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
             <strong>{searchTerm.trim() ? "Yes" : "No"}</strong>
           </div>
         </div>
-      )}
 
-      {previewMode ? (
-        <div className="permission-preview-container">
-          <h3 style={{marginBottom: '1rem'}}>Sidebar Preview for {role?.displayName}</h3>
-          <div className="sidebar-preview">
-            {PERMISSION_MODULES.map(module => {
-              const hasAccess = isSuperAdmin || (module.accessKey && assignedPermissions.includes(module.accessKey));
-              if (!hasAccess) return null;
-
-              return (
-                <div key={module.key} className="preview-module">
-                  <div className="preview-module-title">
-                     <span style={{marginRight: '6px'}}>📁</span>
-                     {module.label}
-                  </div>
-                  <div className="preview-pages">
-                    {module.pages.map(page => {
-                      // Check page view access
-                      const pageViewKey = `${module.key}:${page.key}:view`;
-                      const hasPageAccess = isSuperAdmin || assignedPermissions.includes(pageViewKey);
-                      
-                      if (!hasPageAccess) return null;
-
-                      return (
-                        <div key={page.key} className="preview-page-item">
-                          <span style={{marginRight: '6px'}}>📄</span>
-                          {page.label}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-            
-            {!isSuperAdmin && !PERMISSION_MODULES.some(m => m.accessKey && assignedPermissions.includes(m.accessKey)) && (
-               <div style={{color: '#6b7280', fontStyle: 'italic'}}>No modules accessible.</div>
-            )}
-          </div>
-        </div>
-      ) : (
         <div className="permission-tree-container">
           <div className="tree-root">
             {selectedModules.length === 0 && (
@@ -508,7 +455,6 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
             ))}
           </div>
         </div>
-      )}
     </Modal>
   );
 };

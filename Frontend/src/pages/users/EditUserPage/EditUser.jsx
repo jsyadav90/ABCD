@@ -250,6 +250,9 @@ const EditUser = () => {
       return;
     }
 
+    const confirmed = window.confirm("Are you sure you want to save these user changes?");
+    if (!confirmed) return;
+
     try {
       setSubmitting(true);
       setErrorMessage("");

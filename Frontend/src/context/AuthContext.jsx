@@ -344,9 +344,11 @@ export const AuthProvider = ({ children }) => {
         forcePasswordChange: forcePasswordChange || false
       }
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Login failed'
-      const finalMessage = message && String(message).trim() ? message : 'Invalid login credentials'
-      console.error('[AUTH] Login error:', { status: err.response?.status, message: finalMessage })
+      const rawMessage = err.response?.data?.message || err.message || 'Login failed'
+      const normalizedMessage = String(rawMessage).trim()
+      const isLockedError = [429, 403].includes(err.response?.status) || /lock(ed|ing)/i.test(normalizedMessage)
+      const finalMessage = isLockedError ? 'Invalid login credentials' : (normalizedMessage || 'Invalid login credentials')
+      // console.error('[AUTH] Login error:', { status: err.response?.status, message: finalMessage })
       setError(finalMessage)
       setIsAuthenticated(false)
       return { success: false, error: finalMessage }
