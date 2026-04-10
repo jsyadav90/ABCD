@@ -125,6 +125,15 @@ export const updateRole = asyncHandler(async (req, res) => {
     clearUsers,
   } = req.body;
 
+  console.log("📥 updateRole called with:", {
+    id,
+    isActive,
+    isDefault,
+    newDefaultRoleId,
+    makeNewDefault,
+    clearUsers,
+  });
+
   const role = await Role.findById(id);
 
   if (!role || role.isDeleted) {
@@ -192,24 +201,48 @@ export const updateRole = asyncHandler(async (req, res) => {
     let assignedToReplacement = false;
 
     if (newDefaultRoleId) {
+      console.log("� NEW DEFAULT ROLE ID FOUND:", newDefaultRoleId, "makeNewDefault:", makeNewDefault);
+      
       const replacementRole = await Role.findById(newDefaultRoleId);
-      if (replacementRole && replacementRole.isActive && !replacementRole.isDeleted) {
+      console.log("📝 Replacement role found:", !!replacementRole, "isActive:", replacementRole?.isActive, "isDeleted:", replacementRole?.isDeleted);
+            if (!replacementRole || replacementRole.isDeleted) {
+        throw new apiError(404, "Replacement role not found");
+      }
+      
+      if (makeNewDefault === true && !replacementRole.isActive) {
+        throw new apiError(400, "Cannot set an inactive role as the new default role");
+      }
+            if (replacementRole && replacementRole.isActive && !replacementRole.isDeleted) {
+        // First: unset all other default roles in this organization
         if (makeNewDefault === true) {
-          replacementRole.isDefault = true;
-          await replacementRole.save();
-
+          console.log("✅ YES! makeNewDefault === true, SETTING REPLACEMENT AS DEFAULT NOW");
+          
+          // Unset all other defaults FIRST
           await Role.updateMany(
             {
-              _id: { $ne: replacementRole._id },
-              organizationId: role.organizationId || null,
+              _id: { $ne: newDefaultRoleId },
+              organizationId: replacementRole.organizationId || null,
               isDeleted: false,
               isDefault: true,
             },
             { isDefault: false }
           );
+          console.log("✅ Step 1: Unset all other defaults");
+          
+          // Use findByIdAndUpdate for atomic operation
+          const updatedRole = await Role.findByIdAndUpdate(
+            newDefaultRoleId,
+            { isDefault: true },
+            { new: true }
+          );
+          console.log("✅ Step 2: SET replacement as default. Result isDefault:", updatedRole.isDefault);
+        } else {
+          console.log("❌ makeNewDefault is NOT true (value:", makeNewDefault, "), skipping default assignment");
         }
 
-        await User.updateMany({ roleId: role._id }, { roleId: replacementRole._id });
+        // Reassign users from deactivated role to replacement role
+        await User.updateMany({ roleId: role._id }, { roleId: newDefaultRoleId });
+        console.log("✅ Step 3: Users reassigned from", role._id, "to", newDefaultRoleId);
         assignedToReplacement = true;
       }
     }
@@ -256,10 +289,19 @@ export const updateRole = asyncHandler(async (req, res) => {
   }
 
   if (typeof isDefault === "boolean" && !forcedDefaultToFalse) {
+    // Validate: Cannot set an inactive role as default
+    if (isDefault === true && role.isActive === false) {
+      throw new apiError(400, "Cannot set an inactive role as the default role. Please activate the role first.");
+    }
     role.isDefault = isDefault;
   }
 
   if (isDefault === true) {
+    // Double-check the role is active before unsetting other defaults
+    if (role.isActive === false) {
+      throw new apiError(400, "Cannot set an inactive role as the default role. Please activate the role first.");
+    }
+
     await Role.updateMany(
       {
         _id: { $ne: role._id },

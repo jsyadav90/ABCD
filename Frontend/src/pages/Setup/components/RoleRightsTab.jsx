@@ -201,10 +201,20 @@ const RoleRightsTab = ({ setToast }) => {
   };
 
   const handleRoleToggleChange = (/** @type {string} */ name) => {
-    setRoleForm((prev) => ({
-      ...prev,
-      [name]: !prev[name],
-    }));
+    setRoleForm((prev) => {
+      if (name === "isActive" && prev.isActive === true && prev.isDefault === true) {
+        return {
+          ...prev,
+          isActive: false,
+          isDefault: false,
+        };
+      }
+
+      return {
+        ...prev,
+        [name]: !prev[name],
+      };
+    });
   };
 
   const confirmDefaultRoleOverride = () => {
@@ -278,6 +288,12 @@ const RoleRightsTab = ({ setToast }) => {
       return;
     }
 
+    // Validation: Cannot make an inactive role the default
+    if (roleForm.isDefault === true && roleForm.isActive === false) {
+      setRoleFormError("You cannot set an inactive role as the default role. Please activate the role first.");
+      return;
+    }
+
     try {
       if (!confirmDefaultRoleOverride()) {
         return;
@@ -333,18 +349,24 @@ const RoleRightsTab = ({ setToast }) => {
   const handleDeactivateDefaultRoleSubmit = async () => {
     if (!roleToDeactivate) return;
 
-    const payload = pendingSavePayload
-      ? { ...pendingSavePayload }
-      : { isActive: false, isDefault: false };
+    // Always start with a clean deactivation payload
+    const payload = {
+      isActive: false,
+      isDefault: false,
+    };
 
     if (replacementRoleId) {
       payload.newDefaultRoleId = replacementRoleId;
-      if (replacementMakeDefault) {
+      if (replacementMakeDefault === true) {
         payload.makeNewDefault = true;
       }
     } else {
       payload.clearUsers = true;
     }
+
+    console.log("📤 Sending deactivate payload:", payload);
+    console.log("🎯 replacementMakeDefault state:", replacementMakeDefault);
+    console.log("🆔 replacementRoleId:", replacementRoleId);
 
     setSavingRole(true);
     setDeactivateModalError("");
@@ -589,14 +611,25 @@ const RoleRightsTab = ({ setToast }) => {
                 />
                 Is Active
               </label>
-              <label className="checkbox-label">
+              <label className="checkbox-label" style={{ opacity: roleForm.isActive ? 1 : 0.5 }}>
                 <input
                   type="checkbox"
                   checked={roleForm.isDefault}
-                  onChange={() => handleRoleToggleChange("isDefault")}
+                  disabled={!roleForm.isActive}
+                  onChange={() => {
+                    if (roleForm.isActive) {
+                      handleRoleToggleChange("isDefault");
+                    }
+                  }}
+                  title={!roleForm.isActive ? "Role must be active to set as default" : ""}
                 />
                 Is Default
               </label>
+              {roleForm.isDefault && !roleForm.isActive && (
+                <span style={{ color: "#dc2626", fontSize: "0.8rem", marginLeft: "0.5rem" }}>
+                  ⚠️ Role must be active to be default
+                </span>
+              )}
             </div>
           </div>
 
@@ -678,7 +711,15 @@ const RoleRightsTab = ({ setToast }) => {
               <select
                 className="setup-input"
                 value={replacementRoleId}
-                onChange={(e) => setReplacementRoleId(e.target.value)}
+                onChange={(e) => {
+                  const selectedValue = e.target.value;
+                  console.log("🔄 Replacement role selected:", selectedValue);
+                  setReplacementRoleId(selectedValue);
+                  if (!selectedValue) {
+                    console.log("📋 Clearing default checkbox");
+                    setReplacementMakeDefault(false);
+                  }
+                }}
                 style={{ width: "100%", padding: "0.6rem", borderRadius: "4px", border: "1px solid #d1d5db" }}
               >
                 <option value="">-- No replacement role --</option>
@@ -691,14 +732,38 @@ const RoleRightsTab = ({ setToast }) => {
                   ))}
               </select>
             </div>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={replacementMakeDefault}
-                onChange={() => setReplacementMakeDefault((prev) => !prev)}
-              />
-              Do you want to make the replacement role the new default?
-            </label>
+            {replacementRoleId ? (() => {
+              const selectedRole = roles.find(r => String(r._id || r.id) === String(replacementRoleId));
+              const isSelectedRoleActive = selectedRole && selectedRole.isActive;
+              
+              return (
+                <>
+                  {!isSelectedRoleActive && (
+                    <div style={{ color: "#dc2626", fontSize: "0.9rem", padding: "0.5rem", backgroundColor: "#fee2e2", borderRadius: "4px", marginBottom: "0.5rem" }}>
+                      ⚠️ The selected replacement role is inactive. You cannot make an inactive role the new default.
+                    </div>
+                  )}
+                  <label className="checkbox-label" style={{ opacity: isSelectedRoleActive ? 1 : 0.5 }}>
+                    <input
+                      type="checkbox"
+                      checked={replacementMakeDefault === true}
+                      disabled={!isSelectedRoleActive}
+                      onChange={(e) => {
+                        if (isSelectedRoleActive) {
+                          console.log("☑️ Default checkbox changed to:", e.target.checked);
+                          setReplacementMakeDefault(e.target.checked);
+                        }
+                      }}
+                    />
+                    Do you want to make the replacement role the new default?
+                  </label>
+                </>
+              );
+            })() : (
+              <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>
+                Select a replacement role first to enable the option to make it the new default.
+              </div>
+            )}
             <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>
               Note: if you leave the replacement field empty, affected users will not be reassigned to any role and no new default role will be created.
             </div>
