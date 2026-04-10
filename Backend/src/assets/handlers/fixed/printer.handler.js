@@ -11,8 +11,8 @@ import { generateAssetId } from "../../../services/assetIdGenerator.service.js";
 
 const create = async (req) => {
   const body = req.body || {};
-  const AssetType = norm(body.AssetType).toLowerCase();
-  const AssetCategory = body.AssetCategory; // Now it's ObjectId, no need to normalize to string
+  const AssetType = norm(body.assetType).toLowerCase();
+  const AssetCategory = body.assetCategory; // Now it's ObjectId, no need to normalize to string
 
   const branchId = extractBranchIdFromBody(body);
 
@@ -21,7 +21,7 @@ const create = async (req) => {
     ...body,
     assetCategory: AssetCategory,
     assetType: AssetType,
-    assetTypeId: body.AssetTypeId || null,
+    assetTypeId: body.assetTypeId || null,
     branchId,
     printSpeedPPM: toNumberOrNull(body.printSpeedPPM),
     maxResolutionDPI: toNumberOrNull(body.maxResolutionDPI),
@@ -73,11 +73,12 @@ const create = async (req) => {
   // Generate unique asset ID (A26-00001 format)
   const generatedAssetId = await generateAssetId();
 
-  // 1. Save Fixed Asset first with generated asset ID
+  // 1. Save Fixed Asset first with generated asset ID and tag
   const fixedDoc = await Printer.create({
     ...fixedPayload,
     assetId: generatedAssetId,
     AssetId: generatedAssetId,
+    assetTag: body.assetTag || null,
   });
   const assetId = fixedDoc._id;
 

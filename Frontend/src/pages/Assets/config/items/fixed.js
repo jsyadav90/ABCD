@@ -261,7 +261,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetSubType","assetName","assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -278,13 +278,11 @@ export const fixedConfigs = {
         fields: [
           { name: "printTechnology", label: "Print Technology", type: "select", options: common.printTechnologies },
 
-          { name: "colorSupport", label: "Color Printing Supported", type: "select", options: common.booleanOptions },
+          { name: "colorSupport", required: true,  label: "Color Printing Supported", type: "select", options: common.booleanOptions, defaultValue: "No" },
 
           { name: "printSpeedPPM", placeholder: "e.g. 30", label: "Print Speed (PPM)", type: "number", min: 1, max: 200 },
 
           { name: "maxResolutionDPI", placeholder: "e.g. 600", label: "Max Resolution (DPI)", type: "number", min: 300, max: 4800 },
-
-          { name: "monthlyDutyCycle", placeholder: "e.g. 5000", label: "Monthly Duty Cycle (Pages)", type: "number", min: 1000, max: 1000000 },
 
           { name: "duplexPrinting", label: "Duplex Printing Supported", type: "select", options: common.booleanOptions },
 
@@ -300,33 +298,29 @@ export const fixedConfigs = {
         ],
       },
 
-      //! Asset Lifecycle Status
-      {
-        sectionTitle: "Asset Lifecycle Status",
-        fields: [
-          { name: "lifecycleStatus", label: "Lifecycle Status", type: "select", options: common.lifecycleStatus },
+      // //! Asset Lifecycle Status
+      // {
+      //   sectionTitle: "Asset Lifecycle Status",
+      //   fields: [
 
-          { name: "operationalStatus", label: "Operational Status", type: "select", options: common.operationalStatus },
+      //     { name: "totalPrintCount", placeholder: "e.g. 100000", label: "Total Print Count", type: "number", min: 0, max: 100000000 },
 
-          { name: "totalPrintCount", placeholder: "e.g. 100000", label: "Total Print Count", type: "number", min: 0, max: 100000000 },
+      //     { name: "lastServiceDate", label: "Last Service Date", type: "date" },
 
-          { name: "lastServiceDate", label: "Last Service Date", type: "date" },
+      //   ],
+      // },
 
-          { name: "condition", label: "Physical Condition", type: "select", options: common.conditionStatus },
-        ],
-      },
+      // //! Scanner & Copier (If MFP)
+      // {
+      //   sectionTitle: "Scanner & Copier (If MFP)",
+      //   fields: [
+      //     { name: "scannerAvailable", label: "Scanner Available", type: "select", options: common.booleanOptions },
 
-      //! Scanner & Copier (If MFP)
-      {
-        sectionTitle: "Scanner & Copier (If MFP)",
-        fields: [
-          { name: "scannerAvailable", label: "Scanner Available", type: "select", options: common.booleanOptions },
+      //     { name: "scanResolutionDPI", placeholder: "e.g. 1200", label: "Scan Resolution (DPI)", type: "number", min: 300, max: 4800 },
 
-          { name: "scanResolutionDPI", placeholder: "e.g. 1200", label: "Scan Resolution (DPI)", type: "number", min: 300, max: 4800 },
-
-          { name: "copySpeedCPM", placeholder: "e.g. 25", label: "Copy Speed (CPM)", type: "number", min: 1, max: 200 },
-        ],
-      },
+      //     { name: "copySpeedCPM", placeholder: "e.g. 25", label: "Copy Speed (CPM)", type: "number", min: 1, max: 200 },
+      //   ],
+      // },
 
       //! Cartridge / Toner Details - Black Only (No Color Support)
       {
@@ -341,11 +335,11 @@ export const fixedConfigs = {
           
           { name: "blackCartridgeManufacturer", label: "Manufacturer", type: "text", placeholder: "e.g. HP, Canon, Brother", maxLength: 80 },
           
-          { name: "blackCartridgeLastChanged", label: "Last Changed Date", type: "date" },
+          // { name: "blackCartridgeLastChanged", label: "Last Changed Date", type: "date" },
           
-          { name: "blackCartridgeEstimatedEnd", label: "Estimated End Date", type: "date" },
+          // { name: "blackCartridgeEstimatedEnd", label: "Estimated End Date", type: "date" },
           
-          { name: "blackCartridgeNotes", label: "Notes", type: "textarea", rows: 2, placeholder: "e.g. Compatible with XY model" }
+          // { name: "blackCartridgeNotes", label: "Notes", type: "textarea", rows: 2, placeholder: "e.g. Compatible with XY model" }
         ]
       },
 

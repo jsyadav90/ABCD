@@ -107,6 +107,21 @@ const AddAsset = () => {
     return baseData;
   };
 
+  // Extract default values from sections
+  const extractDefaultValues = (sections) => {
+    const defaults = {};
+    sections.forEach((section) => {
+      if (Array.isArray(section.fields)) {
+        section.fields.forEach((field) => {
+          if (field.defaultValue !== undefined) {
+            defaults[field.name] = field.defaultValue;
+          }
+        });
+      }
+    });
+    return defaults;
+  };
+
   // Load categories and branches on mount
   useEffect(() => {
     const loadCategoriesAndBranches = async () => {
@@ -206,6 +221,10 @@ const AddAsset = () => {
         formSections = await resolveLookupOptions(formSections);
 
         setSections(formSections);
+
+        // Apply default values from config to formData
+        const defaults = extractDefaultValues(formSections);
+        setFormData((prev) => ({ ...prev, ...defaults }));
       } catch (error) {
         console.error('Failed to load item field config:', error);
         setSections([]);

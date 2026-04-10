@@ -15,6 +15,7 @@ const Input = ({
   className = '',
   scanable = false,
   onScan,
+  dateFormat = 'DD-MM-YYYY',
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -58,13 +59,27 @@ const Input = ({
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   };
-  const formatDisplay = (d) => {
+  
+  // Format date based on configured dateFormat
+  const formatDisplay = (d, fmt = dateFormat) => {
     if (!d || isNaN(d)) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    return `${day}-${m}-${y}`;
+    
+    // Support formats: DD-MM-YYYY, MM-DD-YYYY, YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY, YYYY/MM/DD
+    const formats = {
+      'DD-MM-YYYY': `${day}-${month}-${year}`,
+      'MM-DD-YYYY': `${month}-${day}-${year}`,
+      'YYYY-MM-DD': `${year}-${month}-${day}`,
+      'DD/MM/YYYY': `${day}/${month}/${year}`,
+      'MM/DD/YYYY': `${month}/${day}/${year}`,
+      'YYYY/MM/DD': `${year}/${month}/${day}`,
+    };
+    
+    return formats[fmt] || `${day}-${month}-${year}`;
   };
+
   const months = [
     'January','February','March','April','May','June',
     'July','August','September','October','November','December'
@@ -152,33 +167,79 @@ const Input = ({
   };
 
   const normalizeDigitsToDisplay = (digits) => {
-    // Expecting DDMMYYYY (8 digits)
+    // Normalize input based on configured format
+    // For DD-MM-YYYY or DD/MM/YYYY: expecting DDMMYYYY (8 digits)
+    // For MM-DD-YYYY or MM/DD/YYYY: expecting MMDDYYYY (8 digits)
+    // For YYYY-MM-DD or YYYY/MM/DD: expecting YYYYMMDD (8 digits)
+    
+    const separator = dateFormat.includes('/') ? '/' : '-';
     const only = digits.replace(/\D/g, '');
-    const d = only.slice(0, 2);
-    const m = only.slice(2, 4);
-    const y = only.slice(4, 8);
-    let parts = [];
-    if (d) parts.push(d);
-    if (m) parts.push(m);
-    if (y) parts.push(y);
-    return parts.join('-');
+    
+    if (dateFormat.startsWith('YYYY')) {
+      // YYYY-MM-DD format: user enters YYYYMMDD
+      const y = only.slice(0, 4);
+      const m = only.slice(4, 6);
+      const d = only.slice(6, 8);
+      let parts = [];
+      if (y) parts.push(y);
+      if (m) parts.push(m);
+      if (d) parts.push(d);
+      return parts.join(separator);
+    } else {
+      // DD-MM-YYYY or MM-DD-YYYY format: user enters DDMMYYYY or MMDDYYYY
+      const first = only.slice(0, 2);
+      const second = only.slice(2, 4);
+      const year = only.slice(4, 8);
+      let parts = [];
+      if (first) parts.push(first);
+      if (second) parts.push(second);
+      if (year) parts.push(year);
+      return parts.join(separator);
+    }
   };
 
   const tryEmitISOIfComplete = (text) => {
-    // Accept DD-MM-YYYY or DD/MM/YYYY or DDMMYYYY
+    // Accept various formats based on configuration and separators (- / or nothing)
     const s = text.trim();
     const digits = s.replace(/\D/g, '');
     let dd, mm, yyyy;
+    
     if (digits.length === 8) {
-      dd = digits.slice(0, 2);
-      mm = digits.slice(2, 4);
-      yyyy = digits.slice(4, 8);
+      // User input 8 digits: parse based on configured format
+      if (dateFormat.startsWith('YYYY')) {
+        // YYYY-MM-DD format: user should enter YYYYMMDD
+        yyyy = digits.slice(0, 4);
+        mm = digits.slice(4, 6);
+        dd = digits.slice(6, 8);
+      } else if (dateFormat.includes('MM-') || dateFormat.includes('MM/')) {
+        // MM-DD-YYYY or MM/DD/YYYY format: user enters MMDDYYYY
+        mm = digits.slice(0, 2);
+        dd = digits.slice(2, 4);
+        yyyy = digits.slice(4, 8);
+      } else {
+        // DD-MM-YYYY or DD/MM/YYYY format: user enters DDMMYYYY
+        dd = digits.slice(0, 2);
+        mm = digits.slice(2, 4);
+        yyyy = digits.slice(4, 8);
+      }
     } else {
-      const m = s.match(/^(\d{2})[/.-](\d{2})[/.-](\d{4})$/);
+      // Try to parse with separators
+      const m = s.match(/^(\d{2})[/.-](\d{2})[/.-](\d{4})$|^(\d{4})[/.-](\d{2})[/.-](\d{2})$/);
       if (m) {
-        dd = m[1]; mm = m[2]; yyyy = m[3];
+        if (m[4]) {
+          // YYYY-MM-DD format
+          yyyy = m[4];
+          mm = m[5];
+          dd = m[6];
+        } else {
+          // DD-MM-YYYY or MM-DD-YYYY format
+          dd = m[1]; 
+          mm = m[2]; 
+          yyyy = m[3];
+        }
       }
     }
+    
     if (dd && mm && yyyy) {
       const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
       if (!isNaN(d) && d.getDate() === Number(dd)) {
@@ -232,7 +293,8 @@ const Input = ({
             value={dateText}
             onChange={handleDateInputChange}
             onBlur={handleDateInputBlur}
-            placeholder={placeholder || 'DD-MM-YYYY'}
+            onClick={() => setOpenCalendar(true)}
+            placeholder={placeholder || dateFormat}
             disabled={disabled}
             className={`input-field ${error ? 'input-error' : ''} ${className}`}
             {...props}

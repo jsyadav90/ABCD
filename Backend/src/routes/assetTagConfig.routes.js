@@ -9,7 +9,7 @@ router.use(verifyJWT);
 
 router.post("/", verifyPermission("assets:access"), createAssetTagConfig);
 router.get("/", verifyPermission("assets:inventory:view"), listAssetTagConfigs);
-router.get("/preview/:assetTypeId", verifyPermission("assets:inventory:view"), previewNextAssetTag);
+router.get("/preview/:assetTypeId", verifyPermission("assets:access"), previewNextAssetTag);
 router.get("/:assetTypeId", verifyPermission("assets:inventory:view"), getAssetTagConfig);
 
 export default router;

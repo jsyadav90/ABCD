@@ -10,13 +10,8 @@ export const genericConfig = {
       fields: [
         { name: "assetId", label: "Asset ID", placeholder: "Auto-generated on save", type: "text", readOnly: true, disabled: true, required: false,},
         { name: "assetTag", label: "Asset Tag", placeholder: "Enter Asset Tag", type: "text", disabled: true, required: true, maxLength: 80 },
-        { name: "barcode", label: "Barcode / QR Code", placeholder: "Enter Barcode / QR Code", type: "text", maxLength: 120 },
 
         { name: "assetName", label: "Asset Name", placeholder: "Enter Asset Name", type: "text", required: true, maxLength: 120 },
-        { name: "assetDescription", label: "Description", placeholder: "Enter Description", type: "textarea", maxLength: 500 },
-
-        { name: "assetCategory", label: "Category", placeholder: "Select Category", type: "select", options: common.assetCategories },
-        { name: "assetType", label: "Asset Type", placeholder: "Select Asset Type", type: "select", options: common.assetTypes },
         { name: "assetSubType", label: "Sub Type", placeholder: "Enter Sub Type", type: "text", maxLength: 80 },
 
         { name: "manufacturer", label: "Manufacturer", placeholder: "Enter Manufacturer", type: "text", maxLength: 100 },
@@ -26,8 +21,7 @@ export const genericConfig = {
         { name: "partNumber", label: "Part Number", placeholder: "Enter Part Number", type: "text", maxLength: 100 },
         { name: "serialNumber", label: "Serial Number", placeholder: "Enter Serial Number", type: "text", maxLength: 120 },
 
-        { name: "assetCondition", label: "Condition", placeholder: "Select Condition", type: "select", options: common.assetCondition },
-        { name: "ownershipType", label: "Ownership Type", placeholder: "Select Ownership Type", type: "select", options: [{name:"Owned", value:"Owned"}, {name:"Leased", value:"Leased"}, {name:"Rented", value:"Rented"}] },
+        { name: "ownershipType", label: "Ownership Type", placeholder: "Select Ownership Type", type: "select", options: [{name:"Owned", value:"Owned", }, {name:"Leased", value:"Leased"}, {name:"Rented", value:"Rented"}], defaultValue: "Owned" },
 
         { name: "manufacturingDate", label: "Manufacturing Date", placeholder: "Select Manufacturing Date", type: "date" },
        

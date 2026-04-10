@@ -137,6 +137,7 @@ const Field = memo(({ def, value, onChange, onScan, error, formData, overrideOpt
       type={def.type || "text"}
       min={def.min}
       max={def.max}
+      dateFormat={def.dateFormat || "DD-MM-YYYY"}
       scanable={enableScan}
       onScan={() => onScan(def.name)}
     />

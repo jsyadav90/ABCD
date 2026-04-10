@@ -23,6 +23,7 @@ import { Warranty } from "../models/warranty.model.js";
 import { AssetCategory } from "../models/assetcategory.model.js";
 import { AssetType } from "../models/assettype.model.js";
 import { softDeleteOne } from "../utils/softDeleteUtils.js";
+import { generateAssetTag } from "../services/assetTagGenerator.service.js";
 
 const normKey = (val) => String(val || "").trim().toLowerCase();
 
@@ -75,12 +76,21 @@ export const createAsset = asyncHandler(async (req, res) => {
   );
 
   const handler = getHandler(assetTypeName);
-  // Keep the original request body names for downstream handler code if needed
-  req.body.AssetType = assetTypeName;
+  // Keep camelCase payload names for backend processing
   req.body.assetType = assetTypeName;
-  req.body.AssetCategory = assetCategoryId;
+  req.body.AssetType = assetTypeName; // compatibility fallback for legacy handlers
   req.body.assetCategory = assetCategoryId;
-  req.body.AssetTypeId = req.body.AssetTypeId || null;
+  req.body.AssetCategory = assetCategoryId; // compatibility fallback for legacy handlers
+  req.body.assetTypeId = req.body.assetTypeId || null;
+  req.body.AssetTypeId = req.body.assetTypeId; // compatibility fallback for legacy handlers
+
+  if (req.body.assetTypeId) {
+    try {
+      req.body.assetTag = await generateAssetTag(req.body.assetTypeId);
+    } catch (err) {
+      throw new apiError(400, err.message || "Failed to generate asset tag");
+    }
+  }
 
   const { doc, message } = await handler.create(req);
   return res.status(201).json(new apiResponse(201, doc, message || "Asset created successfully"));

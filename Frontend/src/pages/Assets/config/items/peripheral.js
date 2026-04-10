@@ -13,7 +13,7 @@ export const peripheralConfigs = {
        //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetTag","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
         overrideFields: [{          name: "assetId", readOnly: true, placeholder: "Auto-generated on save", required: false
         }, {          name: "assetSubType",
           label: "Sub Type",
