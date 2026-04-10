@@ -935,6 +935,20 @@ const Users = () => {
 
           {openMenuId === row._id && (
             <div className="action-dropdown-menu">
+
+              {hasPermission("users:rows_buttons:edit") && (
+                <button
+                  className="action-menu-item"
+                  onClick={() => {
+                    const params = new URLSearchParams(window.location.search);
+                    navigate(`/users/edit/${row._id}${params.toString() ? `?${params.toString()}` : ''}`);
+                    setOpenMenuId(null);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+              
               {hasPermission("users:rows_buttons:edit_role") && (
                 <button
                   className="action-menu-item"
@@ -950,19 +964,6 @@ const Users = () => {
                   onClick={() => handleOpenAssignReporting(row)}
                 >
                   Reporting To
-                </button>
-              )}
-
-              {hasPermission("users:rows_buttons:edit") && (
-                <button
-                  className="action-menu-item"
-                  onClick={() => {
-                    const params = new URLSearchParams(window.location.search);
-                    navigate(`/users/edit/${row._id}${params.toString() ? `?${params.toString()}` : ''}`);
-                    setOpenMenuId(null);
-                  }}
-                >
-                  Edit
                 </button>
               )}
 
