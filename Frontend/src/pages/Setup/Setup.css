@@ -72,6 +72,88 @@
   margin-bottom: 12px;
 }
 
+.setup-modal-full {
+  width: 100%;
+}
+
+.setup-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.setup-role-modal .modal {
+  width: min(95vw, 46rem);
+  max-width: 46rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: visible;
+}
+
+.setup-role-modal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: none;
+  overflow: visible;
+  padding: 1rem;
+}
+
+@media (max-width: 900px) {
+  .setup-modal-grid {
+    grid-template-columns: 1fr;
+    gap: 0px;
+  }
+}
+
+@media (max-width: 700px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 0.75rem;
+    
+  }
+
+  .setup-role-modal .modal {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    max-height: none;
+    border-radius: 0.75rem;
+    
+  }
+
+  .setup-role-modal .modal-body {
+    max-height: none;
+    overflow: visible;
+    padding: 0.75rem;
+  }
+
+  .setup-role-modal .modal-footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .setup-role-modal{
+    position: absolute;
+    top: 5rem;
+  }
+}
+
+@media (max-width: 640px) {
+
+  .setup-role-modal .modal {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+    border-radius: 0.75rem;
+   
+  }
+
+  .setup-role-modal .modal-body {
+    max-height: calc(100vh - 8rem);
+  }
+
+ 
+}
+
 .setup-toggle-row {
   display: flex;
   flex-wrap: wrap;
@@ -452,6 +534,7 @@ input[type="checkbox"] {
 @media (max-width: 768px) {
   .setup-modal-grid {
     grid-template-columns: 1fr;
+    
   }
 
   .setup-header {

@@ -9,6 +9,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
 }
 
 .modal {
@@ -49,6 +50,41 @@
 .modal-xl {
   width: 90vw;
   max-width: 62.5rem;
+}
+
+.user-page-modal {
+  width: min(95vw, 100%);
+  max-width: 95vw;
+  max-height: calc(100vh - 1rem);
+  overflow: visible;
+}
+
+.user-page-modal .modal-body {
+  padding: 1rem;
+  overflow: visible;
+}
+
+@media (max-width: 700px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .user-page-modal {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    max-height: none;
+  }
+
+  .user-page-modal .modal-body {
+    padding: 0.75rem;
+  }
+
+  .user-page-modal .modal-footer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
 }
 
 .modal-header {

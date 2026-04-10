@@ -546,6 +546,8 @@ const RoleRightsTab = ({ setToast }) => {
           isOpen={roleModalOpen}
           title={editingRole ? "Edit Role Details" : "Add Role"}
           onClose={closeRoleModal}
+          size="lg"
+          className="setup-role-modal"
           footer={
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <Button variant="secondary" onClick={closeRoleModal} disabled={savingRole}>

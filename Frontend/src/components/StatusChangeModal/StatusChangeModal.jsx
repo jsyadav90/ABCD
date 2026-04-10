@@ -11,7 +11,8 @@ import "./StatusChangeModal.css";
  * @param {Function} props.onConfirm - Callback with reason when confirmed
  * @param {Function} props.onCancel - Callback when cancelled
  */
-const StatusChangeModal = ({ isOpen, entityType = 'asset', entityName, newStatus, onConfirm, onCancel }) => {
+const 
+StatusChangeModal = ({ isOpen, entityType = 'asset', entityName, newStatus, onConfirm, onCancel }) => {
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
 

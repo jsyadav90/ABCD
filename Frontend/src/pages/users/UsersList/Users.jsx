@@ -1570,8 +1570,9 @@ const Users = () => {
             onClose={handleCloseChangePasswordModal}
             title="Change Password"
             footer={<></>}
+            className="user-page-modal"
           >
-            <div style={{ padding: "2rem", minWidth: "400px" }}>
+            <div style={{ padding: "1.25rem", width: "100%", maxWidth: "100%" }}>
               <h2 style={{ marginBottom: "0.5rem", marginTop: 0 }}>
                 Change Password
               </h2>
@@ -1580,7 +1581,8 @@ const Users = () => {
                 style={{
                   marginBottom: "1.5rem",
                   display: "flex",
-                  gap: "2rem",
+                  flexWrap: "wrap",
+                  gap: "1rem",
                   fontSize: "0.875rem",
                   color: "#666",
                 }}
@@ -1696,6 +1698,7 @@ const Users = () => {
               <div
                 style={{
                   display: "flex",
+                  flexWrap: "wrap",
                   gap: "1rem",
                   justifyContent: "flex-end",
                   marginTop: "1.5rem",
@@ -1732,8 +1735,9 @@ const Users = () => {
             title="Edit User Role & Permissions"
             footer={<></>}
             size="xl"
+            className="user-page-modal"
           >
-             <div style={{ padding: "1rem", minWidth: "600px" }}>
+             <div style={{ padding: "1rem", width: "100%", maxWidth: "100%" }}>
                 <p style={{ marginBottom: "1rem" }}>User: <strong>{editRoleModal.userName}</strong></p>
 
                 {/* Tabs */}
@@ -1787,8 +1791,8 @@ const Users = () => {
                 {editRoleModal.activeTab === "otherRights" && (
                   <div>
                     {/* Search and Filter Controls */}
-                    <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem", alignItems: "center" }}>
-                      <div style={{ flex: 1 }}>
+                    <div style={{ marginBottom: "1rem", display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <Input
                           type="text"
                           placeholder="Search permissions..."
@@ -1797,7 +1801,7 @@ const Users = () => {
                           style={{ width: "100%" }}
                         />
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0, width: "100%", maxWidth: "240px" }}>
                         <Select
                           value={editRoleModal.selectedModuleKey}
                           onChange={(e) => handleModuleFilter(e.target.value)}
@@ -1805,13 +1809,13 @@ const Users = () => {
                             { value: "all", label: "All Modules" },
                             ...PERMISSION_MODULES.map(m => ({ value: m.key, label: m.label }))
                           ]}
-                          style={{ minWidth: "150px" }}
+                          style={{ width: "100%" }}
                         />
                       </div>
                     </div>
 
                     {/* Permissions Tree */}
-                    <div style={{ maxHeight: "400px", overflowY: "auto", border: "1px solid #ddd", borderRadius: "4px", padding: "1rem" }}>
+                    <div className="permissions-tree-container">
                       {filteredModules
                         .filter(module => editRoleModal.selectedModuleKey === "all" || module.key === editRoleModal.selectedModuleKey)
                         .map(module => (
@@ -1877,7 +1881,7 @@ const Users = () => {
                 )}
 
                 {/* Footer Buttons */}
-                <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
                     <Button variant="secondary" onClick={() => setEditRoleModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
                     <Button onClick={handleSubmitEditRole} disabled={editRoleModal.isSubmitting}>
                         {editRoleModal.isSubmitting ? "Saving..." : "Save"}
@@ -1900,8 +1904,9 @@ const Users = () => {
             onClose={() => setAssignReportingModal(prev => ({ ...prev, isOpen: false }))}
             title="Assign Reporting Manager"
             footer={<></>}
+            className="user-page-modal"
           >
-             <div style={{ padding: "1rem", minWidth: "400px" }}>
+             <div style={{ padding: "1rem", width: "100%", maxWidth: "100%" }}>
                 <p style={{ marginBottom: "0.5rem" }}>User: <strong>{assignReportingModal.userName}</strong></p>
                 <p style={{ fontSize: "0.875rem", color: "#666", marginBottom: "1rem" }}>Assign a manager who this user reports to.</p>
                 <div style={{ marginBottom: "1.5rem" }}>
@@ -1920,7 +1925,7 @@ const Users = () => {
                         error={assignReportingModal.error}
                     />
                 </div>
-                <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
                     <Button variant="secondary" onClick={() => setAssignReportingModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
                     <Button onClick={handleSubmitAssignReporting} disabled={assignReportingModal.isSubmitting}>
                         {assignReportingModal.isSubmitting ? "Saving..." : "Save"}
