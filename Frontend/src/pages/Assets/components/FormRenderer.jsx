@@ -42,6 +42,42 @@ const shouldShow = (field, getValue) => {
   return evaluateShowIf(field.showIf, getValue);
 };
 
+const isFieldDisabledByLogic = (fieldName, formData) => {
+  const getValue = (k) => formData?.[k];
+  const warrantyAvailable = String(formData.warrantyAvailable || "").toLowerCase();
+  const warrantyMode = String(formData.warrantyMode || "").toLowerCase();
+
+  // Disable manual warrantyEndDate when warranty mode is Duration (calculated automatically)
+  if (fieldName === "warrantyEndDate" && warrantyMode === "duration") {
+    return true;
+  }
+
+  // Disable inYear and inMonth when warranty mode is EndDate (user provides end date directly)
+  if ((fieldName === "inYear" || fieldName === "inMonth") && warrantyMode === "enddate") {
+    return true;
+  }
+
+  // Do not force-disable warrantyStartDate; allow users to edit it after auto-fill
+
+  // Disable totalAmount (always calculated, read-only)
+  if (fieldName === "totalAmount") {
+    return true;
+  }
+
+  // Disable AMC fields when warranty is active
+  if (
+    warrantyAvailable === "yes" &&
+    (fieldName === "amcAvailable" ||
+      fieldName === "amcVendor" ||
+      fieldName === "amcStartDate" ||
+      fieldName === "amcEndDate")
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
 const normalizeOptions = (options, getValue) => {
   if (!Array.isArray(options)) return [];
   const mapped = options
@@ -83,6 +119,12 @@ const Field = memo(({ def, value, onChange, onScan, error, formData, overrideOpt
   const finalOptions = overrideOptions.length > 0 ? overrideOptions : def.options;
   const selectOptions = useMemo(() => normalizeOptions(finalOptions, getValue), [finalOptions, getValue]);
 
+  // Check if field should be disabled by purchase/warranty logic
+  const isDisabledByPurchaseWarrantyLogic = useMemo(
+    () => isFieldDisabledByLogic(def.name, formData),
+    [def.name, formData]
+  );
+
   useEffect(() => {
     if (def.type !== "select") return;
     if (value == null || String(value).trim() === "") return;
@@ -98,7 +140,7 @@ const Field = memo(({ def, value, onChange, onScan, error, formData, overrideOpt
     placeholder: def.placeholder,
     required: !!def.required,
     readOnly: !!def.readOnly,
-    disabled: isFieldDisabled || !!def.disabled || (def.type === "select" && !!def.readOnly),
+    disabled: isFieldDisabled || isDisabledByPurchaseWarrantyLogic || !!def.disabled || (def.type === "select" && !!def.readOnly),
     error: error ?? def.error,
     "aria-label": def.label,
     maxLength: def.maxLength,

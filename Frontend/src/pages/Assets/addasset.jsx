@@ -7,6 +7,14 @@ import { fetchAssetCategories, fetchAssetTypesByCategory, createAsset, fetchLook
 import { fetchBranchesForDropdown } from '../../services/userApi.js';
 import { getAssetFieldConfig } from './config/assetFieldConfig.js';
 import { getSelectedBranch } from '../../utils/scope.js';
+import { 
+  calculateTotalAmount, 
+  getWarrantyStartDateFromPurchase,
+  calculateWarrantyEndDateFromDuration,
+  calculateWarrantyStatus,
+  validateWarrantyFields,
+  validatePurchaseFields
+} from './utils/warrantyCalculations.js';
 
 const normalizeTypeKey = (value) =>
   String(value || '')
@@ -278,6 +286,63 @@ const AddAsset = () => {
     }
   };
 
+  // ========== AUTO-CALCULATE TOTAL AMOUNT ==========
+  useEffect(() => {
+    const total = calculateTotalAmount(formData.purchaseCost, formData.taxAmount);
+    if (total !== null && formData.totalAmount !== total) {
+      setFormData((prev) => ({ ...prev, totalAmount: total }));
+    }
+  }, [formData.purchaseCost, formData.taxAmount]);
+
+  // ========== AUTO-FILL WARRANTY START DATE FROM PURCHASE ==========
+  useEffect(() => {
+    const warrantyStartDate = getWarrantyStartDateFromPurchase(formData);
+    if (warrantyStartDate && !formData.warrantyStartDate) {
+      setFormData((prev) => ({ ...prev, warrantyStartDate }));
+    }
+  }, [formData.assetReceivedOn, formData.invoiceDate, formData.deliveryChallanDate]);
+
+  // ========== AUTO-CALCULATE WARRANTY END DATE FOR DURATION MODE ==========
+  useEffect(() => {
+    const warrantyMode = String(formData.warrantyMode || "").toLowerCase();
+    
+    if (warrantyMode === "duration" && formData.warrantyStartDate) {
+      const warrantyEndDate = calculateWarrantyEndDateFromDuration(
+        formData.warrantyStartDate,
+        formData.inYear,
+        formData.inMonth
+      );
+      if (warrantyEndDate && formData.warrantyEndDate !== warrantyEndDate) {
+        setFormData((prev) => ({ ...prev, warrantyEndDate }));
+      }
+    }
+  }, [formData.warrantyMode, formData.warrantyStartDate, formData.inYear, formData.inMonth]);
+
+  // ========== CALCULATE WARRANTY STATUS ==========
+  useEffect(() => {
+    const warrantyStatus = calculateWarrantyStatus(formData.warrantyEndDate);
+    if (warrantyStatus && formData.warrantyStatus !== warrantyStatus) {
+      setFormData((prev) => ({ ...prev, warrantyStatus }));
+    }
+  }, [formData.warrantyEndDate]);
+
+  // ========== ENFORCE WARRANTY / AMC RULES ==========
+  useEffect(() => {
+    const warrantyAvailable = String(formData.warrantyAvailable || "").toLowerCase();
+    if (warrantyAvailable === "yes") {
+      // If warranty is active, AMC must be disabled
+      if (formData.amcAvailable !== "No") {
+        setFormData((prev) => ({
+          ...prev,
+          amcAvailable: "No",
+          amcVendor: null,
+          amcStartDate: null,
+          amcEndDate: null,
+        }));
+      }
+    }
+  }, [formData.warrantyAvailable]);
+
   // Calculate validation errors for red border display
   const calculateValidationErrors = () => {
     const validationErrors = {};
@@ -292,8 +357,22 @@ const AddAsset = () => {
         }
       });
     });
+
+    // Add purchase-specific validations
+    const purchaseErrors = validatePurchaseFields(formData);
+    purchaseErrors.forEach((msg) => {
+      validationErrors[`purchase_${msg}`] = msg;
+    });
+
+    // Add warranty-specific validations
+    const warrantyErrors = validateWarrantyFields(formData);
+    warrantyErrors.forEach((msg) => {
+      validationErrors[`warranty_${msg}`] = msg;
+    });
+
     return validationErrors;
   };
+
 
   const handleItemSelect = async (e) => {
     const selectedId = e.target.value;
@@ -366,6 +445,9 @@ const AddAsset = () => {
         branchId: filteredFormData.branchId || filteredFormData.branch, // Include branch ObjectId
         ...filteredFormData,
       };
+
+      // Ensure totalAmount is derived from purchaseCost + taxAmount at submit time
+      payload.totalAmount = calculateTotalAmount(payload.purchaseCost, payload.taxAmount);
 
       // Log payload to console for debugging
       // console.log('[SEND] Sending payload to backend:', payload);

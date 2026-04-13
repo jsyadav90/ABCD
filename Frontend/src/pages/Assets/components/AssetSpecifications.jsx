@@ -40,6 +40,23 @@ const AssetSpecifications = ({ asset }) => {
   const config = ASSET_SPECS_CONFIG[assetType];
 
   // Format field value based on format type
+  const parseDateOnly = (value) => {
+    if (!value) return null;
+    const str = String(value).trim();
+    const isoMatch = str.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/);
+    if (isoMatch) {
+      const parsed = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+      return Number.isFinite(parsed.getTime()) ? parsed : null;
+    }
+    const dmyMatch = str.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+    if (dmyMatch) {
+      const parsed = new Date(Number(dmyMatch[3]), Number(dmyMatch[2]) - 1, Number(dmyMatch[1]));
+      return Number.isFinite(parsed.getTime()) ? parsed : null;
+    }
+    const parsed = new Date(str);
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
+  };
+
   const formatFieldValue = (value, format, unit = "") => {
     if (value === null || value === undefined) return null;
 
@@ -50,8 +67,10 @@ const AssetSpecifications = ({ asset }) => {
         return `${value}${unit ? ` ${unit}` : ""}`;
       case "boolean":
         return String(value).toLowerCase() === "true" || value === true ? "Yes" : "No";
-      case "date":
-        return new Date(value).toLocaleDateString("en-IN");
+      case "date": {
+        const parsed = parseDateOnly(value);
+        return parsed ? parsed.toLocaleDateString("en-IN") : String(value);
+      }
       case "list":
         return value; // Will be handled separately
       default:

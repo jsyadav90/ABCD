@@ -69,9 +69,28 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
     return isActive ? "success" : "danger";
   };
 
+  const parseDateOnly = (value) => {
+    if (!value) return null;
+    const str = String(value).trim();
+    const isoMatch = str.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/);
+    if (isoMatch) {
+      const parsed = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+      return Number.isFinite(parsed.getTime()) ? parsed : null;
+    }
+    const dmyMatch = str.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+    if (dmyMatch) {
+      const parsed = new Date(Number(dmyMatch[3]), Number(dmyMatch[2]) - 1, Number(dmyMatch[1]));
+      return Number.isFinite(parsed.getTime()) ? parsed : null;
+    }
+    const parsed = new Date(str);
+    return Number.isFinite(parsed.getTime()) ? parsed : null;
+  };
+
   const formatDate = (date) => {
     if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-IN", {
+    const parsed = parseDateOnly(date);
+    if (!parsed) return "N/A";
+    return parsed.toLocaleDateString("en-IN", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -96,10 +115,12 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
     // Priority 1: Check if under AMC
     if (warranty.amcAvailable === "Yes" || warranty.amcAvailable === "yes") {
       if (warranty.amcEndDate) {
-        const amcEndDate = new Date(warranty.amcEndDate);
-        amcEndDate.setHours(0, 0, 0, 0);
-        if (amcEndDate >= today) {
-          return "Under AMC";
+        const amcEndDate = parseDateOnly(warranty.amcEndDate);
+        if (amcEndDate) {
+          amcEndDate.setHours(0, 0, 0, 0);
+          if (amcEndDate >= today) {
+            return "Under AMC";
+          }
         }
       }
     }
@@ -107,12 +128,14 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
     // Priority 2: Check if under warranty
     if (warranty.warrantyAvailable === "Yes" || warranty.warrantyAvailable === "yes") {
       if (warranty.warrantyEndDate) {
-        const warrantyEndDate = new Date(warranty.warrantyEndDate);
-        warrantyEndDate.setHours(0, 0, 0, 0);
-        if (warrantyEndDate >= today) {
-          return "Under Warranty";
-        } else {
-          return "Warranty Expired";
+        const warrantyEndDate = parseDateOnly(warranty.warrantyEndDate);
+        if (warrantyEndDate) {
+          warrantyEndDate.setHours(0, 0, 0, 0);
+          if (warrantyEndDate >= today) {
+            return "Under Warranty";
+          } else {
+            return "Warranty Expired";
+          }
         }
       }
       // If no end date but warranty is available, assume it's under warranty
@@ -121,10 +144,11 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
     
     // If warranty was available but now expired
     if (warranty.warrantyAvailable === "No" && warranty.warrantyEndDate) {
-      const warrantyEndDate = new Date(warranty.warrantyEndDate);
-      warrantyEndDate.setHours(0, 0, 0, 0);
-      if (warrantyEndDate < today) {
-        return "Warranty Expired";
+      const warrantyEndDate = parseDateOnly(warranty.warrantyEndDate);
+      if (warrantyEndDate) {
+        warrantyEndDate.setHours(0, 0, 0, 0);
+        if (warrantyEndDate < today) {
+          return "Warranty Expired";
       }
     }
     

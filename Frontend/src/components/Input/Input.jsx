@@ -36,19 +36,20 @@ const Input = ({
   const parseDate = (val) => {
     if (!val) return null;
     if (val instanceof Date && !isNaN(val)) return val;
-    const s = String(val);
-    // Try YYYY-MM-DD
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (m) {
-      const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    const s = String(val).trim();
+
+    const isoMatch = s.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/);
+    if (isoMatch) {
+      const d = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
       return isNaN(d) ? null : d;
     }
-    // Try DD-MM-YYYY
-    const m2 = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-    if (m2) {
-      const d = new Date(Number(m2[3]), Number(m2[2]) - 1, Number(m2[1]));
+
+    const dmyMatch = s.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+    if (dmyMatch) {
+      const d = new Date(Number(dmyMatch[3]), Number(dmyMatch[2]) - 1, Number(dmyMatch[1]));
       return isNaN(d) ? null : d;
     }
+
     const d = new Date(s);
     return isNaN(d) ? null : d;
   };
@@ -211,7 +212,7 @@ const Input = ({
         yyyy = digits.slice(0, 4);
         mm = digits.slice(4, 6);
         dd = digits.slice(6, 8);
-      } else if (dateFormat.includes('MM-') || dateFormat.includes('MM/')) {
+      } else if (dateFormat.startsWith('MM')) {
         // MM-DD-YYYY or MM/DD/YYYY format: user enters MMDDYYYY
         mm = digits.slice(0, 2);
         dd = digits.slice(2, 4);
@@ -267,6 +268,17 @@ const Input = ({
   };
 
   const handleDateInputBlur = () => {
+    const active = document.activeElement;
+    // Ignore blur if the user is moving focus inside the same date widget or calendar popover.
+    if (
+      openCalendar &&
+      active &&
+      ((popRef.current && popRef.current.contains(active)) ||
+        (inputRef.current && inputRef.current.contains(active)))
+    ) {
+      return;
+    }
+
     if (!tryEmitISOIfComplete(dateText)) {
       // If invalid/incomplete, keep text but do not emit change
       // Optionally, could clear on invalid; leaving as-is for UX
@@ -422,6 +434,7 @@ const Input = ({
                     key={idx}
                     type="button"
                     className={cls}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelectDate(d)}
                   >
                     {d.getDate()}
@@ -433,6 +446,7 @@ const Input = ({
               <button
                 type="button"
                 className="date-today-btn"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelectDate(new Date())}
               >
                 Today

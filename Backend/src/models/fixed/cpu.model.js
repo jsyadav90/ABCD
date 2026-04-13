@@ -23,7 +23,6 @@ const assetSchema = new mongoose.Schema(
     assetId: { type: String, trim: true, default: null },
     assetTag: { type: String, trim: true, default: null },
     // barcode: { type: String, trim: true, default: null },
-    assetSubType: { type: String, trim: true, default: null },
     manufacturer: { type: String, trim: true, default: null },
     model: { type: String, trim: true, default: null },
     modelNumber: { type: String, trim: true, default: null },

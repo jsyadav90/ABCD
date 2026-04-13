@@ -20,9 +20,8 @@ const warrantySchema = new mongoose.Schema(
     supportPhone: { type: String, trim: true, default: null },
     supportEmail: { type: String, trim: true, default: null },
 
-    // Calculated warranty till date and status
-    warrantyTillDate: { type: Date, default: null }, // Calculated field based on invoice Date and warrantyMode, inYear, inMonth, warrantyStartDate, warrantyEndDate and current date. 
-    warrantyStatus: { type: String, enum: ["Under Warranty", "Expired"], default: null }, // Calculated field based on warrantyTillDate and current date.
+    // Calculated warranty till date
+    warrantyTillDate: { type: Date, default: null }, // Calculated field based on warrantyEndDate and warranty mode.
 
     amcAvailable: { type: String, trim: true, default: "No" }, // Applicable if warrantyAvailable is "No", e.g. Yes or No
     amcVendor: { type: String, trim: true, default: null },  // Applicable if amcAvailable is "Yes" 

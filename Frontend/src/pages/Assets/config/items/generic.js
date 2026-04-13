@@ -28,68 +28,154 @@ export const genericConfig = {
       ],
     },
 
+    // //! Purchase Information
+    // {
+    //   sectionTitle: "Purchase Information",
+    //   fields: [
+    //     { name: "purchaseType", label: "Purchase Type", placeholder: "Select Purchase Type", type: "select", options: ["PO", "Direct"] },
+        
+    //     { name: "poNumber", label: "PO Number", placeholder: "Enter PO Number", type: "text", maxLength: 80, showIf: { purchaseType: "PO" } },
+    //     { name: "poDate", label: "PO Date", placeholder: "Select PO Date", type: "date", showIf: { purchaseType: "PO" } },
+        
+    //     {name:"receiptNumber", label: "Receipt Number", placeholder: "Enter Receipt Number", type: "text", maxLength: 80, showIf: { purchaseType: "Direct" } },
+    //     {name: "receiptDate", label: "Receipt Date", placeholder: "Select Receipt Date", type: "date", showIf: { purchaseType: "Direct" } },
+
+    //     { name: "vendorId", label: "Vendor", placeholder: "Select Vendor", type: "select", options: common.vendors },
+        
+        
+    //     { name: "assetReceivedOn", label: "Asset Received On", placeholder: "Select Asset Received On", type: "radio", options: [{ name: "Invoice", value: "invoice" }, { name: "Challan", value: "Challan" }] },
+    //     { name: "invoiceNumber", label: "Invoice Number", placeholder: "Enter Invoice Number", type: "text", maxLength: 80, showIf: { assetReceivedOn: "invoice" } },
+    //     { name: "invoiceDate", label: "Invoice Date", placeholder: "Select Invoice Date", type: "date", showIf: { assetReceivedOn: "invoice" } },
+    //     { name: "deliveryChallanNumber", label: "Delivery Challan Number", placeholder: "Enter Delivery Challan Number", type: "text", showIf: { assetReceivedOn: "Challan" } },
+    //     { name: "deliveryChallanDate", label: "Challan Date", placeholder: "Select Challan Date", type: "date", showIf: { assetReceivedOn: "Challan" } },
+        
+    //     { name: "purchaseDate", label: "Purchase Date", placeholder: "Select Purchase Date", type: "date", },
+    //     { name: "purchaseCost", label: "Purchase Cost", placeholder: "Enter Purchase Cost", type: "number", min: 0, max: 50000000 },
+    //     { name: "taxAmount", label: "Tax Amount", placeholder: "Enter Tax Amount", type: "number" },
+    //     { name: "totalAmount", label: "Total Amount", placeholder: "Enter Total Amount", type: "number" },
+    //     { name: "currency", label: "Currency", placeholder: "Select Currency", type: "select", options: ["INR", "USD", "EUR"] },
+
+    //     { name: "deliveryDate", label: "Delivery Date", placeholder: "Select Delivery Date", type: "date" },
+    //     { name: "receivedBy", label: "Received By", placeholder: "Enter Received By", type: "text" },
+    //   ],
+    // },
+
+    // //! Warranty Information
+    // {
+    //   sectionTitle: "Warranty Information",
+    //   fields: [
+    //     { name: "warrantyAvailable", label: "Warranty Available", placeholder: "Select Warranty Available", type: "select", options: ["Yes", "No"], defaultValue: "No" },
+
+    //     { name: "warrantyMode", label: "Warranty Mode", placeholder: "Select Warranty Mode", type: "select", options: ["Duration", "EndDate"], showIf: { warrantyAvailable: "Yes" } },
+
+    //     { name: "inYear", label: "Year", placeholder: "Enter Year", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" } },
+    //     { name: "inMonth", label: "Month", placeholder: "Enter Month", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" }, defaultValue: 0 },
+        
+    //     { name: "warrantyStartDate", label: "Warranty Start Date", placeholder: "Select Warranty Start Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
+    //     { name: "warrantyEndDate", label: "Warranty End Date", placeholder: "Select Warranty End Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
+
+    //     { name: "warrantyProvider", label: "Warranty Provider", placeholder: "Select Warranty Provider", type: "select", options: ["Manufacturer", "Vendor", "Extended"], showIf: { warrantyAvailable: "Yes" } },
+
+    //     { name: "supportVendor", label: "Support Vendor", placeholder: "Enter Support Vendor", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+    //     { name: "supportPhone", label: "Support Phone", placeholder: "Enter Support Phone", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+    //     { name: "supportEmail", label: "Support Email", placeholder: "Enter Support Email", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+
+    //     { name: "warrantyTillDate", label: "Warranty Till Date", placeholder: "Auto calculated", type: "date", readOnly: true, showIf: { warrantyAvailable: "Yes" } },
+    //     { name: "warrantyStatus", label: "Warranty Status", placeholder: "Auto calculated", type: "text", readOnly: true, showIf: { warrantyAvailable: "Yes" } },
+
+    //     { name: "amcAvailable", label: "AMC Available", placeholder: "Select AMC Available", defaultValue: "No", type: "select", options: ["Yes", "No"], showIf: { warrantyAvailable: "No" } },
+
+    //     { name: "amcVendor", label: "AMC Vendor", placeholder: "Enter AMC Vendor", type: "text", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+    //     { name: "amcStartDate", label: "AMC Start Date", placeholder: "Select AMC Start Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+    //     { name: "amcEndDate", label: "AMC End Date", placeholder: "Select AMC End Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+    //   ],
+    // },
+
+
     //! Purchase Information
-    {
-      sectionTitle: "Purchase Information",
-      fields: [
-        { name: "purchaseType", label: "Purchase Type", placeholder: "Select Purchase Type", type: "select", options: ["PO", "Direct"] },
-        
-        { name: "poNumber", label: "PO Number", placeholder: "Enter PO Number", type: "text", maxLength: 80, showIf: { purchaseType: "PO" } },
-        { name: "poDate", label: "PO Date", placeholder: "Select PO Date", type: "date", showIf: { purchaseType: "PO" } },
-        
-        {name:"receiptNumber", label: "Receipt Number", placeholder: "Enter Receipt Number", type: "text", maxLength: 80, showIf: { purchaseType: "Direct" } },
-        {name: "receiptDate", label: "Receipt Date", placeholder: "Select Receipt Date", type: "date", showIf: { purchaseType: "Direct" } },
+{
+  sectionTitle: "Purchase Information",
+  fields: [
+    { name: "purchaseType", label: "Purchase Type", placeholder: "Select Purchase Type", type: "select", options: ["PO", "Direct"] },
 
-        { name: "vendorId", label: "Vendor", placeholder: "Select Vendor", type: "select", options: common.vendors },
-        
-        
-        { name: "assetReceivedOn", label: "Asset Received On", placeholder: "Select Asset Received On", type: "radio", options: [{ name: "Invoice", value: "invoice" }, { name: "Challan", value: "Challan" }] },
-        { name: "invoiceNumber", label: "Invoice Number", placeholder: "Enter Invoice Number", type: "text", maxLength: 80, showIf: { assetReceivedOn: "invoice" } },
-        { name: "invoiceDate", label: "Invoice Date", placeholder: "Select Invoice Date", type: "date", showIf: { assetReceivedOn: "invoice" } },
-        { name: "deliveryChallanNumber", label: "Delivery Challan Number", placeholder: "Enter Delivery Challan Number", type: "text", showIf: { assetReceivedOn: "Challan" } },
-        { name: "deliveryChallanDate", label: "Challan Date", placeholder: "Select Challan Date", type: "date", showIf: { assetReceivedOn: "Challan" } },
-        
-        { name: "purchaseDate", label: "Purchase Date", placeholder: "Select Purchase Date", type: "date", },
-        { name: "purchaseCost", label: "Purchase Cost", placeholder: "Enter Purchase Cost", type: "number", min: 0, max: 50000000 },
-        { name: "taxAmount", label: "Tax Amount", placeholder: "Enter Tax Amount", type: "number" },
-        { name: "totalAmount", label: "Total Amount", placeholder: "Enter Total Amount", type: "number" },
-        { name: "currency", label: "Currency", placeholder: "Select Currency", type: "select", options: ["INR", "USD", "EUR"] },
+    { name: "poNumber", label: "PO Number", placeholder: "Enter PO Number", type: "text", maxLength: 80, showIf: { purchaseType: "PO" } },
+    { name: "poDate", label: "PO Date", placeholder: "Select PO Date", type: "date", showIf: { purchaseType: "PO" } },
 
-        { name: "deliveryDate", label: "Delivery Date", placeholder: "Select Delivery Date", type: "date" },
-        { name: "receivedBy", label: "Received By", placeholder: "Enter Received By", type: "text" },
-      ],
+    { name: "receiptNumber", label: "Receipt Number", placeholder: "Enter Receipt Number", type: "text", maxLength: 80, showIf: { purchaseType: "Direct" } },
+    { name: "receiptDate", label: "Receipt Date", placeholder: "Select Receipt Date", type: "date", showIf: { purchaseType: "Direct" } },
+
+    { name: "vendorId", label: "Vendor", placeholder: "Select Vendor", type: "select", options: common.vendors },
+
+    { 
+      name: "assetReceivedOn", 
+      label: "Asset Received On", 
+      placeholder: "Select Asset Received On", 
+      type: "radio", 
+      options: [
+        { name: "Invoice", value: "invoice" }, 
+        { name: "Challan", value: "challan" }
+      ] 
     },
 
-    //! Warranty Information
-    {
-      sectionTitle: "Warranty Information",
-      fields: [
-        { name: "warrantyAvailable", label: "Warranty Available", placeholder: "Select Warranty Available", type: "select", options: ["Yes", "No"], defaultValue: "No" },
+    { name: "invoiceNumber", label: "Invoice Number", placeholder: "Enter Invoice Number", type: "text", maxLength: 80, showIf: { assetReceivedOn: "invoice" } },
+    { name: "invoiceDate", label: "Invoice Date", placeholder: "Select Invoice Date", type: "date", showIf: { assetReceivedOn: "invoice" } },
 
-        { name: "warrantyMode", label: "Warranty Mode", placeholder: "Select Warranty Mode", type: "select", options: ["Duration", "EndDate"], showIf: { warrantyAvailable: "Yes" } },
+    { name: "deliveryChallanNumber", label: "Delivery Challan Number", placeholder: "Enter Delivery Challan Number", type: "text", showIf: { assetReceivedOn: "challan" } },
+    { name: "deliveryChallanDate", label: "Challan Date", placeholder: "Select Challan Date", type: "date", showIf: { assetReceivedOn: "challan" } },
 
-        { name: "inYear", label: "Year", placeholder: "Enter Year", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" } },
-        { name: "inMonth", label: "Month", placeholder: "Enter Month", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" }, defaultValue: 0 },
-        
-        { name: "warrantyStartDate", label: "Warranty Start Date", placeholder: "Select Warranty Start Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
-        { name: "warrantyEndDate", label: "Warranty End Date", placeholder: "Select Warranty End Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
+    { name: "purchaseCost", label: "Purchase Cost", placeholder: "Enter Purchase Cost", type: "number", min: 0, max: 50000000 },
+    { name: "taxAmount", label: "Tax Amount", placeholder: "Enter Tax Amount", type: "number", defaultValue: 0 },
 
-        { name: "warrantyProvider", label: "Warranty Provider", placeholder: "Select Warranty Provider", type: "select", options: ["Manufacturer", "Vendor", "Extended"], showIf: { warrantyAvailable: "Yes" } },
-
-        { name: "supportVendor", label: "Support Vendor", placeholder: "Enter Support Vendor", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
-        { name: "supportPhone", label: "Support Phone", placeholder: "Enter Support Phone", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
-        { name: "supportEmail", label: "Support Email", placeholder: "Enter Support Email", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
-
-        { name: "warrantyTillDate", label: "Warranty Till Date", placeholder: "Auto calculated", type: "date", readOnly: true, showIf: { warrantyAvailable: "Yes" } },
-        { name: "warrantyStatus", label: "Warranty Status", placeholder: "Auto calculated", type: "text", readOnly: true, showIf: { warrantyAvailable: "Yes" } },
-
-        { name: "amcAvailable", label: "AMC Available", placeholder: "Select AMC Available", defaultValue: "No", type: "select", options: ["Yes", "No"], showIf: { warrantyAvailable: "No" } },
-
-        { name: "amcVendor", label: "AMC Vendor", placeholder: "Enter AMC Vendor", type: "text", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
-        { name: "amcStartDate", label: "AMC Start Date", placeholder: "Select AMC Start Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
-        { name: "amcEndDate", label: "AMC End Date", placeholder: "Select AMC End Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
-      ],
+    { 
+      name: "totalAmount", 
+      label: "Total Amount", 
+      placeholder: "Auto calculated", 
+      type: "number", 
+      readOnly: true 
     },
+
+    { name: "currency", label: "Currency", placeholder: "Select Currency", type: "select", options: ["INR", "USD", "EUR"], defaultValue: "INR" },
+
+    { name: "deliveryDate", label: "Delivery Date", placeholder: "Select Delivery Date", type: "date" },
+    { name: "receivedBy", label: "Received By", placeholder: "Enter Received By", type: "text" },
+  ],
+},
+
+//! Warranty Information
+{
+  sectionTitle: "Warranty Information",
+  fields: [
+    { name: "warrantyAvailable", label: "Warranty Available", type: "select", options: ["Yes", "No"], defaultValue: "No" },
+
+    { name: "warrantyMode", label: "Warranty Mode", type: "select", options: ["Duration", "EndDate"], showIf: { warrantyAvailable: "Yes" } },
+
+    // 👉 AUTO FILLED (based on invoice/challan date)
+    { 
+      name: "warrantyStartDate", 
+      label: "Warranty Start Date", 
+      type: "date", 
+      readOnly: true, 
+      showIf: { warrantyAvailable: "Yes" } 
+    },
+
+    { name: "inYear", label: "Year", placeholder: "Enter Year", type: "number", showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" } },
+    { name: "inMonth", label: "Month", placeholder: "Enter Month", type: "number", defaultValue: 0, showIf: { warrantyAvailable: "Yes", warrantyMode: "Duration" } },
+
+    { name: "warrantyEndDate", label: "Warranty End Date", type: "date", showIf: { warrantyAvailable: "Yes", warrantyMode: "EndDate" } },
+
+    { name: "warrantyProvider", label: "Warranty Provider", type: "select", options: ["Manufacturer", "Vendor", "Extended"], showIf: { warrantyAvailable: "Yes" } },
+
+    { name: "supportVendor", label: "Support Vendor", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+    { name: "supportPhone", label: "Support Phone", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+    { name: "supportEmail", label: "Support Email", type: "text", showIf: { warrantyAvailable: "Yes", warrantyProvider: "Extended" } },
+
+    { name: "amcAvailable", label: "AMC Available", type: "select", options: ["Yes", "No"], defaultValue: "No", showIf: { warrantyAvailable: "No" } },
+
+    { name: "amcVendor", label: "AMC Vendor", type: "text", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+    { name: "amcStartDate", label: "AMC Start Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+    { name: "amcEndDate", label: "AMC End Date", type: "date", showIf: { warrantyAvailable: "No", amcAvailable: "Yes" } },
+  ],
+},
 
     //! Asset State
     {
