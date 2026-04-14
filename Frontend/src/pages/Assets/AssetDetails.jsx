@@ -149,6 +149,7 @@ import { toCapitalizedCase } from "../../utils/string.jsx";
         warrantyEndDate.setHours(0, 0, 0, 0);
         if (warrantyEndDate < today) {
           return "Warranty Expired";
+        }
       }
     }
     

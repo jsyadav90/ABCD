@@ -10,19 +10,54 @@ import { Warranty } from "../../../models/warranty.model.js";
 import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit } from "../../../utils/assetUtils.js";
 import { generateAssetId } from "../../../services/assetIdGenerator.service.js";
 
+// Helper function to extract table data from indexed form fields
+const extractTableData = (body, fieldNames, maxRows = 10) => {
+  const rows = [];
+  for (let i = 0; i < maxRows; i++) {
+    const row = {};
+    let hasData = false;
+    fieldNames.forEach(fieldName => {
+      const indexedField = `${fieldName}_${i}`;
+      if (body[indexedField] !== undefined && body[indexedField] !== null && body[indexedField] !== '') {
+        row[fieldName] = body[indexedField];
+        hasData = true;
+      }
+    });
+    if (hasData) {
+      rows.push(row);
+    }
+  }
+  return rows;
+};
+
+// Helper to map frontend field names to schema field names
+const mapNetworkFields = (networkDetails) => {
+  return networkDetails.map(row => {
+    const mapped = { ...row };
+    // No mapping needed as schema matches frontend field names
+    return mapped;
+  });
+};
+
 const create = async (req) => {
   const body = req.body || {};
   const AssetType = norm(body.AssetType).toLowerCase();
   const AssetCategory = body.AssetCategory; // Now it's ObjectId, no need to normalize to string
   
-  // Extract tables from payload prepared by AddItem.jsx
-  const memoryModules = body.memory?.ramModules || [];
-  const storageDevices = body.storage?.storageDevices || [];
+  // Extract tables from indexed form fields (Memory section)
+  const memoryFieldNames = ['ramManufacturer', 'ramModelNumber', 'ramSerialNumber', 'ramCapacityGB', 'ramType', 'ramSpeedMHz', 'ramFormFactor', 'ramSlot', 'ramChannel'];
+  const memoryModules = extractTableData(body, memoryFieldNames);
   
-  // Extract Network Details from sections if present (since it's a table in frontend)
-  const sections = Array.isArray(body.sections) ? body.sections : [];
-  const networkSection = sections.find(s => norm(s.name).toLowerCase() === "network details" && s.kind === "rows");
-  const networkDetails = networkSection?.rows || [];
+  // Extract tables from indexed form fields (Storage section)
+  const storageFieldNames = ['driveManufacturer', 'driveModelNumber', 'driveSerial', 'driveCapacityGB', 'driveType', 'driveInterfaceSpeed', 'driveSlot', 'raidConfigured', 'encryptionEnabled'];
+  const storageDevices = extractTableData(body, storageFieldNames);
+  
+  // Extract Network Details from indexed form fields
+  const networkFieldNames = ['nicType', 'dhcpEnabled', 'dhcpServer', 'ipv4Address', 'subnet', 'defaultGateway', 'dnsHostname', 'macAddress', 'ipv6Address', 'switchPort', 'linkSpeedMbps', 'wifiSSID', 'wifiSecurity', 'wifiBand'];
+  let networkDetails = extractTableData(body, networkFieldNames);
+  
+  // Map frontend field names to schema field names
+  networkDetails = mapNetworkFields(networkDetails);
 
   // Form se branchId map karo
   const branchId = extractBranchIdFromBody(body);
@@ -97,6 +132,16 @@ const create = async (req) => {
   delete fixedPayload.memoryModules;
   delete fixedPayload.storageDevices;
   delete fixedPayload.networkDetails;
+  
+  // Remove indexed table fields
+  [...memoryFieldNames, ...storageFieldNames, ...networkFieldNames].forEach(fieldName => {
+    // Remove all indexed versions of this field
+    Object.keys(fixedPayload).forEach(key => {
+      if (key.startsWith(`${fieldName}_`)) {
+        delete fixedPayload[key];
+      }
+    });
+  });
 
   // Purchase & Warranty field names to extract
   const purchaseFields = [

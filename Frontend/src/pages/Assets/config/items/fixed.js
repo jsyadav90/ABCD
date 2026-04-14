@@ -18,7 +18,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetSubType","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetSubType","modelNumber", "assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -185,7 +185,7 @@ export const fixedConfigs = {
        //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetSubType","modelNumber",  "assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -261,7 +261,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetSubType","assetName","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetSubType","assetName","modelNumber",  "assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),
@@ -460,7 +460,7 @@ export const fixedConfigs = {
       //! Basic Information
       fromGeneric("Basic Information", {
         // Example: hide description field coming from generic
-        omitFields: ["assetDescription", "barcode","assetName","assetCategory","assetType","brand","assetCondition",],
+        omitFields: ["assetDescription", "barcode","assetName","assetSubType","modelNumber",  "assetCategory","assetType","brand","assetCondition",],
         // overrideFields: [{},{},{}  ],
         // addFields: [{},{},{}],
       }),

@@ -18,7 +18,7 @@
 import React, { useState } from "react";
 import Input from "../../../components/Input/Input.jsx";
 import Textarea from "../../../components/Textarea/Textarea.jsx";
-import { ASSET_SPECS_CONFIG, LIST_FORMATTERS, getNestedValue, hasFieldData } from "../config/assetSpecsConfig.js";
+import { ASSET_SPECS_CONFIG, LIST_FORMATTERS, evaluateShowIf, getNestedValue, hasFieldData } from "../config/assetSpecsConfig.js";
 import "./AssetSpecifications.css";
 
 const AssetSpecifications = ({ asset }) => {
@@ -62,11 +62,17 @@ const AssetSpecifications = ({ asset }) => {
 
     switch (format) {
       case "text":
-        return String(value);
+        return `${String(value)}${unit ? ` ${unit}` : ""}`;
       case "number":
         return `${value}${unit ? ` ${unit}` : ""}`;
-      case "boolean":
-        return String(value).toLowerCase() === "true" || value === true ? "Yes" : "No";
+      case "boolean": {
+        const normalized = String(value).trim().toLowerCase();
+        const truthy = ["true", "yes", "1", "y", "on"];
+        const falsy = ["false", "no", "0", "n", "off"];
+        if (truthy.includes(normalized)) return "Yes";
+        if (falsy.includes(normalized)) return "No";
+        return String(value);
+      }
       case "date": {
         const parsed = parseDateOnly(value);
         return parsed ? parsed.toLocaleDateString("en-IN") : String(value);
@@ -78,10 +84,18 @@ const AssetSpecifications = ({ asset }) => {
     }
   };
 
+  const shouldShowField = (field) => {
+    if (!field?.showIf) return true;
+    return evaluateShowIf(field.showIf, asset);
+  };
+
+  const shouldShowSection = (section) => {
+    if (!section?.showIf) return true;
+    return evaluateShowIf(section.showIf, asset);
+  };
+
   // Render a field item using Input component
   const renderFieldItem = (field) => {
-    if (!hasFieldData(asset, field.key)) return null;
-
     const value = getNestedValue(asset, field.key);
 
     if (field.format === "list" && Array.isArray(value) && value.length > 0) {
@@ -102,13 +116,13 @@ const AssetSpecifications = ({ asset }) => {
     }
 
     const displayValue = formatFieldValue(value, field.format, field.unit);
-    if (!displayValue) return null;
+    const finalValue = displayValue || "N/A";
 
     return (
       <div key={field.key} className="spec-item">
         <label>{field.label}</label>
-        <div className="spec-value" title={displayValue}>
-          {displayValue}
+        <div className="spec-value" title={finalValue}>
+          {finalValue}
         </div>
       </div>
     );
@@ -116,14 +130,15 @@ const AssetSpecifications = ({ asset }) => {
 
   // Render a section
   const renderSection = (section) => {
-    const hasFields = section.fields.some((field) => hasFieldData(asset, field.key));
-    if (!hasFields) return null;
+    if (!shouldShowSection(section)) return null;
+    const visibleFields = (section.fields || []).filter(shouldShowField);
+    if (visibleFields.length === 0) return null;
 
     return (
       <div key={section.title} className="spec-section">
         <h4>{section.title}</h4>
         <div className="spec-grid">
-          {section.fields.map((field) => renderFieldItem(field))}
+          {visibleFields.map((field) => renderFieldItem(field))}
         </div>
       </div>
     );
@@ -144,18 +159,8 @@ const AssetSpecifications = ({ asset }) => {
     }
 
     const sections = config.sections.map((section) => renderSection(section));
-    const validSections = sections.filter((s) => s !== null);
 
-    if (validSections.length === 0) {
-      return (
-        <div className="no-specs">
-          <span className="material-icons">info</span>
-          <p>No specifications available for this {assetType}</p>
-        </div>
-      );
-    }
-
-    return validSections;
+    return sections;
   };
 
   return (

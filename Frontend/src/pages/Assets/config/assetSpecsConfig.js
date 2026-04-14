@@ -1,52 +1,3 @@
-/**
- * Asset Specifications Configuration
- * 
- * EASY TO USE GUIDE:
- * To add specifications for a new asset type, just add a new object following this pattern:
- * 
- * ASSET_TYPE_NAME: {
- *   icon: "material_icon_name",
- *   sections: [
- *     {
- *       title: "Section Name",
- *       fields: [
- *         { key: "fieldName", label: "Display Label", unit: "optional unit", format: "text/number/boolean" },
- *       ]
- *     }
- *   ]
- * }
- * 
- * FORMAT TYPES:
- * - "text" : Shows as plain text
- * - "number" : Shows numbers with optional unit (e.g., "2 GB")
- * - "boolean" : Shows as Yes/No
- * - "list" : Shows array items in a nice list
- * - "date" : Formats date nicely
- * 
- * EXAMPLE for adding PRINTER specs:
- * 
- * PRINTER: {
- *   icon: "print",
- *   sections: [
- *     {
- *       title: "Basic Info",
- *       fields: [
- *         { key: "manufacturer", label: "Manufacturer", format: "text" },
- *         { key: "model", label: "Model", format: "text" },
- *       ]
- *     },
- *     {
- *       title: "Print Specifications",
- *       fields: [
- *         { key: "colorPrinting", label: "Color Printing", format: "boolean" },
- *         { key: "maxPrintSpeedPPM", label: "Print Speed", unit: "PPM", format: "number" },
- *         { key: "maxPaperWidth", label: "Max Paper Width", unit: "mm", format: "number" },
- *       ]
- *     }
- *   ]
- * }
- */
-
 export const ASSET_SPECS_CONFIG = {
   // ======================== CPU ========================
   CPU: {
@@ -80,7 +31,7 @@ export const ASSET_SPECS_CONFIG = {
       {
         title: "Graphics",
         fields: [
-          { key: "gpu", label: "GPU Model", format: "text" },
+          { key: "gpuModelNumber", label: "GPU Model", format: "text" },
           { key: "gpuCapacityGB", label: "GPU Memory", unit: "GB", format: "number" },
         ]
       },
@@ -158,10 +109,17 @@ export const ASSET_SPECS_CONFIG = {
         ]
       },
       {
-        title: "Memory & Storage",
+        title: "Memory",
         fields: [
-          { key: "memory.totalCapacityGB", label: "RAM", unit: "GB", format: "number" },
-          { key: "storage.totalCapacityGB", label: "Storage", unit: "GB", format: "number" },
+          { key: "memory.totalCapacityGB", label: "Total RAM", unit: "GB", format: "number" },
+          { key: "memory.modules", label: "Installed RAM Modules", format: "list", listFormat: "ramModule" },
+        ]
+      },
+      {
+        title: "Storage",
+        fields: [
+          { key: "storage.totalCapacityGB", label: "Total Storage", unit: "GB", format: "number" },
+          { key: "storage.devices", label: "Installed Drives", format: "list", listFormat: "storageDrive" },
         ]
       },
       {
@@ -206,10 +164,10 @@ export const ASSET_SPECS_CONFIG = {
       {
         title: "Camera Specifications",
         fields: [
-          { key: "cameraType", label: "Camera Type", format: "text" },
+          { key: "assetSubType", label: "Camera Type", format: "text" },
           { key: "resolution", label: "Resolution", format: "text" },
           { key: "frameRate", label: "Frame Rate", unit: "FPS", format: "number" },
-          { key: "sensorType", label: "Sensor Type", format: "text" },
+          // { key: "sensorType", label: "Sensor Type", format: "text" },
           { key: "fieldOfView", label: "Field of View", unit: "°", format: "number" },
           { key: "autoFocus", label: "Auto Focus", format: "boolean" },
         ]
@@ -218,16 +176,16 @@ export const ASSET_SPECS_CONFIG = {
         title: "Audio Features",
         fields: [
           { key: "builtInMicrophone", label: "Built-in Microphone", format: "boolean" },
-          { key: "microphoneType", label: "Microphone Type", format: "text" },
-          { key: "noiseReduction", label: "Noise Reduction", format: "boolean" },
+          // { key: "microphoneType", label: "Microphone Type", format: "text", showIf: { builtInMicrophone: "Yes" } },
+          { key: "noiseReduction", label: "Noise Reduction", format: "boolean", showIf: { builtInMicrophone: "Yes" } },
         ]
       },
       {
         title: "Connectivity",
         fields: [
           { key: "connectionType", label: "Connection Type", format: "text" },
-          { key: "cableLength", label: "Cable Length", unit: "m", format: "number" },
-          { key: "plugAndPlay", label: "Plug & Play", format: "boolean" },
+          { key: "cableLength", label: "Cable Length", unit: "m", format: "number", showIf: { connectionType: ["USB", "USB-C"] } },
+          { key: "plugAndPlay", label: "Plug & Play", format: "boolean", showIf: { connectionType: ["USB", "USB-C"] } },
         ]
       },
       {
@@ -235,15 +193,13 @@ export const ASSET_SPECS_CONFIG = {
         fields: [
           { key: "mountType", label: "Mount Type", format: "text" },
           { key: "color", label: "Color", format: "text" },
-          { key: "weight", label: "Weight", unit: "g", format: "number" },
+          // { key: "weight", label: "Weight", unit: "g", format: "number" },
         ]
       },
     ]
   },
 
-  // ======================== PRINTER (EXAMPLE - UNCOMMENT TO USE) ========================
-  // Uncomment this to enable Printer specs. This is just an example!
-  /*
+  // ======================== PRINTER ========================
   PRINTER: {
     icon: "print",
     sections: [
@@ -251,28 +207,79 @@ export const ASSET_SPECS_CONFIG = {
         title: "Basic Information",
         fields: [
           { key: "manufacturer", label: "Manufacturer", format: "text" },
+          // { key: "brand", label: "Brand", format: "text" },
           { key: "model", label: "Model", format: "text" },
+          { key: "modelNumber", label: "Model Number", format: "text" },
+          { key: "partNumber", label: "Part Number", format: "text" },
           { key: "serialNumber", label: "Serial Number", format: "text" },
+          { key: "assetCondition", label: "Condition", format: "text" },
+          { key: "ownershipType", label: "Ownership", format: "text" },
+          { key: "manufacturingDate", label: "Manufacturing Date", format: "date" },
         ]
       },
       {
         title: "Print Specifications",
         fields: [
-          { key: "colorPrinting", label: "Color Printing", format: "boolean" },
-          { key: "maxPrintSpeedPPM", label: "Print Speed", unit: "PPM", format: "number" },
-          { key: "maxPaperWidth", label: "Max Paper Width", unit: "mm", format: "number" },
+          { key: "printTechnology", label: "Print Technology", format: "text" },
+          { key: "colorSupport", label: "Color Support", format: "text" },
+          { key: "printSpeedPPM", label: "Print Speed", unit: "PPM", format: "number" },
+          { key: "maxResolutionDPI", label: "Max Resolution", unit: "DPI", format: "number" },
+          { key: "monthlyDutyCycle", label: "Monthly Duty Cycle", unit: "pages", format: "number" },
+          { key: "duplexPrinting", label: "Duplex Printing", format: "text" },
+          { key: "totalPrintCount", label: "Total Print Count", unit: "pages", format: "number" },
         ]
       },
       {
-        title: "Connectivity",
+        title: "Connectivity & Network",
         fields: [
-          { key: "wifiEnabled", label: "WiFi Enabled", format: "boolean" },
-          { key: "networkPrinting", label: "Network Printing", format: "boolean" },
+          { key: "networkSupport", label: "Network Support", format: "text" },
+          { key: "wirelessSupport", label: "Wireless Support", format: "text" },
+          { key: "ipAddress", label: "IP Address", format: "text", showIf: { or: [ { networkSupport: "Yes" }, { wirelessSupport: "Yes" } ] } },
+          { key: "macAddress", label: "MAC Address", format: "text", showIf: { or: [ { networkSupport: "Yes" }, { wirelessSupport: "Yes" } ] } },
+          { key: "gateway", label: "Gateway", format: "text", showIf: { ipAddress : { not: { equals: null } } } },
+          { key: "subnet", label: "Subnet", format: "text", showIf: { ipAddress : { not: { equals: null } } } },
+          { key: "dns", label: "DNS", format: "text", showIf: { ipAddress : { not: { equals: null } } } },
+        ]
+      },
+      {
+        title: "Scanner & Copier",
+        fields: [
+          { key: "scannerSupport", label: "Scanner Support", format: "text" },
+          { key: "copierSupport", label: "Copier Support", format: "text" },
+          { key: "scanResolutionDPI", label: "Scan Resolution", unit: "DPI", format: "number" },
+          { key: "copySpeedCPM", label: "Copy Speed", unit: "CPM", format: "number" },
+        ]
+      },
+      {
+        title: "Cartridge/Toner (Black)",
+        showIf: { colorSupport: "No" },
+        fields: [
+          { key: "blackCartridgeModel", label: "Cartridge Model", format: "text" },
+          { key: "blackCartridgePartNumber", label: "Part Number", format: "text" },
+          { key: "blackCartridgeManufacturer", label: "Manufacturer", format: "text" },
+          { key: "blackCartridgeYieldPages", label: "Yield", unit: "pages", format: "number" },
+          { key: "blackCartridgeLastChanged", label: "Last Changed", format: "date" },
+          { key: "blackCartridgeEstimatedEnd", label: "Estimated End", format: "date" },
+        ]
+      },
+      {
+        title: "Cartridge/Toner (Color)",
+        showIf: { colorSupport: "Yes" },
+        fields: [
+          { key: "cartridges", label: "Color Cartridges", format: "list", listFormat: "printerCartridge",  },
+        ]
+      },
+      {
+        title: "Physical & Power",
+        fields: [
+          { key: "printerColor", label: "Color", format: "text" },
+          { key: "powerConsumptionWatt", label: "Power Consumption", unit: "W", format: "number" },
+          { key: "voltageRange", label: "Voltage Range",unit: "V", format: "text" },
         ]
       },
     ]
   },
-  */
+  
 };
 
 /**
@@ -293,6 +300,13 @@ export const LIST_FORMATTERS = {
       sub: `${drive.driveInterfaceSpeed || 'N/A'} - ${drive.driveManufacturer || 'N/A'}`.trim(),
     }));
   },
+
+  printerCartridge: (cartridges) => {
+    return cartridges.map((cartridge, idx) => ({
+      main: `${cartridge.cartridgeColor || 'Unknown'} - ${cartridge.cartridgeModel || 'N/A'}`,
+      sub: `${cartridge.cartridgeYieldPages || 'N/A'} pages - ${cartridge.cartridgeManufacturer || 'N/A'}`.trim(),
+    }));
+  },
 };
 
 /**
@@ -300,6 +314,39 @@ export const LIST_FORMATTERS = {
  */
 export const getNestedValue = (obj, path) => {
   return path.split('.').reduce((current, prop) => current?.[prop], obj);
+};
+
+const resolveSourceValue = (source, key) => {
+  if (typeof source === "function") {
+    return source(key);
+  }
+  return getNestedValue(source, key);
+};
+
+export const evaluateShowIf = (cond, source) => {
+  if (!cond || typeof cond !== "object") return true;
+  if (Array.isArray(cond)) {
+    return cond.every((item) => evaluateShowIf(item, source));
+  }
+  if ("field" in cond) {
+    return String(resolveSourceValue(source, cond.field) ?? "") === String(cond.equals ?? "");
+  }
+  if ("not" in cond) {
+    return !evaluateShowIf(cond.not, source);
+  }
+  if ("or" in cond) {
+    return Array.isArray(cond.or) && cond.or.some((item) => evaluateShowIf(item, source));
+  }
+  if ("and" in cond) {
+    return Array.isArray(cond.and) && cond.and.every((item) => evaluateShowIf(item, source));
+  }
+  return Object.entries(cond).every(([key, expected]) => {
+    const actualValue = String(resolveSourceValue(source, key) ?? "").trim();
+    if (Array.isArray(expected)) {
+      return expected.map(String).includes(actualValue);
+    }
+    return actualValue === String(expected ?? "");
+  });
 };
 
 /**

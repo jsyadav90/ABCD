@@ -9,13 +9,39 @@ import { Warranty } from "../../../models/warranty.model.js";
 import { norm, buildAssetListFilter, extractBranchIdFromBody, ensureOrgAndAudit } from "../../../utils/assetUtils.js";
 import { generateAssetId } from "../../../services/assetIdGenerator.service.js";
 
+// Helper function to extract table data from indexed form fields
+const extractTableData = (body, fieldNames, maxRows = 10) => {
+  const rows = [];
+  for (let i = 0; i < maxRows; i++) {
+    const row = {};
+    let hasData = false;
+    fieldNames.forEach(fieldName => {
+      const indexedField = `${fieldName}_${i}`;
+      if (body[indexedField] !== undefined && body[indexedField] !== null && body[indexedField] !== '') {
+        row[fieldName] = body[indexedField];
+        hasData = true;
+      }
+    });
+    if (hasData) {
+      rows.push(row);
+    }
+  }
+  return rows;
+};
+
 const create = async (req) => {
   const body = req.body || {};
   const AssetType = norm(body.AssetType).toLowerCase();
   const AssetCategory = body.AssetCategory; // Now it's ObjectId, no need to normalize to string
-
-  const memoryModules = body.memory?.ramModules || [];
-  const storageDevices = body.storage?.storageDevices || [];
+  
+  // Extract tables from indexed form fields (Memory section)
+  const memoryFieldNames = ['ramManufacturer', 'ramModelNumber', 'ramSerialNumber', 'ramCapacityGB', 'ramType', 'ramSpeedMHz', 'ramFormFactor', 'ramSlot', 'ramChannel'];
+  const memoryModules = extractTableData(body, memoryFieldNames);
+  
+  // Extract tables from indexed form fields (Storage section)
+  const storageFieldNames = ['driveManufacturer', 'driveModelNumber', 'driveSerial', 'driveCapacityGB', 'driveType', 'driveInterfaceSpeed', 'driveSlot', 'raidConfigured', 'encryptionEnabled'];
+  const storageDevices = extractTableData(body, storageFieldNames);
+  
   const branchId = extractBranchIdFromBody(body);
 
   const validMemoryModules = memoryModules.filter((m) => m && (m.ramCapacityGB || m.ramManufacturer || m.ramModelNumber));
@@ -60,6 +86,16 @@ const create = async (req) => {
   delete fixedPayload.flat;
   delete fixedPayload.memoryModules;
   delete fixedPayload.storageDevices;
+  
+  // Remove indexed table fields
+  [...memoryFieldNames, ...storageFieldNames].forEach(fieldName => {
+    // Remove all indexed versions of this field
+    Object.keys(fixedPayload).forEach(key => {
+      if (key.startsWith(`${fieldName}_`)) {
+        delete fixedPayload[key];
+      }
+    });
+  });
 
   // Purchase & Warranty field names to extract
   const purchaseFields = [

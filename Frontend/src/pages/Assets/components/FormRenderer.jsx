@@ -15,27 +15,7 @@ import { useScanning } from "../../../components/BarcodeScanner/useScanning.js";
 import Radio from "../../../components/Radio/Radio.jsx";
 // @ts-ignore
 import { TABLE_SECTION_TITLES } from "../config/common.js";
-
-const evaluateShowIf = (cond, getValue) => {
-  // Support verbose form: { field: 'purchaseType', equals: 'PO' }
-  if (typeof cond === "object" && "field" in cond) {
-    return String(getValue(cond.field) ?? "") === String(cond.equals ?? "");
-  }
-  // Support shorthand form: { purchaseType: 'PO', other: 'X' } or { purchaseType: ['PO', 'Direct'] }
-  if (typeof cond === "object") {
-    return Object.entries(cond).every(
-      ([k, v]) => {
-        const fieldValue = String(getValue(k) ?? "");
-        // Support array values for multiple conditions
-        if (Array.isArray(v)) {
-          return v.map(String).includes(fieldValue);
-        }
-        return fieldValue === String(v ?? "");
-      }
-    );
-  }
-  return true;
-};
+import { evaluateShowIf } from "../config/assetSpecsConfig.js";
 
 const shouldShow = (field, getValue) => {
   if (!field.showIf) return true;
