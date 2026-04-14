@@ -1,5 +1,7 @@
 export const BRANCH_SCOPE_KEY = "selectedBranch";
 export const BRANCH_SCOPE_EVENT = "branch-scope-changed";
+export const MODULE_SCOPE_KEY = "selectedModule";
+export const MODULE_SCOPE_EVENT = "module-scope-changed";
 
 export const getSelectedBranch = () => {
   try {
@@ -57,4 +59,36 @@ export const onBranchChange = (handler) => {
   const wrapped = (e) => handler(e.detail?.branchId || "", e.detail?.branchName || "");
   window.addEventListener(BRANCH_SCOPE_EVENT, wrapped);
   return () => window.removeEventListener(BRANCH_SCOPE_EVENT, wrapped);
+};
+
+export const getSelectedModule = () => {
+  try {
+    const stored = localStorage.getItem(MODULE_SCOPE_KEY);
+    if (stored && stored !== 'undefined' && stored !== 'null') {
+      return stored;
+    }
+    return "";
+  } catch {
+    return "";
+  }
+};
+
+export const setSelectedModule = (moduleKey) => {
+  try {
+    if (moduleKey) {
+      localStorage.setItem(MODULE_SCOPE_KEY, moduleKey);
+    } else {
+      localStorage.removeItem(MODULE_SCOPE_KEY);
+    }
+    const ev = new CustomEvent(MODULE_SCOPE_EVENT, { detail: { moduleKey } });
+    window.dispatchEvent(ev);
+  } catch {
+    // ignore
+  }
+};
+
+export const onModuleChange = (handler) => {
+  const wrapped = (e) => handler(e.detail?.moduleKey || "");
+  window.addEventListener(MODULE_SCOPE_EVENT, wrapped);
+  return () => window.removeEventListener(MODULE_SCOPE_EVENT, wrapped);
 };

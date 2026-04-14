@@ -11,8 +11,10 @@ import { Button, Card, Badge, Table, Select } from "../../components";
 import { authAPI } from "../../services/api";
 import { fetchBranchesForDropdown, fetchUsersCount, fetchAllUsers } from "../../services/userApi";
 import { fetchAssetsCount } from "../../services/assetApi";
-import { getSelectedBranch, setSelectedBranch } from "../../utils/scope";
+import { getSelectedBranch, setSelectedBranch, getSelectedModule, setSelectedModule } from "../../utils/scope";
 import { useAuth } from "../../hooks/useAuth";
+import { PERMISSION_MODULES } from "../../constants/permissions";
+import { canAccessModule } from "../../utils/permissionHelper";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -27,6 +29,7 @@ const Dashboard = () => {
   const [isMarqueeEnabled, setIsMarqueeEnabled] = useState(false);
 
   const [branch, setBranch] = useState("");
+  const [module, setModule] = useState("__ALL__");
   const [syncIn, setSyncIn] = useState(59);
   const [lastSync, setLastSync] = useState(new Date());
 
@@ -40,33 +43,62 @@ const Dashboard = () => {
   });
 
   const [branchOptions, setBranchOptions] = useState([]);
+  const [moduleOptions, setModuleOptions] = useState([]);
   const [totalUsers, setTotalUsers] = useState(null);
   const [totalAssets, setTotalAssets] = useState(null);
 
-  async function computeUsersCount(selected) {
+  const getUserEffectivePermissions = (user) => {
+    const legacy = Array.isArray(user.permissions) ? user.permissions : [];
+    const rolePerms = Array.isArray(user.roleId?.permissionKeys) ? user.roleId.permissionKeys : [];
+    const extraPermissions = Array.isArray(user.extraPermissions) ? user.extraPermissions : [];
+    const removedPermissions = Array.isArray(user.removedPermissions) ? user.removedPermissions : [];
+
+    const combined = [...legacy, ...rolePerms, ...extraPermissions];
+    const unique = [...new Set(combined)];
+    return unique.filter((perm) => !removedPermissions.includes(perm));
+  };
+
+  const doesUserHaveModule = (user, moduleKey) => {
+    const perms = getUserEffectivePermissions(user);
+    if (perms.includes("*")) return true;
+    if (perms.includes(`${moduleKey}:access`)) return true;
+    return perms.some((permission) => {
+      return typeof permission === "string" && permission.startsWith(`${moduleKey}:`) && permission !== `${moduleKey}:access`;
+    });
+  };
+
+  async function computeUsersCount(selectedBranch, selectedModule) {
     try {
-      if (selected === "__ALL__" || !selected) {
+      const branchFilterActive = selectedBranch && selectedBranch !== "__ALL__";
+      const moduleFilterActive = selectedModule && selectedModule !== "__ALL__";
+
+      if (!branchFilterActive && !moduleFilterActive) {
         const count = await fetchUsersCount();
         setTotalUsers(count);
         return;
       }
+
       const all = await fetchAllUsers(Number(import.meta.env.VITE_API_TABLE_SIZE) || 100000, 1);
       const count = all.filter((u) => {
         const ids = Array.isArray(u.branchId) ? u.branchId : [];
-        return ids.some((b) => {
+        const branchMatch = !branchFilterActive || ids.some((b) => {
           const id = typeof b === "object" && b?._id ? String(b._id) : String(b);
-          return id === selected;
+          return id === selectedBranch;
         });
+
+        const moduleMatch = !moduleFilterActive || doesUserHaveModule(u, selectedModule);
+        return branchMatch && moduleMatch;
       }).length;
       setTotalUsers(count);
-    } catch {
+    } catch (error) {
+      console.error("Error computing users count:", error);
       setTotalUsers(null);
     }
   }
 
-  async function computeAssetsCount(selected) {
+  async function computeAssetsCount(selectedBranch) {
     try {
-      const count = await fetchAssetsCount(selected);
+      const count = await fetchAssetsCount(selectedBranch);
       setTotalAssets(count);
     } catch (error) {
       console.error("Error fetching assets count:", error);
@@ -114,26 +146,39 @@ const Dashboard = () => {
 
         setBranchOptions(availableOpts);
 
-        const saved = getSelectedBranch();
-        let selectedValue = "";
+        const savedBranch = getSelectedBranch();
+        const savedModule = getSelectedModule();
+        let selectedBranchValue = "";
+        let selectedModuleValue = "__ALL__";
 
-        const isSavedAllAllowed = saved === "__ALL__" && availableOpts.length > 1;
-        const isSavedBranchValid = availableOpts.some(o => o.value === saved);
+        const isSavedAllAllowed = savedBranch === "__ALL__" && availableOpts.length > 1;
+        const isSavedBranchValid = availableOpts.some(o => o.value === savedBranch);
 
-        if (saved && (isSavedAllAllowed || isSavedBranchValid)) {
-          selectedValue = saved;
+        if (savedBranch && (isSavedAllAllowed || isSavedBranchValid)) {
+          selectedBranchValue = savedBranch;
         } else {
-          selectedValue = availableOpts.length > 1 ? "__ALL__" : (availableOpts[0]?.value || "");
+          selectedBranchValue = availableOpts.length > 1 ? "__ALL__" : (availableOpts[0]?.value || "");
         }
 
-        setBranch(selectedValue);
+        const availableModuleOptions = PERMISSION_MODULES
+          .filter((module) => canAccessModule(module.key))
+          .map((module) => ({ value: module.key, label: module.label }));
 
-        // Set the selected branch with name
-        const selectedOpt = availableOpts.find(o => o.value === selectedValue);
-        setSelectedBranch(selectedValue, selectedOpt?.label || "");
+        setModuleOptions([{ value: "__ALL__", label: "All Modules" }, ...availableModuleOptions]);
 
-        await computeUsersCount(selectedValue);
-        await computeAssetsCount(selectedValue);
+        if (savedModule && savedModule !== "__ALL__" && availableModuleOptions.some((opt) => opt.value === savedModule)) {
+          selectedModuleValue = savedModule;
+        }
+
+        setBranch(selectedBranchValue);
+        setModule(selectedModuleValue);
+
+        const selectedOpt = availableOpts.find(o => o.value === selectedBranchValue);
+        setSelectedBranch(selectedBranchValue, selectedOpt?.label || "");
+        setSelectedModule(selectedModuleValue);
+
+        await computeUsersCount(selectedBranchValue, selectedModuleValue);
+        await computeAssetsCount(selectedBranchValue);
       } catch {}
     };
 
@@ -147,7 +192,8 @@ const Dashboard = () => {
         const selectedOpt = branchOptions.find(o => o.value === branch);
         setSelectedBranch(branch, selectedOpt?.label || "");
       }
-      await computeUsersCount(branch);
+      setSelectedModule(module);
+      await computeUsersCount(branch, module);
       await computeAssetsCount(branch);
     } catch {
       setTotalUsers(null);
@@ -394,6 +440,16 @@ const Dashboard = () => {
                     : branchOptions
                 }
                 disabled={branchOptions.length === 1}
+                placeholder=""
+              />
+            </div>
+            <div>
+              <label className="">Select Module </label>
+              <Select
+                name="module"
+                value={module}
+                onChange={(e) => setModule(e.target.value)}
+                options={moduleOptions}
                 placeholder=""
               />
             </div>
