@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 // @ts-ignore
 import { Modal, Button, Alert, Card } from "../../components";
 import { roleAPI } from "../../services/api";
-import { PERMISSION_MODULES } from "../../constants/permissions";
+import { PERMISSION_MODULES, MAIN_MODULES } from "../../constants/permissions";
 import "./Setup.css"; // Reuse CSS
 
 // Helper to check if a permission is assigned
@@ -22,6 +22,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   const [expandedModules, setExpandedModules] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedModuleKey, setSelectedModuleKey] = useState("all");
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState("all");
 
   useEffect(() => {
     if (role && isOpen) {
@@ -49,6 +50,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
       setExpandedModules(allExpanded);
       setSearchTerm("");
       setSelectedModuleKey("all");
+      setSelectedCategoryKey("all");
     }
   }, [role, isOpen]);
 
@@ -83,14 +85,57 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   }, [searchTerm]);
 
   const selectedModules = useMemo(() => {
-    if (selectedModuleKey === "all") return filteredModules;
-    return filteredModules.filter((module) => module.key === selectedModuleKey);
+    let modules = filteredModules;
+    
+    if (selectedModuleKey !== "all") {
+      // When specific main module selected, show its submodules
+      const mainModule = MAIN_MODULES.find(m => m.key === selectedModuleKey);
+      if (mainModule) {
+        modules = modules.filter(module => mainModule.subModules.includes(module.key));
+      }
+    }
+    
+    return modules;
   }, [filteredModules, selectedModuleKey]);
 
   const moduleOptions = useMemo(() => [
-    { key: "all", label: "All Categories" },
-    ...PERMISSION_MODULES.map((module) => ({ key: module.key, label: module.label })),
+    { key: "all", label: "All Modules" },
+    ...MAIN_MODULES.map((module) => ({ key: module.key, label: module.label })),
   ], []);
+
+  const categoryOptions = useMemo(() => {
+    const options = [{ key: "all", label: "All Categories" }];
+    
+    if (selectedModuleKey === "all") {
+      // When all modules selected, show all submodules
+      PERMISSION_MODULES.forEach(module => {
+        options.push({ key: module.key, label: module.label });
+      });
+    } else {
+      // When specific main module selected, show its submodules
+      const mainModule = MAIN_MODULES.find(m => m.key === selectedModuleKey);
+      if (mainModule) {
+        mainModule.subModules.forEach(subModuleKey => {
+          const subModule = PERMISSION_MODULES.find(m => m.key === subModuleKey);
+          if (subModule) {
+            options.push({ key: subModule.key, label: subModule.label });
+          }
+        });
+      }
+    }
+    
+    return options;
+  }, [selectedModuleKey]);
+
+  const finalSelectedModules = useMemo(() => {
+    let modules = selectedModules;
+    
+    if (selectedCategoryKey !== "all") {
+      modules = modules.filter(module => module.key === selectedCategoryKey);
+    }
+    
+    return modules;
+  }, [selectedModules, selectedCategoryKey]);
 
   // Auto-expand on search
   useEffect(() => {
@@ -324,13 +369,28 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
 
       <div className="permission-toolbar">
           <div className="permission-toolbar__selector">
-            <label htmlFor="permission-category-select">View category</label>
+            <label htmlFor="permission-module-select">Select Module</label>
             <select
-              id="permission-category-select"
+              id="permission-module-select"
               value={selectedModuleKey}
               onChange={(e) => setSelectedModuleKey(e.target.value)}
             >
               {moduleOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="permission-toolbar__selector">
+            <label htmlFor="permission-category-select">View Category</label>
+            <select
+              id="permission-category-select"
+              value={selectedCategoryKey}
+              onChange={(e) => setSelectedCategoryKey(e.target.value)}
+            >
+              {categoryOptions.map((option) => (
                 <option key={option.key} value={option.key}>
                   {option.label}
                 </option>
@@ -350,30 +410,34 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
           </div>
         </div>
 
-        <div className="permission-summary-card">
+        {/* <div className="permission-summary-card">
+          <div>
+            <span className="summary-label">Selected module</span>
+            <strong>{selectedModuleKey === "all" ? "All Modules" : moduleOptions.find(option => option.key === selectedModuleKey)?.label}</strong>
+          </div>
           <div>
             <span className="summary-label">Selected category</span>
-            <strong>{selectedModuleKey === "all" ? "All Categories" : moduleOptions.find(option => option.key === selectedModuleKey)?.label}</strong>
+            <strong>{selectedCategoryKey === "all" ? "All Categories" : categoryOptions.find(option => option.key === selectedCategoryKey)?.label}</strong>
           </div>
           <div>
             <span className="summary-label">Matched sections</span>
-            <strong>{selectedModules.length}</strong>
+            <strong>{finalSelectedModules.length}</strong>
           </div>
           <div>
             <span className="summary-label">Search active</span>
             <strong>{searchTerm.trim() ? "Yes" : "No"}</strong>
           </div>
-        </div>
+        </div> */}
 
         <div className="permission-tree-container">
           <div className="tree-root">
-            {selectedModules.length === 0 && (
+            {finalSelectedModules.length === 0 && (
                 <div style={{ padding: "1rem", textAlign: "center", color: "#6b7280" }}>
                   No matching rights found.
                 </div>
             )}
 
-            {selectedModules.map((module) => (
+            {finalSelectedModules.map((module) => (
               <div key={module.key} className="tree-module">
                 {/* Module Header */}
                 <div 

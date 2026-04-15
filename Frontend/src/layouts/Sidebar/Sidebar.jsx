@@ -28,7 +28,7 @@ const sidebarMenuItems = [
     icon: "dashboard",
     path: "/dashboard",
     permission: null,
-    modules: ["moduxle_1"],
+    modules: ["module_1"],
   },
   {
     key: "users",
@@ -76,7 +76,7 @@ const sidebarMenuItems = [
     icon: "settings",
     path: "/setup",
     permission: "setup",
-    modules: ["module_1"],
+    modules: ["module_1", "module_2"],
   },
   // Example future items:
   // {

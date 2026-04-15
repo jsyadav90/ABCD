@@ -1,5 +1,18 @@
 // Permission Constants
 
+export const MAIN_MODULES = [
+  {
+    key: "module1",
+    label: "Module 1",
+    subModules: ["assets", "users", "upgrades", "reports", "setup"]
+  },
+  {
+    key: "module2",
+    label: "Module 2",
+    subModules: []
+  }
+];
+
 export const PERMISSION_MODULES = [
   {
     key: "assets",

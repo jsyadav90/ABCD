@@ -62,7 +62,7 @@ const MainLayout = ({ children }) => {
         
         {showSidebar && (
           <Sidebar
-            selectedModule={location.pathname === '/dashboard' ? selectedModule : 'module_1'}
+            selectedModule={selectedModule}
             collapsed={collapsed}
             onCloseSidebar={() => setCollapsed(false)}
           />
