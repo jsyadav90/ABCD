@@ -21,7 +21,83 @@ import { authAPI } from "../../services/api";
 import { Modal, Input, Button } from "../../components";
 import "./Sidebar.css";
 
-const Sidebar = ({ onCloseSidebar }) => {
+const sidebarMenuItems = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: "dashboard",
+    path: "/dashboard",
+    permission: null,
+    modules: ["moduxle_1"],
+  },
+  {
+    key: "users",
+    label: "User",
+    icon: "people",
+    path: "/users",
+    permission: "users",
+    modules: ["module_1"],
+  },
+  {
+    key: "assets",
+    label: "Asset",
+    icon: "inventory_2",
+    path: "/assets",
+    permission: "assets",
+    modules: ["module_1"],
+  },
+  {
+    key: "upgrades",
+    label: "Upgrade",
+    icon: "assignment",
+    path: "/requests",
+    permission: "upgrades",
+    modules: ["module_1"],
+  },
+  {
+    key: "issueTo",
+    label: "Issue To",
+    icon: "assignment",
+    path: "/requests",
+    permission: "issueTo",
+    modules: ["module_1"],
+  },
+  {
+    key: "reports",
+    label: "Report",
+    icon: "bar_chart",
+    path: "/report",
+    permission: "reports",
+    modules: ["module_1"],
+  },
+  {
+    key: "setup",
+    label: "Setup",
+    icon: "settings",
+    path: "/setup",
+    permission: "setup",
+    modules: ["module_1"],
+  },
+  // Example future items:
+  // {
+  //   key: "module2Feature",
+  //   label: "Module 2 Feature",
+  //   icon: "extension",
+  //   path: "/module2-feature",
+  //   permission: "module2Feature",
+  //   modules: ["module_2"],
+  // },
+  // {
+  //   key: "sharedFeature",
+  //   label: "Shared",
+  //   icon: "device_hub",
+  //   path: "/shared",
+  //   permission: "shared",
+  //   modules: ["module_1", "module_2"],
+  // },
+];
+
+const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [userOpen, setUserOpen] = useState(false);
@@ -33,6 +109,12 @@ const Sidebar = ({ onCloseSidebar }) => {
   const [arrowTop, setArrowTop] = useState(24);
   const [flyoutWidth, setFlyoutWidth] = useState(260);
   const flyoutRef = useRef(null);
+
+  const availableMenuItems = sidebarMenuItems.filter((item) => {
+    if (!item.modules.includes(selectedModule)) return false;
+    if (!item.permission) return true;
+    return isSuperAdmin() || canAccessModule(item.permission);
+  });
 
   
 
@@ -193,72 +275,14 @@ const Sidebar = ({ onCloseSidebar }) => {
     <>
       <nav className="menu-bar">
         <ul className="menu">
-          {/* <li>
-            <Link to="/dashboard" onClick={handleMenuItemClick}>
-              <span className="material-icons">dashboard</span>
-              <span className="menu-text">Dashboard</span>
-            </Link>
-          </li> */}
-
-          {/* User Management Module */}
-          {(isSuperAdmin() || canAccessModule("users")) && (
-            <li>
-              <Link to="/users" onClick={handleMenuItemClick}>
-                <span className="material-icons">people</span>
-                <span className="menu-text">User</span>
+          {availableMenuItems.map((item) => (
+            <li key={item.key}>
+              <Link to={item.path} onClick={handleMenuItemClick}>
+                <span className="material-icons">{item.icon}</span>
+                <span className="menu-text">{item.label}</span>
               </Link>
             </li>
-          )}
-
-          {/* Asset Management Module - Single Clickable Item */}
-          {(isSuperAdmin() || canAccessModule("assets")) && (
-            <li>
-              <Link to="/assets" onClick={handleMenuItemClick}>
-                <span className="material-icons">inventory_2</span>
-                <span className="menu-text">Asset</span>
-              </Link>
-            </li>
-          )}
-
-          {/* Upgrade Request Module */}
-          {(isSuperAdmin() || canAccessModule("upgrades")) && (
-            <li>
-              <Link to="/requests" onClick={handleMenuItemClick}>
-                <span className="material-icons">assignment</span>
-                <span className="menu-text">Upgrade</span>
-              </Link>
-            </li>
-          )}
-
-          {/* Upgrade Request Module */}
-          {(isSuperAdmin() || canAccessModule("issueTo")) && (
-            <li>
-              <Link to="/requests" onClick={handleMenuItemClick}>
-                <span className="material-icons">assignment</span>
-                <span className="menu-text">Issue To</span>
-              </Link>
-            </li>
-          )}
-
-          {/* Reports Module */}
-          {(isSuperAdmin() || canAccessModule("reports")) && (
-            <li>
-              <Link to="/report" onClick={handleMenuItemClick}>
-                <span className="material-icons">bar_chart</span>
-                <span className="menu-text">Report</span>
-              </Link>
-            </li>
-          )}
-
-          {/* Setup Module */}
-          {(isSuperAdmin() || canAccessModule("setup")) &&(
-            <li>
-              <Link to="/setup" onClick={handleMenuItemClick}>
-                <span className="material-icons">settings</span>
-                <span className="menu-text">Setup</span>
-              </Link>
-            </li>
-          )}
+          ))}
         </ul>
 
       {/* USER DETAILS (BOTTOM SECTION) */}

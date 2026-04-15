@@ -8,6 +8,7 @@
  */
 import React, { useEffect, useState, useRef } from "react";
 import { Button, Card, Badge, Table, Select } from "../../components";
+import ProfileCard from "../../layouts/ProfileCard";
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../../services/api";
 import { fetchBranchesForDropdown, fetchUsersCount, fetchAllUsers } from "../../services/userApi";
@@ -390,54 +391,16 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <Card className="profile-card" title="">
-        <div className="profile-row">
-          <div className="user-meta">
-            <div className="avatar">
-              {profile?.name ? profile.name.split(" ").map(s => s[0]).slice(0,2).join("").toUpperCase() : "U"}
-            </div>
-            <div>
-              <div className="user-name">{profile?.name || "--"}</div>
-              <div className="user-role">
-                {profile?.role ? profile.role.replaceAll("_"," ").toUpperCase() : "N/A"}
-                <span className="user-id"> | ID: {profile?.userId || "--"}</span>
-              </div>
-              <div className="user-email">{profile?.email || "--"}</div>
-            </div>
-          </div>
-
-          <div className="filters">
-            <div className="filter">
-              <label className="filter-label">Module</label>
-              <Select
-                name="appModule"
-                value={selectedAppModule}
-                onChange={(e) => setSelectedAppModuleLocal(e.target.value)}
-                options={appModuleOptions}
-                placeholder=""
-              />
-            </div>
-            <div className="filter">
-              <label className="filter-label">Branch</label>
-              <Select
-                name="branch"
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                options={
-                  branchOptions.length > 1
-                    ? [{ value: "__ALL__", label: "All Branches" }, ...branchOptions]
-                    : branchOptions
-                }
-                disabled={branchOptions.length === 1}
-                placeholder=""
-              />
-            </div>
-            <div className="filter-btn">
-              <Button variant="primary" size="md" onClick={applyFilters}>Apply</Button>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <ProfileCard
+        profile={profile}
+        branch={branch}
+        setBranch={setBranch}
+        branchOptions={branchOptions}
+        selectedAppModule={selectedAppModule}
+        setSelectedAppModule={setSelectedAppModuleLocal}
+        appModuleOptions={appModuleOptions}
+        onApplyFilters={applyFilters}
+      />
 
       <div className="quick-actions">
         <Button variant="primary" redirect="/assets/add">
