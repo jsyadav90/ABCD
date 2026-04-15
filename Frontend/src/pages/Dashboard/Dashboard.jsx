@@ -8,13 +8,13 @@
  */
 import React, { useEffect, useState, useRef } from "react";
 import { Button, Card, Badge, Table, Select } from "../../components";
+import { useNavigate } from "react-router-dom";
 import { authAPI } from "../../services/api";
 import { fetchBranchesForDropdown, fetchUsersCount, fetchAllUsers } from "../../services/userApi";
 import { fetchAssetsCount } from "../../services/assetApi";
 import { getSelectedBranch, setSelectedBranch, getSelectedModule, setSelectedModule } from "../../utils/scope";
 import { useAuth } from "../../hooks/useAuth";
-import { PERMISSION_MODULES } from "../../constants/permissions";
-import { canAccessModule } from "../../utils/permissionHelper";
+import { getSelectedAppModule, setSelectedAppModule, MODULES } from "../../utils/appModule";
 import "./Dashboard.css";
 
 const Dashboard = () => {
@@ -28,8 +28,10 @@ const Dashboard = () => {
   const wheelTimeoutRef = useRef(null);
   const [isMarqueeEnabled, setIsMarqueeEnabled] = useState(false);
 
+  const navigate = useNavigate();
+  
   const [branch, setBranch] = useState("");
-  const [module, setModule] = useState("__ALL__");
+  const [selectedAppModule, setSelectedAppModuleLocal] = useState(getSelectedAppModule());
   const [syncIn, setSyncIn] = useState(59);
   const [lastSync, setLastSync] = useState(new Date());
 
@@ -43,36 +45,19 @@ const Dashboard = () => {
   });
 
   const [branchOptions, setBranchOptions] = useState([]);
-  const [moduleOptions, setModuleOptions] = useState([]);
+  const [appModuleOptions, setAppModuleOptions] = useState(
+    MODULES.map(m => ({ value: m.id, label: m.label }))
+  );
   const [totalUsers, setTotalUsers] = useState(null);
   const [totalAssets, setTotalAssets] = useState(null);
 
-  const getUserEffectivePermissions = (user) => {
-    const legacy = Array.isArray(user.permissions) ? user.permissions : [];
-    const rolePerms = Array.isArray(user.roleId?.permissionKeys) ? user.roleId.permissionKeys : [];
-    const extraPermissions = Array.isArray(user.extraPermissions) ? user.extraPermissions : [];
-    const removedPermissions = Array.isArray(user.removedPermissions) ? user.removedPermissions : [];
 
-    const combined = [...legacy, ...rolePerms, ...extraPermissions];
-    const unique = [...new Set(combined)];
-    return unique.filter((perm) => !removedPermissions.includes(perm));
-  };
 
-  const doesUserHaveModule = (user, moduleKey) => {
-    const perms = getUserEffectivePermissions(user);
-    if (perms.includes("*")) return true;
-    if (perms.includes(`${moduleKey}:access`)) return true;
-    return perms.some((permission) => {
-      return typeof permission === "string" && permission.startsWith(`${moduleKey}:`) && permission !== `${moduleKey}:access`;
-    });
-  };
-
-  async function computeUsersCount(selectedBranch, selectedModule) {
+  async function computeUsersCount(selectedBranch) {
     try {
       const branchFilterActive = selectedBranch && selectedBranch !== "__ALL__";
-      const moduleFilterActive = selectedModule && selectedModule !== "__ALL__";
 
-      if (!branchFilterActive && !moduleFilterActive) {
+      if (!branchFilterActive) {
         const count = await fetchUsersCount();
         setTotalUsers(count);
         return;
@@ -81,13 +66,10 @@ const Dashboard = () => {
       const all = await fetchAllUsers(Number(import.meta.env.VITE_API_TABLE_SIZE) || 100000, 1);
       const count = all.filter((u) => {
         const ids = Array.isArray(u.branchId) ? u.branchId : [];
-        const branchMatch = !branchFilterActive || ids.some((b) => {
+        return ids.some((b) => {
           const id = typeof b === "object" && b?._id ? String(b._id) : String(b);
           return id === selectedBranch;
         });
-
-        const moduleMatch = !moduleFilterActive || doesUserHaveModule(u, selectedModule);
-        return branchMatch && moduleMatch;
       }).length;
       setTotalUsers(count);
     } catch (error) {
@@ -147,9 +129,7 @@ const Dashboard = () => {
         setBranchOptions(availableOpts);
 
         const savedBranch = getSelectedBranch();
-        const savedModule = getSelectedModule();
         let selectedBranchValue = "";
-        let selectedModuleValue = "__ALL__";
 
         const isSavedAllAllowed = savedBranch === "__ALL__" && availableOpts.length > 1;
         const isSavedBranchValid = availableOpts.some(o => o.value === savedBranch);
@@ -160,24 +140,12 @@ const Dashboard = () => {
           selectedBranchValue = availableOpts.length > 1 ? "__ALL__" : (availableOpts[0]?.value || "");
         }
 
-        const availableModuleOptions = PERMISSION_MODULES
-          .filter((module) => canAccessModule(module.key))
-          .map((module) => ({ value: module.key, label: module.label }));
-
-        setModuleOptions([{ value: "__ALL__", label: "All Modules" }, ...availableModuleOptions]);
-
-        if (savedModule && savedModule !== "__ALL__" && availableModuleOptions.some((opt) => opt.value === savedModule)) {
-          selectedModuleValue = savedModule;
-        }
-
         setBranch(selectedBranchValue);
-        setModule(selectedModuleValue);
 
         const selectedOpt = availableOpts.find(o => o.value === selectedBranchValue);
         setSelectedBranch(selectedBranchValue, selectedOpt?.label || "");
-        setSelectedModule(selectedModuleValue);
 
-        await computeUsersCount(selectedBranchValue, selectedModuleValue);
+        await computeUsersCount(selectedBranchValue);
         await computeAssetsCount(selectedBranchValue);
       } catch {}
     };
@@ -192,8 +160,19 @@ const Dashboard = () => {
         const selectedOpt = branchOptions.find(o => o.value === branch);
         setSelectedBranch(branch, selectedOpt?.label || "");
       }
-      setSelectedModule(module);
-      await computeUsersCount(branch, module);
+      
+      // Save the selected app module and navigate if needed
+      setSelectedAppModule(selectedAppModule);
+      
+      if (selectedAppModule === "module_1") {
+        // Module 1 stays in dashboard (or can navigate elsewhere)
+        navigate("/dashboard");
+      } else if (selectedAppModule === "module_2") {
+        // Module 2 will show dashboard only (without sidebar)
+        navigate("/dashboard");
+      }
+      
+      await computeUsersCount(branch);
       await computeAssetsCount(branch);
     } catch {
       setTotalUsers(null);
@@ -429,6 +408,16 @@ const Dashboard = () => {
 
           <div className="filters">
             <div className="filter">
+              <label className="filter-label">Module</label>
+              <Select
+                name="appModule"
+                value={selectedAppModule}
+                onChange={(e) => setSelectedAppModuleLocal(e.target.value)}
+                options={appModuleOptions}
+                placeholder=""
+              />
+            </div>
+            <div className="filter">
               <label className="filter-label">Branch</label>
               <Select
                 name="branch"
@@ -440,16 +429,6 @@ const Dashboard = () => {
                     : branchOptions
                 }
                 disabled={branchOptions.length === 1}
-                placeholder=""
-              />
-            </div>
-            <div>
-              <label className="">Select Module </label>
-              <Select
-                name="module"
-                value={module}
-                onChange={(e) => setModule(e.target.value)}
-                options={moduleOptions}
                 placeholder=""
               />
             </div>

@@ -1,11 +1,27 @@
 import React, { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
+import { getSelectedAppModule } from '../utils/appModule'
 import './MainLayout.css'
 
 const MainLayout = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 992)
+  const location = useLocation()
+
+  // Check if we should show sidebar based on module selection and route
+  const shouldShowSidebar = () => {
+    // Only show sidebar on dashboard for Module 1
+    if (location.pathname === '/dashboard') {
+      const selectedModule = getSelectedAppModule()
+      return selectedModule === 'module_1'
+    }
+    // Show sidebar on all other pages
+    return true
+  }
+  
+  const showSidebar = shouldShowSidebar()
 
   // Handle window resize to detect screen size
   React.useEffect(() => {
@@ -30,9 +46,9 @@ const MainLayout = ({ children }) => {
       <Header onToggleSidebar={handleToggle} />
       <div className={`layout-body ${collapsed ? 'sidebar-open' : ''} ${!isDesktop ? 'mobile' : 'desktop'}`}>
         {/* Overlay backdrop for mobile only */}
-        {collapsed && !isDesktop && <div className="sidebar-overlay" onClick={() => setCollapsed(false)} />}
+        {showSidebar && collapsed && !isDesktop && <div className="sidebar-overlay" onClick={() => setCollapsed(false)} />}
         
-        <Sidebar collapsed={collapsed} onCloseSidebar={() => setCollapsed(false)} />
+        {showSidebar && <Sidebar collapsed={collapsed} onCloseSidebar={() => setCollapsed(false)} />}
         <main className="main-content" onClick={handleMainContentClick}>
           <div className="main-container">
             {children}
