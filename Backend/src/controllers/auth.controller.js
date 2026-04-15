@@ -453,6 +453,7 @@ export const profileController = asyncHandler(async (req, res) => {
     const roleId = roleData?._id || userDoc.roleId?._id || userDoc.roleId || null;
     const roleName = roleData?.name || userDoc.roleId?.name || null;
 
+    const roleModules = Array.isArray(roleData?.modules) ? roleData.modules : [];
     const minimalUser = {
       _id: userDoc._id,
       userId: userDoc.userId,
@@ -460,6 +461,7 @@ export const profileController = asyncHandler(async (req, res) => {
       email: userDoc.email,
       role: roleName,
       roleId: roleId,
+      modules: roleName === "super_admin" && roleModules.length === 0 ? ["module1", "module2"] : roleModules,
       branchId: Array.isArray(userDoc.branchId) 
         ? userDoc.branchId.map(b => (b && b._id) ? b._id : b).filter(Boolean)
         : [],

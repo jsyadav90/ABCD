@@ -54,13 +54,45 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
     }
   }, [role, isOpen]);
 
+  const assignedMainModules = useMemo(() => {
+    if (role?.name === "super_admin") {
+      return MAIN_MODULES.map((module) => module.key);
+    }
+
+    if (!Array.isArray(role?.modules) || role.modules.length === 0) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(
+        role.modules
+          .filter((m) => typeof m === "string")
+          .map((m) => m.trim().toLowerCase())
+          .filter(Boolean)
+      )
+    );
+  }, [role]);
+
+  const availablePermissionModules = useMemo(() => {
+    if (assignedMainModules.length === 0) {
+      return [];
+    }
+
+    const allowedSubModules = new Set(
+      MAIN_MODULES.filter((module) => assignedMainModules.includes(module.key))
+        .flatMap((module) => module.subModules)
+    );
+
+    return PERMISSION_MODULES.filter((module) => allowedSubModules.has(module.key));
+  }, [assignedMainModules]);
+
   // Filter modules based on search term
   const filteredModules = useMemo(() => {
-    if (!searchTerm.trim()) return PERMISSION_MODULES;
+    if (!searchTerm.trim()) return availablePermissionModules;
     
     const lowerSearch = searchTerm.toLowerCase();
     
-    return PERMISSION_MODULES.map(module => {
+    return availablePermissionModules.map(module => {
       // Check if module matches
       const moduleMatches = module.label.toLowerCase().includes(lowerSearch);
       
@@ -82,7 +114,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
       
       return null;
     }).filter(Boolean);
-  }, [searchTerm]);
+  }, [searchTerm, availablePermissionModules]);
 
   const selectedModules = useMemo(() => {
     let modules = filteredModules;
@@ -99,24 +131,25 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   }, [filteredModules, selectedModuleKey]);
 
   const moduleOptions = useMemo(() => [
-    { key: "all", label: "All Modules" },
-    ...MAIN_MODULES.map((module) => ({ key: module.key, label: module.label })),
-  ], []);
+    { key: "all", label: "All Assigned Modules" },
+    ...MAIN_MODULES.filter((module) => assignedMainModules.includes(module.key)).map((module) => ({
+      key: module.key,
+      label: module.label,
+    })),
+  ], [assignedMainModules]);
 
   const categoryOptions = useMemo(() => {
     const options = [{ key: "all", label: "All Categories" }];
     
     if (selectedModuleKey === "all") {
-      // When all modules selected, show all submodules
-      PERMISSION_MODULES.forEach(module => {
+      availablePermissionModules.forEach(module => {
         options.push({ key: module.key, label: module.label });
       });
     } else {
-      // When specific main module selected, show its submodules
       const mainModule = MAIN_MODULES.find(m => m.key === selectedModuleKey);
       if (mainModule) {
         mainModule.subModules.forEach(subModuleKey => {
-          const subModule = PERMISSION_MODULES.find(m => m.key === subModuleKey);
+          const subModule = availablePermissionModules.find(m => m.key === subModuleKey);
           if (subModule) {
             options.push({ key: subModule.key, label: subModule.label });
           }
@@ -125,7 +158,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
     }
     
     return options;
-  }, [selectedModuleKey]);
+  }, [selectedModuleKey, availablePermissionModules]);
 
   const finalSelectedModules = useMemo(() => {
     let modules = selectedModules;

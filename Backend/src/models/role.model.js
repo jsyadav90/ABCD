@@ -74,6 +74,12 @@ const roleSchema = new mongoose.Schema(
       default: [],
     },
 
+    modules: {
+      type: [String],
+      default: [],
+      note: "Assigned main modules for role access",
+    },
+
     // Role Status
     isActive: {
       type: Boolean,
@@ -194,11 +200,17 @@ roleSchema.pre("save", function () {
   } else {
     this.permissionKeys = [];
   }
-});
 
-// =====================================================
-// METHODS (permissionKeys based)
-// =====================================================
+  if (Array.isArray(this.modules)) {
+    const moduleKeys = this.modules
+      .filter((m) => typeof m === "string")
+      .map((m) => m.trim().toLowerCase())
+      .filter(Boolean);
+    this.modules = Array.from(new Set(moduleKeys));
+  } else {
+    this.modules = [];
+  }
+});
 
 roleSchema.methods.hasKey = function (key) {
   if (!this.isActive) return false;
@@ -323,6 +335,7 @@ roleSchema.statics.initializeSystemRoles = async function (createdBy) {
       createdBy,
       permissions: [],
       permissionKeys: ["*"],
+      modules: ["module1", "module2"],
     },
   ];
 
@@ -334,6 +347,9 @@ roleSchema.statics.initializeSystemRoles = async function (createdBy) {
 
     if (!exists) {
       await this.create(roleData);
+    } else if (!Array.isArray(exists.modules) || exists.modules.length === 0) {
+      exists.modules = Array.from(new Set(["module1", "module2"]));
+      await exists.save();
     }
   }
 };

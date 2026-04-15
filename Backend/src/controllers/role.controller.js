@@ -50,6 +50,7 @@ export const createRole = asyncHandler(async (req, res) => {
     isActive,
     isDefault,
     permissionKeys,
+    modules,
   } = req.body;
 
   if (!name || !displayName) {
@@ -92,6 +93,10 @@ export const createRole = asyncHandler(async (req, res) => {
     );
   }
 
+  const moduleList = Array.isArray(modules)
+    ? Array.from(new Set(modules.filter((m) => typeof m === "string").map((m) => m.trim().toLowerCase())))
+    : [];
+
   const doc = await Role.create({
     name: name.toLowerCase(),
     displayName,
@@ -102,6 +107,7 @@ export const createRole = asyncHandler(async (req, res) => {
     isActive: isActive !== false,
     isDefault: isDefault === true,
     permissionKeys: Array.isArray(permissionKeys) ? permissionKeys : [],
+    modules: moduleList,
     createdBy: req.user.id,
   });
 
@@ -120,6 +126,7 @@ export const updateRole = asyncHandler(async (req, res) => {
     isActive,
     isDefault,
     permissionKeys,
+    modules,
     newDefaultRoleId,
     makeNewDefault,
     clearUsers,
@@ -315,6 +322,21 @@ export const updateRole = asyncHandler(async (req, res) => {
 
   if (Array.isArray(permissionKeys)) {
     role.permissionKeys = permissionKeys;
+  }
+
+  if (Array.isArray(modules)) {
+    role.modules = Array.from(new Set(modules
+      .filter((m) => typeof m === "string")
+      .map((m) => m.trim().toLowerCase())
+      .filter(Boolean)
+    ));
+  }
+
+  if (role.name === "super_admin") {
+    role.modules = ["module1", "module2"];
+    if (!Array.isArray(role.permissionKeys) || !role.permissionKeys.includes("*")) {
+      role.permissionKeys = ["*"];
+    }
   }
 
   if (req.user?.id) {

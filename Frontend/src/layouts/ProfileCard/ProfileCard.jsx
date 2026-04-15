@@ -42,6 +42,7 @@ const ProfileCard = ({
               value={selectedAppModule}
               onChange={(e) => setSelectedAppModule(e.target.value)}
               options={appModuleOptions}
+              disabled={appModuleOptions.length === 1}
               placeholder=""
             />
           </div>

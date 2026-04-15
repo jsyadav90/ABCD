@@ -21,6 +21,7 @@ const RoleRightsTab = ({ setToast }) => {
     isDefault: false,
     permissions: [],
     permissionKeys: [],
+    modules: [],
   });
   const [roleFormError, setRoleFormError] = useState("");
   const [savingRole, setSavingRole] = useState(false);
@@ -108,6 +109,7 @@ const RoleRightsTab = ({ setToast }) => {
       isDefault: false,
       permissions: [],
       permissionKeys: [],
+      modules: [],
     });
     setRoleFormError("");
     setNameValidationMsg("");
@@ -127,6 +129,7 @@ const RoleRightsTab = ({ setToast }) => {
       isDefault: role.isDefault === true,
       permissions: role.permissions || [],
       permissionKeys: role.permissionKeys || [],
+      modules: role.modules || [],
     });
     setRoleFormError("");
     setNameValidationMsg("");
@@ -171,6 +174,18 @@ const RoleRightsTab = ({ setToast }) => {
     });
   };
 
+  const handleRoleModulesChange = (/** @type {{ target: { selectedOptions: any; }; }} */ e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions || []);
+    const selectedModules = selectedOptions
+      .map((option) => option.value)
+      .filter((value) => typeof value === "string" && value.trim() !== "");
+
+    setRoleForm((prev) => ({
+      ...prev,
+      modules: Array.from(new Set(selectedModules)),
+    }));
+  };
+
   const handleCopyPermissions = (/** @type {import("react").SetStateAction<string>} */ sourceRoleId) => {
     setCopyFromRoleId(sourceRoleId);
     if (!sourceRoleId) return;
@@ -189,6 +204,7 @@ const RoleRightsTab = ({ setToast }) => {
           ...prev,
           permissionKeys: [...(sourceRole.permissionKeys || [])],
           permissions: [...(sourceRole.permissions || [])],
+          modules: [...(sourceRole.modules || [])],
         }));
         setToast({
           type: "success",
@@ -308,6 +324,7 @@ const RoleRightsTab = ({ setToast }) => {
         isDefault: roleForm.isDefault,
         permissions: [],
         permissionKeys: roleForm.permissionKeys || [],
+        modules: roleForm.modules || [],
       };
 
       if (
@@ -431,6 +448,15 @@ const RoleRightsTab = ({ setToast }) => {
       header: "Default",
       key: "isDefault",
       render: (/** @type {{ isDefault: any; }} */ row) => (row.isDefault ? "Yes" : "No"),
+    },
+    {
+      header: "Modules",
+      key: "modules",
+      render: (/** @type {{ modules: string[]; }} */ row) => (
+        <span title={(row.modules || []).join(", ") || "None"}>
+          {(row.modules || []).length || 0}
+        </span>
+      ),
     },
     {
       header: "Actions",
@@ -649,15 +675,34 @@ const RoleRightsTab = ({ setToast }) => {
                   <option value="">-- Select a role to copy rights --</option>
                   {roles.map((r) => (
                     <option key={r._id || r.id} value={r._id || r.id}>
-                      {r.displayName} ({r.permissionKeys?.length || 0} rights)
+                      {r.displayName} ({r.permissionKeys?.length || 0} rights, {(r.modules || []).length || 0} modules)
                     </option>
                   ))}
                 </select>
                 <small style={{ color: "#6b7280", display: "block", marginTop: "0.25rem" }}>
-                  Select a role to automatically copy its rights to this new role.
+                  Select a role to automatically copy its rights and modules to this new role.
                 </small>
              </div>
           )}
+
+          <div className="setup-modal-full">
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem" }}>
+              Modules
+            </label>
+            <select
+              name="modules"
+              multiple
+              value={roleForm.modules}
+              onChange={handleRoleModulesChange}
+              style={{ width: "100%", minHeight: "120px", padding: "0.5rem", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "0.95rem" }}
+            >
+              <option value="module1">Module 1</option>
+              <option value="module2">Module 2</option>
+            </select>
+            <small style={{ color: "#6b7280", display: "block", marginTop: "0.25rem" }}>
+              Pick the modules this role may access. Manage rights will only show the modules assigned here.
+            </small>
+          </div>
 
           <div className="setup-modal-full">
             <Input

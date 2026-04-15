@@ -46,9 +46,7 @@ const Dashboard = () => {
   });
 
   const [branchOptions, setBranchOptions] = useState([]);
-  const [appModuleOptions, setAppModuleOptions] = useState(
-    MODULES.map(m => ({ value: m.id, label: m.label }))
-  );
+  const [appModuleOptions, setAppModuleOptions] = useState([]);
   const [totalUsers, setTotalUsers] = useState(null);
   const [totalAssets, setTotalAssets] = useState(null);
 
@@ -112,9 +110,34 @@ const Dashboard = () => {
           userId: u.userId || "",
           organizationId: u.organizationId || null,
           branchIds: Array.isArray(u.branchId) ? u.branchId.map(b => String(b)) : [],
+          modules: Array.isArray(u.modules) ? u.modules : [],
         };
 
         setProfile(userInfo);
+
+        // Filter app modules based on user's assigned modules
+        let availableAppModules = MODULES.map(m => ({ value: m.id, label: m.label }));
+        if (userInfo.modules.length > 0) {
+          availableAppModules = MODULES
+            .filter(m => userInfo.modules.includes(m.id))
+            .map(m => ({ value: m.id, label: m.label }));
+        }
+        setAppModuleOptions(availableAppModules);
+
+        // Set default selected app module based on available modules
+        const savedAppModule = getSelectedAppModule();
+        let selectedAppModuleValue = savedAppModule;
+
+        if (availableAppModules.length === 1) {
+          // If only one module available, select it by default
+          selectedAppModuleValue = availableAppModules[0].value;
+        } else if (!availableAppModules.some(m => m.value === savedAppModule)) {
+          // If saved module is not available, select first available
+          selectedAppModuleValue = availableAppModules[0]?.value || "";
+        }
+
+        setSelectedAppModuleLocal(selectedAppModuleValue);
+        setSelectedAppModule(selectedAppModuleValue);
 
         const branches = await fetchBranchesForDropdown(userInfo.organizationId);
         if (!isMounted) return;

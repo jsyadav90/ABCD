@@ -22,14 +22,14 @@ import { Modal, Input, Button } from "../../components";
 import "./Sidebar.css";
 
 const sidebarMenuItems = [
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    icon: "dashboard",
-    path: "/dashboard",
-    permission: null,
-    modules: ["module_1"],
-  },
+  // {
+  //   key: "dashboard",
+  //   label: "Dashboard",
+  //   icon: "dashboard",
+  //   path: "/dashboard",
+  //   permission: null,
+  //   modules: ["module_1"],
+  // },
   {
     key: "users",
     label: "User",
