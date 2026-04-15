@@ -254,9 +254,8 @@ export const createUser = asyncHandler(async (req, res) => {
 export const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const userDoc = await User.findById(id).populate('roleId branchId').lean();
-  const user = userDoc ? { ...userDoc, role: userDoc.roleId?.displayName || userDoc.roleId?.name || null } : null;
   
-  if (!user) {
+  if (!userDoc) {
     throw new apiError(404, "User not found");
   }
   
@@ -264,7 +263,20 @@ export const getUserById = asyncHandler(async (req, res) => {
   if (!(await hasUserAccess(req.user, { ...targetUserForAccess, _id: id }))) {
     throw new apiError(404, "User not found");
   }
-  
+
+  const roleModules = Array.isArray(userDoc.roleId?.modules) ? userDoc.roleId.modules : [];
+  const userModules = Array.isArray(userDoc.modules) ? userDoc.modules : [];
+  const removedModules = Array.isArray(userDoc.removedModules) ? userDoc.removedModules : [];
+  const effectiveModules = Array.from(new Set([...roleModules, ...userModules])).filter(
+    (moduleKey) => !removedModules.includes(moduleKey)
+  );
+
+  const user = {
+    ...userDoc,
+    role: userDoc.roleId?.displayName || userDoc.roleId?.name || null,
+    modules: effectiveModules,
+  };
+
   return res.status(200).json(new apiResponse(200, user, "User retrieved successfully"));
 });
 
@@ -355,9 +367,17 @@ export const listUsers = asyncHandler(async (req, res) => {
   // Map role name for compatibility with frontend which expects `role` string
   const items = itemsRaw.map((it) => {
     const loginData = loginMap.get(it._id.toString());
+    const roleModules = Array.isArray(it.roleId?.modules) ? it.roleId.modules : [];
+    const userModules = Array.isArray(it.modules) ? it.modules : [];
+    const removedModules = Array.isArray(it.removedModules) ? it.removedModules : [];
+    const effectiveModules = Array.from(new Set([...roleModules, ...userModules])).filter(
+      (moduleKey) => !removedModules.includes(moduleKey)
+    );
+
     return {
       ...it,
       role: it.roleId?.displayName || it.roleId?.name || null,
+      modules: effectiveModules,
       // Add lock status information
       isLocked: loginData ? (loginData.isPermanentlyLocked || (loginData.lockUntil && new Date() < loginData.lockUntil)) : false,
       lockLevel: loginData?.lockLevel || 0,
@@ -542,7 +562,7 @@ export const toggleIsActive = asyncHandler(async (req, res) => {
 
 export const changeUserRole = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { roleId, role, extraPermissions, removedPermissions } = req.body;
+  const { roleId, role, extraPermissions, removedPermissions, extraModules, removedModules } = req.body;
 
   const user = await User.findById(id);
   
@@ -583,8 +603,16 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     user.removedPermissions = removedPermissions;
   }
 
+  // Update individual module overrides if provided
+  if (Array.isArray(extraModules)) {
+    user.modules = extraModules;
+  }
+  if (Array.isArray(removedModules)) {
+    user.removedModules = removedModules;
+  }
+
   await user.save();
-  return res.status(200).json(new apiResponse(200, user, "User role and permissions updated successfully"));
+  return res.status(200).json(new apiResponse(200, user, "User role, permissions, and module overrides updated successfully"));
 });
 
 export const softDeleteUser = asyncHandler(async (req, res) => {
@@ -635,7 +663,7 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
     // Fetch only active roles for dropdown lists
     let roles = await Role.find(
       { isDeleted: false, isActive: true },
-      "name displayName description category permissionKeys"
+      "name displayName description category permissionKeys modules"
     )
       .lean()
       .sort({ priority: -1 });
@@ -676,7 +704,7 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
         // Re-fetch active roles
         roles = await Role.find(
           { isDeleted: false, isActive: true },
-          "name displayName description category permissionKeys"
+          "name displayName description category permissionKeys modules"
         )
           .lean()
           .sort({ priority: -1 });
@@ -689,6 +717,7 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
       displayName: role.displayName,
       description: role.description,
       permissionKeys: Array.isArray(role.permissionKeys) ? role.permissionKeys : [],
+      modules: Array.isArray(role.modules) ? role.modules : [],
     }));
 
     return res.status(200).json(new apiResponse(200, formattedRoles, "Roles retrieved successfully"));

@@ -379,3 +379,153 @@
   color: #1e7e34;
 }
 
+/*
+ * PERMISSION TREE STYLES (Same as Setup page)
+ * Hierarchical structure with connecting lines
+ */
+
+.permission-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 1rem;
+}
+
+.permission-toolbar__selector,
+.permission-toolbar__search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.permission-toolbar label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.permission-toolbar select,
+.permission-toolbar input[type="text"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.permission-tree-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #fff;
+  margin-top: 0;
+  padding: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tree-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* 1. Module (Level 1) */
+.tree-module {
+  position: relative;
+}
+
+.module-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #111827;
+  cursor: pointer;
+  user-select: none;
+}
+
+.module-header:hover {
+  background-color: #e5e7eb;
+}
+
+/* 2. Submodules Container (Level 2) */
+.tree-pages {
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+  border-left: 1px solid #d1d5db;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Page Item */
+.tree-page {
+  position: relative;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.page-actions {
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+  border-left: 1px solid #d1d5db;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Action Item */
+.action-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.action-item:hover {
+  color: #111827;
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #0f172a;
+  border-radius: 3px;
+  margin: 0;
+}
+
+/* Icons */
+.expand-icon {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  width: 16px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+

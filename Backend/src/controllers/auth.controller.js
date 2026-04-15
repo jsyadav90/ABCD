@@ -454,6 +454,12 @@ export const profileController = asyncHandler(async (req, res) => {
     const roleName = roleData?.name || userDoc.roleId?.name || null;
 
     const roleModules = Array.isArray(roleData?.modules) ? roleData.modules : [];
+    const userModules = Array.isArray(userDoc.modules) ? userDoc.modules : [];
+    const removedModules = Array.isArray(userDoc.removedModules) ? userDoc.removedModules : [];
+    const effectiveModules = Array.from(new Set([...(roleModules || []), ...userModules])).filter(
+      (moduleKey) => !removedModules.includes(moduleKey)
+    );
+
     const minimalUser = {
       _id: userDoc._id,
       userId: userDoc.userId,
@@ -461,9 +467,10 @@ export const profileController = asyncHandler(async (req, res) => {
       email: userDoc.email,
       role: roleName,
       roleId: roleId,
-      // If no modules assigned to role, default to both modules for all users
-      // This ensures users can see dashboard modules unless explicitly restricted
-      modules: roleModules && roleModules.length > 0 ? roleModules : ["module_1", "module_2"],
+      // Compute effective modules from role plus individual user overrides.
+      modules: effectiveModules.length > 0
+        ? effectiveModules
+        : (roleModules.length > 0 ? roleModules : ["module_1", "module_2"]),
       branchId: Array.isArray(userDoc.branchId) 
         ? userDoc.branchId.map(b => (b && b._id) ? b._id : b).filter(Boolean)
         : [],

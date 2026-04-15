@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
-import { getSelectedAppModule } from '../utils/appModule'
+import { getSelectedAppModule, setSelectedAppModule } from '../utils/appModule'
+import { authAPI } from '../services/api'
 import './MainLayout.css'
 
 /**
@@ -42,6 +43,51 @@ const MainLayout = ({ children }) => {
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Sync app module selection when rights change while the user is active.
+  const lastModuleSyncRef = useRef(0)
+  React.useEffect(() => {
+    const normalizeModuleId = (moduleId) => {
+      if (!moduleId) return moduleId
+      return String(moduleId).replace(/^module([12])$/, 'module_$1')
+    }
+
+    const syncModuleSelection = async () => {
+      try {
+        const response = await authAPI.getProfile()
+        const user = response.data?.data?.user || {}
+        const rawModules = Array.isArray(user.modules) ? user.modules : []
+        const normalizedModules = rawModules
+          .map(normalizeModuleId)
+          .filter((m) => typeof m === 'string' && m)
+
+        const currentModule = getSelectedAppModule()
+        const availableModules = normalizedModules.length > 0 ? normalizedModules : [currentModule || 'module_1']
+
+        if (!availableModules.includes(currentModule)) {
+          const newModule = availableModules[0]
+          setSelectedModule(newModule)
+          setSelectedAppModule(newModule)
+        }
+      } catch (err) {
+        // Ignore profile fetch failures here; do not break UI
+        console.warn('[MainLayout] Module sync failed:', err?.message || err)
+      }
+    }
+
+    const scheduleSync = () => {
+      const now = Date.now()
+      if (now - lastModuleSyncRef.current < 10000) return
+      lastModuleSyncRef.current = now
+      syncModuleSelection()
+    }
+
+    const events = ['click', 'keydown', 'touchstart']
+    events.forEach((eventName) => window.addEventListener(eventName, scheduleSync, true))
+    return () => {
+      events.forEach((eventName) => window.removeEventListener(eventName, scheduleSync, true))
+    }
   }, [])
 
   const handleToggle = () => setCollapsed(prev => !prev)

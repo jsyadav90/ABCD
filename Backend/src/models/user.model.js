@@ -125,6 +125,20 @@ const userSchema = new mongoose.Schema(
       note: 'Permissions from role that are removed for this user'
     },
 
+    // Assigned modules for this user (independent of role)
+    modules: {
+      type: [String],
+      default: [],
+      note: 'Modules assigned to user individually, independent of role modules'
+    },
+
+    // Modules removed from role assignments for this user
+    removedModules: {
+      type: [String],
+      default: [],
+      note: 'Modules removed from role assignments for this user'
+    },
+
     reportingTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

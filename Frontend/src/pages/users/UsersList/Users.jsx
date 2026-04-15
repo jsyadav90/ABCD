@@ -15,7 +15,7 @@ import Modal from "../../../components/Modal/Modal.jsx";
 import FilterPopup from "../../../components/Filter/FilterPopup.jsx";
 import FilterDisplay from "../../../components/Filter/FilterDisplay.jsx";
 import { hasPermission } from "../../../utils/permissionHelper";
-import { PERMISSION_MODULES } from "../../../constants/permissions";
+import { PERMISSION_MODULES, MAIN_MODULES } from "../../../constants/permissions";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
 import StatusChangeModal from "../../../components/StatusChangeModal/StatusChangeModal.jsx";
 import "./Users.css";
@@ -33,6 +33,7 @@ import {
 } from "../../../services/userApi.js";
 import { authAPI } from "../../../services/api.js";
 import Select from "../../../components/Select/Select.jsx";
+import MultiSelect from "../../../components/Select/MultiSelect.jsx";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle.jsx";
 import { getSelectedBranch, onBranchChange } from "../../../utils/scope";
 
@@ -72,13 +73,18 @@ const Users = () => {
     userName: "",
     currentRoleId: "",
     newRoleId: "",
-    activeTab: "role", // "role" or "otherRights"
+    activeTab: "role", // "role", "modules", or "otherRights"
     extraPermissions: [],
     removedPermissions: [],
     assignedPermissions: [], // Current assigned permissions for UI
     expandedModules: {},
     searchTerm: "",
-    selectedModuleKey: "all",
+    selectedModuleKey: "all", // For filtering permissions
+    selectedCategoryKey: "all", // For filtering permissions
+    selectedModules: [], // User's assigned modules
+    roleModules: [], // Role's assigned modules
+    extraModules: [], // Extra modules assigned to user beyond role
+    removedModules: [], // Modules removed from role for user
     isSubmitting: false,
     error: ""
   });
@@ -253,16 +259,19 @@ const Users = () => {
     return () => clearTimeout(timer);
   }, [error]);
 
-  // Update assignedPermissions when role or permissions change
+// Update assignedPermissions when role changes (for permissions tab)
   useEffect(() => {
     if (editRoleModal.isOpen && editRoleModal.newRoleId) {
       const role = roles.find(r => r._id === editRoleModal.newRoleId);
       const rolePerms = role ? role.permissionKeys || [] : [];
       const effectivePerms = [...new Set([...rolePerms, ...editRoleModal.extraPermissions].filter(p => !editRoleModal.removedPermissions.includes(p)))];
-      
+
       setEditRoleModal(prev => ({
         ...prev,
-        assignedPermissions: effectivePerms
+        assignedPermissions: effectivePerms,
+        searchTerm: "",
+        selectedModuleKey: "all",
+        selectedCategoryKey: "all"
       }));
     }
   }, [editRoleModal.newRoleId, editRoleModal.extraPermissions, editRoleModal.removedPermissions, roles, editRoleModal.isOpen]);
@@ -285,6 +294,71 @@ const Users = () => {
       return filteredPages.length > 0 ? { ...module, pages: filteredPages } : null;
     }).filter(Boolean);
   }, [editRoleModal.searchTerm]);
+
+  // Available permission modules based on user's assigned modules
+  const availablePermissionModules = useMemo(() => {
+    if (editRoleModal.selectedModules.length === 0) {
+      return [];
+    }
+
+    const allowedSubModules = new Set(
+      MAIN_MODULES.filter((module) => editRoleModal.selectedModules.includes(module.key))
+        .flatMap((module) => module.subModules)
+    );
+
+    return PERMISSION_MODULES.filter((module) => allowedSubModules.has(module.key));
+  }, [editRoleModal.selectedModules]);
+
+  // Module options for the select dropdown
+  const moduleOptions = useMemo(() => [
+    { key: "all", label: "All Assigned Modules" },
+    ...MAIN_MODULES.filter((module) => editRoleModal.selectedModules.includes(module.key)).map((module) => ({
+      key: module.key,
+      label: module.label,
+    })),
+  ], [editRoleModal.selectedModules]);
+
+  // Category options for the select dropdown
+  const categoryOptions = useMemo(() => {
+    const options = [{ key: "all", label: "All Categories" }];
+
+    if (editRoleModal.selectedModuleKey === "all") {
+      availablePermissionModules.forEach(module => {
+        options.push({ key: module.key, label: module.label });
+      });
+    } else {
+      const mainModule = MAIN_MODULES.find(m => m.key === editRoleModal.selectedModuleKey);
+      if (mainModule) {
+        mainModule.subModules.forEach(subModuleKey => {
+          const subModule = availablePermissionModules.find(m => m.key === subModuleKey);
+          if (subModule) {
+            options.push({ key: subModule.key, label: subModule.label });
+          }
+        });
+      }
+    }
+
+    return options;
+  }, [editRoleModal.selectedModuleKey, availablePermissionModules]);
+
+  // Final filtered modules based on all filters
+  const finalFilteredModules = useMemo(() => {
+    let modules = editRoleModal.searchTerm.trim() ? filteredModules : availablePermissionModules;
+
+    if (editRoleModal.selectedModuleKey !== "all") {
+      // When specific main module selected, show its submodules
+      const mainModule = MAIN_MODULES.find(m => m.key === editRoleModal.selectedModuleKey);
+      if (mainModule) {
+        modules = modules.filter(module => mainModule.subModules.includes(module.key));
+      }
+    }
+
+    if (editRoleModal.selectedCategoryKey !== "all") {
+      modules = modules.filter(module => module.key === editRoleModal.selectedCategoryKey);
+    }
+
+    return modules;
+  }, [editRoleModal.searchTerm, editRoleModal.selectedModuleKey, editRoleModal.selectedCategoryKey, filteredModules, availablePermissionModules]);
 
   const handleDisableRow = (id) => {
     const user = allUsers.find((u) => u._id === id);
@@ -561,6 +635,13 @@ const Users = () => {
     const removedPerms = row.removedPermissions || [];
     const effectivePerms = [...new Set([...rolePerms, ...extraPerms].filter(p => !removedPerms.includes(p)))];
 
+    const removedModules = Array.isArray(row.removedModules) ? row.removedModules : [];
+    const roleModules = Array.isArray(role?.modules) ? role.modules : [];
+    // row.modules is already the effective modules computed by backend
+    const effectiveModules = Array.isArray(row.modules) ? row.modules : [];
+    // Compute extra modules: modules that are assigned but not in the role
+    const extraModules = effectiveModules.filter(module => !roleModules.includes(module));
+
     setEditRoleModal({
       isOpen: true,
       userId: row._id,
@@ -574,6 +655,11 @@ const Users = () => {
       expandedModules: {},
       searchTerm: "",
       selectedModuleKey: "all",
+      selectedCategoryKey: "all",
+      selectedModules: effectiveModules, // Use effective modules directly from backend
+      roleModules: roleModules, // Role's assigned modules
+      extraModules: extraModules, // Extra modules beyond role
+      removedModules,
       isSubmitting: false,
       error: ""
     });
@@ -590,6 +676,12 @@ const Users = () => {
     if (!editRoleModal.newRoleId) {
         setEditRoleModal(prev => ({...prev, error: "Please select a role"}));
         return;
+    }
+
+    // If we're on the modules tab, save modules
+    if (editRoleModal.activeTab === "modules") {
+      await handleSaveModules();
+      return;
     }
 
     // If we're on the otherRights tab, save permissions
@@ -616,6 +708,25 @@ const Users = () => {
     } catch (err) {
         setEditRoleModal(prev => ({...prev, isSubmitting: false, error: err.message}));
     }
+  };
+
+  const handleRoleChange = (newRoleId) => {
+    // When role changes, compute new effective modules: new role modules + user extra modules - user removed modules
+    const selectedRole = roles.find(r => r._id === newRoleId);
+    const newRoleModules = Array.isArray(selectedRole?.modules) ? selectedRole.modules : [];
+    const userExtraModules = Array.isArray(editRoleModal.extraModules) ? editRoleModal.extraModules : [];
+    const userRemovedModules = Array.isArray(editRoleModal.removedModules) ? editRoleModal.removedModules : [];
+    const newEffectiveModules = Array.from(new Set([...newRoleModules, ...userExtraModules])).filter(
+      (moduleKey) => !userRemovedModules.includes(moduleKey)
+    );
+
+    setEditRoleModal(prev => ({
+      ...prev,
+      newRoleId,
+      roleModules: newRoleModules,
+      selectedModules: newEffectiveModules,
+      error: ""
+    }));
   };
 
   // --- Assign Reporting Handlers ---
@@ -686,7 +797,15 @@ const Users = () => {
   };
 
   const handleModuleFilter = (moduleKey) => {
-    setEditRoleModal(prev => ({ ...prev, selectedModuleKey: moduleKey }));
+    setEditRoleModal(prev => ({
+      ...prev,
+      selectedModuleKey: moduleKey,
+      selectedCategoryKey: "all" // Reset category when module changes
+    }));
+  };
+
+  const handleCategoryFilter = (categoryKey) => {
+    setEditRoleModal(prev => ({ ...prev, selectedCategoryKey: categoryKey }));
   };
 
   const handleSavePermissions = async () => {
@@ -705,7 +824,8 @@ const Users = () => {
       const removedPermissions = rolePerms.filter(p => !editRoleModal.assignedPermissions.includes(p));
 
       // Save the changes
-      await changeUserRole(editRoleModal.userId, editRoleModal.newRoleId, extraPermissions, removedPermissions);
+      const response = await changeUserRole(editRoleModal.userId, editRoleModal.newRoleId, extraPermissions, removedPermissions);
+      console.log("Permission save response:", response);
 
       // Update local state
       setAllUsers(prev => prev.map(u =>
@@ -715,10 +835,42 @@ const Users = () => {
       ));
 
       setSuccessMessage("User role and permissions updated successfully");
-      setEditRoleModal(prev => ({ ...prev, isOpen: false }));
+      setEditRoleModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setEditRoleModal(prev => ({ ...prev, isSubmitting: false, error: err.message }));
+      console.error("Error saving permissions:", err);
+      setEditRoleModal(prev => ({ ...prev, isSubmitting: false, error: err.message || "Failed to save permissions" }));
+    }
+  };
+
+  const handleSaveModules = async () => {
+    const confirmed = window.confirm("Are you sure you want to save module changes for this user?");
+    if (!confirmed) return;
+
+    try {
+      setEditRoleModal(prev => ({ ...prev, isSubmitting: true, error: "" }));
+
+      const roleModules = editRoleModal.roleModules || [];
+      const extraModules = editRoleModal.selectedModules.filter(m => !roleModules.includes(m));
+      const removedModules = roleModules.filter(m => !editRoleModal.selectedModules.includes(m));
+
+      // Save module overrides using the same route as other rights
+      const response = await changeUserRole(editRoleModal.userId, editRoleModal.newRoleId, null, null, extraModules, removedModules);
+      console.log("Module save response:", response);
+
+      // Update local state with effective modules
+      setAllUsers(prev => prev.map(u =>
+        u._id === editRoleModal.userId
+          ? { ...u, modules: editRoleModal.selectedModules }
+          : u
+      ));
+
+      setSuccessMessage("User modules updated successfully");
+      setEditRoleModal(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error("Error saving modules:", err);
+      setEditRoleModal(prev => ({ ...prev, isSubmitting: false, error: err.message || "Failed to save modules" }));
     }
   };
 
@@ -1757,6 +1909,19 @@ const Users = () => {
                     Role
                   </button>
                   <button
+                    onClick={() => setEditRoleModal(prev => ({ ...prev, activeTab: "modules" }))}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      border: "none",
+                      background: editRoleModal.activeTab === "modules" ? "#f8f9fa" : "transparent",
+                      borderBottom: editRoleModal.activeTab === "modules" ? "2px solid #007bff" : "none",
+                      cursor: "pointer",
+                      fontWeight: editRoleModal.activeTab === "modules" ? "bold" : "normal"
+                    }}
+                  >
+                    Modules
+                  </button>
+                  <button
                     onClick={() => setEditRoleModal(prev => ({ ...prev, activeTab: "otherRights" }))}
                     style={{
                       padding: "0.5rem 1rem",
@@ -1779,7 +1944,7 @@ const Users = () => {
                             label="Select Role"
                             name="newRoleId"
                             value={editRoleModal.newRoleId}
-                            onChange={(e) => setEditRoleModal(prev => ({ ...prev, newRoleId: e.target.value, error: "" }))}
+                            onChange={(e) => handleRoleChange(e.target.value)}
                             onBlur={() => {}}
                             options={roles.map(r => ({ value: r._id, label: r.displayName || r.name }))}
                             error={editRoleModal.error}
@@ -1788,95 +1953,173 @@ const Users = () => {
                   </div>
                 )}
 
+                {/* Modules Tab */}
+                {editRoleModal.activeTab === "modules" && (
+                  <div>
+                    <p style={{ marginBottom: "0.5rem", fontSize: "0.8rem", color: "#666", fontStyle: "italic" }}>
+                      Effective modules: {editRoleModal.selectedModules.length > 0 ? editRoleModal.selectedModules.join(", ") : "None"}
+                    </p>
+                    <MultiSelect
+                      label="Assigned Modules"
+                      name="selectedModules"
+                      value={editRoleModal.selectedModules}
+                      onChange={(e) => {
+                        setEditRoleModal(prev => ({ ...prev, selectedModules: e.target.value }));
+                      }}
+                      options={MAIN_MODULES.map(m => ({ value: m.key, label: m.label }))}
+                      error={editRoleModal.error}
+                    />
+                  </div>
+                )}
+
                 {/* Other Rights Tab */}
                 {editRoleModal.activeTab === "otherRights" && (
                   <div>
-                    {/* Search and Filter Controls */}
-                    <div style={{ marginBottom: "1rem", display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Input
-                          type="text"
-                          placeholder="Search permissions..."
-                          value={editRoleModal.searchTerm}
-                          onChange={(e) => handlePermissionSearch(e.target.value)}
-                          style={{ width: "100%" }}
-                        />
-                      </div>
-                      <div style={{ minWidth: 0, width: "100%", maxWidth: "240px" }}>
-                        <Select
+                    {/* Permission Toolbar - Same as Setup Page */}
+                    <div className="permission-toolbar">
+                      <div className="permission-toolbar__selector">
+                        <label htmlFor="user-permission-module-select">Select Module</label>
+                        <select
+                          id="user-permission-module-select"
                           value={editRoleModal.selectedModuleKey}
                           onChange={(e) => handleModuleFilter(e.target.value)}
-                          options={[
-                            { value: "all", label: "All Modules" },
-                            ...PERMISSION_MODULES.map(m => ({ value: m.key, label: m.label }))
-                          ]}
-                          style={{ width: "100%" }}
+                        >
+                          {moduleOptions.map((option) => (
+                            <option key={option.key} value={option.key}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="permission-toolbar__selector">
+                        <label htmlFor="user-permission-category-select">View Category</label>
+                        <select
+                          id="user-permission-category-select"
+                          value={editRoleModal.selectedCategoryKey}
+                          onChange={(e) => handleCategoryFilter(e.target.value)}
+                        >
+                          {categoryOptions.map((option) => (
+                            <option key={option.key} value={option.key}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="permission-toolbar__search">
+                        <label htmlFor="user-permission-search-input">Search rights</label>
+                        <input
+                          id="user-permission-search-input"
+                          type="text"
+                          placeholder="Search modules, pages, or actions..."
+                          value={editRoleModal.searchTerm}
+                          onChange={(e) => handlePermissionSearch(e.target.value)}
                         />
                       </div>
                     </div>
 
                     {/* Permissions Tree */}
-                    <div className="permissions-tree-container">
-                      {filteredModules
-                        .filter(module => editRoleModal.selectedModuleKey === "all" || module.key === editRoleModal.selectedModuleKey)
-                        .map(module => (
-                        <div key={module.key} style={{ marginBottom: "1rem" }}>
-                          <div
-                            onClick={() => toggleModuleExpand(module.key)}
-                            style={{
-                              cursor: "pointer",
-                              fontWeight: "bold",
-                              display: "flex",
-                              alignItems: "center",
-                              marginBottom: "0.5rem"
-                            }}
-                          >
-                            <span style={{ marginRight: "0.5rem" }}>
-                              {editRoleModal.expandedModules[module.key] ? "▼" : "▶"}
-                            </span>
-                            {module.label}
+                    <div className="permission-tree-container">
+                      <div className="tree-root">
+                        {finalFilteredModules.length === 0 && (
+                          <div style={{ padding: "1rem", textAlign: "center", color: "#6b7280" }}>
+                            No matching rights found.
                           </div>
+                        )}
 
-                          {editRoleModal.expandedModules[module.key] && (
-                            <div style={{ marginLeft: "1rem" }}>
-                              {module.pages.map(page => (
-                                <div key={page.key} style={{ marginBottom: "0.5rem" }}>
-                                  <div style={{ fontWeight: "bold", marginBottom: "0.25rem" }}>
-                                    {page.label}
-                                  </div>
-                                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.5rem" }}>
-                                    {page.actions.map(action => {
-                                      const permissionKey = `${module.key}:${page.key}:${action.key}`;
-                                      const isChecked = editRoleModal.assignedPermissions.includes(permissionKey);
-                                      return (
-                                        <label
-                                          key={action.key}
-                                          style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            cursor: "pointer",
-                                            padding: "0.25rem",
-                                            borderRadius: "4px",
-                                            background: isChecked ? "#e3f2fd" : "transparent"
-                                          }}
-                                        >
-                                          <input
-                                            type="checkbox"
-                                            checked={isChecked}
-                                            onChange={() => togglePermission(permissionKey)}
-                                            style={{ marginRight: "0.5rem" }}
-                                          />
-                                          {action.label}
-                                        </label>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              ))}
+                        {finalFilteredModules.map((module) => (
+                          <div key={module.key} className="tree-module">
+                            {/* Module Header */}
+                            <div
+                              className="module-header"
+                              onClick={(e) => {
+                                if (e.target.type !== 'checkbox') {
+                                  toggleModuleExpand(module.key);
+                                }
+                              }}
+                            >
+                              <span className={`expand-icon ${editRoleModal.expandedModules[module.key] ? 'expanded' : ''}`}>▶</span>
+                              {module.accessKey && (
+                                <input
+                                  type="checkbox"
+                                  checked={editRoleModal.assignedPermissions.includes(module.accessKey)}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    const newPermissions = isChecked
+                                      ? [...editRoleModal.assignedPermissions, module.accessKey]
+                                      : editRoleModal.assignedPermissions.filter(p => p !== module.accessKey);
+                                    setEditRoleModal(prev => ({ ...prev, assignedPermissions: newPermissions }));
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  title="Enable/Disable entire module"
+                                />
+                              )}
+                              <span>{module.label}</span>
                             </div>
-                          )}
-                        </div>
-                      ))}
+
+                            {/* Submodules (Pages) */}
+                            {editRoleModal.expandedModules[module.key] && (
+                              <div className="tree-pages">
+                                {module.pages.map(page => (
+                                  <div key={page.key} className="tree-page">
+                                    {/* Page Header */}
+                                    <div className="page-header">
+                                      <input
+                                        type="checkbox"
+                                        checked={page.actions.every(action => {
+                                          const permissionKey = `${module.key}:${page.key}:${action.key}`;
+                                          return editRoleModal.assignedPermissions.includes(permissionKey);
+                                        })}
+                                        onChange={(e) => {
+                                          const isChecked = e.target.checked;
+                                          const newPermissions = [...editRoleModal.assignedPermissions];
+
+                                          page.actions.forEach(action => {
+                                            const permissionKey = `${module.key}:${page.key}:${action.key}`;
+                                            if (isChecked) {
+                                              if (!newPermissions.includes(permissionKey)) {
+                                                newPermissions.push(permissionKey);
+                                              }
+                                            } else {
+                                              const index = newPermissions.indexOf(permissionKey);
+                                              if (index > -1) {
+                                                newPermissions.splice(index, 1);
+                                              }
+                                            }
+                                          });
+
+                                          setEditRoleModal(prev => ({ ...prev, assignedPermissions: newPermissions }));
+                                        }}
+                                        title="Select all actions in this page"
+                                      />
+                                      <span>{page.label}</span>
+                                    </div>
+
+                                    {/* Page Actions */}
+                                    <div className="page-actions">
+                                      {page.actions.map(action => {
+                                        const permissionKey = `${module.key}:${page.key}:${action.key}`;
+                                        const isChecked = editRoleModal.assignedPermissions.includes(permissionKey);
+                                        return (
+                                          <label key={action.key} className="action-item">
+                                            <input
+                                              type="checkbox"
+                                              checked={isChecked}
+                                              onChange={() => togglePermission(permissionKey)}
+                                            />
+                                            <span>{action.label}</span>
+                                          </label>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
