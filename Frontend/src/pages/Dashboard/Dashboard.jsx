@@ -103,6 +103,18 @@ const Dashboard = () => {
         const u = data.user || {};
         if (!isMounted) return;
 
+        // Normalize module IDs - handle both old format (module1) and new format (module_1)
+        const normalizeModuleId = (moduleId) => {
+          if (!moduleId) return moduleId;
+          // Convert module1 -> module_1 and module2 -> module_2
+          return String(moduleId).replace(/^module([12])$/, 'module_$1');
+        };
+
+        let rawModules = Array.isArray(u.modules) ? u.modules : [];
+        const normalizedModules = rawModules.map(normalizeModuleId);
+
+       
+
         const userInfo = {
           name: u.name || "",
           email: u.email || "",
@@ -110,18 +122,20 @@ const Dashboard = () => {
           userId: u.userId || "",
           organizationId: u.organizationId || null,
           branchIds: Array.isArray(u.branchId) ? u.branchId.map(b => String(b)) : [],
-          modules: Array.isArray(u.modules) ? u.modules : [],
+          modules: normalizedModules,
         };
 
         setProfile(userInfo);
 
         // Filter app modules based on user's assigned modules
+        // If no modules assigned, show all available modules (for backward compatibility)
         let availableAppModules = MODULES.map(m => ({ value: m.id, label: m.label }));
-        if (userInfo.modules.length > 0) {
+        
+        if (userInfo.modules && userInfo.modules.length > 0) {
           availableAppModules = MODULES
             .filter(m => userInfo.modules.includes(m.id))
             .map(m => ({ value: m.id, label: m.label }));
-        }
+        }       
         setAppModuleOptions(availableAppModules);
 
         // Set default selected app module based on available modules

@@ -335,7 +335,7 @@ roleSchema.statics.initializeSystemRoles = async function (createdBy) {
       createdBy,
       permissions: [],
       permissionKeys: ["*"],
-      modules: ["module1", "module2"],
+      modules: ["module_1", "module_2"],
     },
   ];
 
@@ -348,7 +348,7 @@ roleSchema.statics.initializeSystemRoles = async function (createdBy) {
     if (!exists) {
       await this.create(roleData);
     } else if (!Array.isArray(exists.modules) || exists.modules.length === 0) {
-      exists.modules = Array.from(new Set(["module1", "module2"]));
+      exists.modules = Array.from(new Set(["module_1", "module_2"]));
       await exists.save();
     }
   }

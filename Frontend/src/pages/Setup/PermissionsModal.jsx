@@ -131,7 +131,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
   }, [filteredModules, selectedModuleKey]);
 
   const moduleOptions = useMemo(() => [
-    { key: "all", label: "All Assigned Modules" },
+    // { key: "all", label: "All Assigned Modules" },
     ...MAIN_MODULES.filter((module) => assignedMainModules.includes(module.key)).map((module) => ({
       key: module.key,
       label: module.label,

@@ -28,9 +28,9 @@ const ProfileCard = ({
             <div className="user-name">{profile?.name || "--"}</div>
             <div className="user-role">
               {profile?.role ? profile.role.replaceAll("_", " ").toUpperCase() : "N/A"}
-              <span className="user-id"> | ID: {profile?.userId || "--"}</span>
+             
             </div>
-            <div className="user-email">{profile?.email || "--"}</div>
+            <div className="user-id"> ID : {profile?.userId || "--"}</div>
           </div>
         </div>
 

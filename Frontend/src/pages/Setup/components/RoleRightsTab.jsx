@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import { roleAPI } from "../../../services/api.js";
-import { Table, Button, Input, Modal, Card, Alert } from "../../../components";
+import { MAIN_MODULES } from "../../../constants/permissions";
+import { Table, Button, Input, Modal, Card, Alert, MultiSelect } from "../../../components";
 import PermissionsModal from "../PermissionsModal";
 
 const RoleRightsTab = ({ setToast }) => {
@@ -174,15 +175,12 @@ const RoleRightsTab = ({ setToast }) => {
     });
   };
 
-  const handleRoleModulesChange = (/** @type {{ target: { selectedOptions: any; }; }} */ e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions || []);
-    const selectedModules = selectedOptions
-      .map((option) => option.value)
-      .filter((value) => typeof value === "string" && value.trim() !== "");
+  const handleRoleModulesChange = (/** @type {{ target: { value: any; }; }} */ e) => {
+    const selectedModules = Array.isArray(e.target.value) ? e.target.value : [];
 
     setRoleForm((prev) => ({
       ...prev,
-      modules: Array.from(new Set(selectedModules)),
+      modules: Array.from(new Set(selectedModules.filter((value) => typeof value === "string" && value.trim() !== ""))),
     }));
   };
 
@@ -686,19 +684,14 @@ const RoleRightsTab = ({ setToast }) => {
           )}
 
           <div className="setup-modal-full">
-            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: 500, fontSize: "0.9rem" }}>
-              Modules
-            </label>
-            <select
+            <MultiSelect
               name="modules"
-              multiple
+              label="Modules"
               value={roleForm.modules}
               onChange={handleRoleModulesChange}
-              style={{ width: "100%", minHeight: "120px", padding: "0.5rem", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "0.95rem" }}
-            >
-              <option value="module1">Module 1</option>
-              <option value="module2">Module 2</option>
-            </select>
+              options={MAIN_MODULES.map(module => ({ value: module.key, label: module.label }))}
+              placeholder="Select modules..."
+            />
             <small style={{ color: "#6b7280", display: "block", marginTop: "0.25rem" }}>
               Pick the modules this role may access. Manage rights will only show the modules assigned here.
             </small>

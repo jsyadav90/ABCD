@@ -461,7 +461,9 @@ export const profileController = asyncHandler(async (req, res) => {
       email: userDoc.email,
       role: roleName,
       roleId: roleId,
-      modules: roleName === "super_admin" && roleModules.length === 0 ? ["module1", "module2"] : roleModules,
+      // If no modules assigned to role, default to both modules for all users
+      // This ensures users can see dashboard modules unless explicitly restricted
+      modules: roleModules && roleModules.length > 0 ? roleModules : ["module_1", "module_2"],
       branchId: Array.isArray(userDoc.branchId) 
         ? userDoc.branchId.map(b => (b && b._id) ? b._id : b).filter(Boolean)
         : [],

@@ -95,7 +95,7 @@ export const createRole = asyncHandler(async (req, res) => {
 
   const moduleList = Array.isArray(modules)
     ? Array.from(new Set(modules.filter((m) => typeof m === "string").map((m) => m.trim().toLowerCase())))
-    : [];
+    : ["module_1", "module_2"]; // Default to both modules if not specified
 
   const doc = await Role.create({
     name: name.toLowerCase(),
@@ -330,10 +330,17 @@ export const updateRole = asyncHandler(async (req, res) => {
       .map((m) => m.trim().toLowerCase())
       .filter(Boolean)
     ));
+    // Ensure at least default modules if explicitly set to empty
+    if (!role.modules || role.modules.length === 0) {
+      role.modules = ["module_1", "module_2"];
+    }
+  } else if (!role.modules || role.modules.length === 0) {
+    // Ensure role has modules even if not provided in update
+    role.modules = ["module_1", "module_2"];
   }
 
   if (role.name === "super_admin") {
-    role.modules = ["module1", "module2"];
+    role.modules = ["module_1", "module_2"];
     if (!Array.isArray(role.permissionKeys) || !role.permissionKeys.includes("*")) {
       role.permissionKeys = ["*"];
     }

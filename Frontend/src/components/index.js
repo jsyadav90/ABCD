@@ -8,6 +8,7 @@ export { default as Select } from './Select/Select';
 export { default as Textarea } from './Textarea/Textarea';
 export { default as Checkbox } from './Checkbox/Checkbox';
 export { default as Radio } from './Radio/Radio';
+export { default as MultiSelect } from './MultiSelectBranch/MultiSelectBranch';
 
 // Data Display Components
 export { default as Table } from './Table/Table';
