@@ -162,16 +162,11 @@ const Dashboard = () => {
         setSelectedBranch(branch, selectedOpt?.label || "");
       }
       
-      // Save the selected app module and navigate if needed
+      // Save the selected app module - the reactive DashboardRouter will handle the UI update
       setSelectedAppModule(selectedAppModule);
       
-      if (selectedAppModule === "module_1") {
-        // Module 1 stays in dashboard (or can navigate elsewhere)
-        navigate("/dashboard");
-      } else if (selectedAppModule === "module_2") {
-        // Module 2 will show dashboard only (without sidebar)
-        navigate("/dashboard");
-      }
+      // No need for navigation - DashboardRouter listens for appModuleChanged events
+      // and will automatically switch dashboards
       
       await computeUsersCount(branch);
       await computeAssetsCount(branch);

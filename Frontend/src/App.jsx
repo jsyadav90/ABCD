@@ -10,15 +10,17 @@
  *   Root redirects to /dashboard.
  */
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import ScanningProvider from "./components/BarcodeScanner/ScanningProvider.jsx";
 import MainLayout from "./layouts/MainLayout";
 import { ProtectedRoute } from "./components";
 import Loading from "./components/Loading/Loading.jsx";
+import { getSelectedAppModule } from "./utils/appModule";
 
 // Pages: lazy loaded for faster first paint on slow networks
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
+const DashboardModule2 = lazy(() => import("./pages/Dashboard/DashboardModule2"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const Login = lazy(() => import("./pages/Login/Login"));
 const Users = lazy(() => import("./pages/users/UsersList/Users"));
@@ -32,6 +34,22 @@ const AssetPage = lazy(() => import("./pages/Assets/asset"));
 const AddAssetPage = lazy(() => import("./pages/Assets/addasset"));
 // @ts-ignore
 const AssetDetails = lazy(() => import("./pages/Assets/AssetDetails"));
+
+// Dashboard Router Component
+const DashboardRouter = () => {
+  const [selectedModule, setSelectedModule] = useState(getSelectedAppModule());
+
+  useEffect(() => {
+    const handleModuleChange = (event) => {
+      setSelectedModule(event.detail.moduleId);
+    };
+
+    window.addEventListener("appModuleChanged", handleModuleChange);
+    return () => window.removeEventListener("appModuleChanged", handleModuleChange);
+  }, []);
+
+  return selectedModule === "module_2" ? <DashboardModule2 /> : <Dashboard />;
+};
 
 function App() {
   return (
@@ -55,7 +73,7 @@ function App() {
 // @ts-ignore
               children={undefined} requiredPermission={undefined}>
                 <MainLayout>
-                  <Dashboard />
+                  <DashboardRouter />
                 </MainLayout>
               </ProtectedRoute>
             }
