@@ -637,10 +637,10 @@ const Users = () => {
 
     const removedModules = Array.isArray(row.removedModules) ? row.removedModules : [];
     const roleModules = Array.isArray(role?.modules) ? role.modules : [];
-    // row.modules is already the effective modules computed by backend
+    // row.modules is the effective modules (transformed in userApi.js)
     const effectiveModules = Array.isArray(row.modules) ? row.modules : [];
-    // Compute extra modules: modules that are assigned but not in the role
-    const extraModules = effectiveModules.filter(module => !roleModules.includes(module));
+    // row.extraModules is the extra modules (preserved in userApi.js)
+    const extraModules = Array.isArray(row.extraModules) ? row.extraModules : [];
 
     setEditRoleModal({
       isOpen: true,
@@ -656,7 +656,7 @@ const Users = () => {
       searchTerm: "",
       selectedModuleKey: "all",
       selectedCategoryKey: "all",
-      selectedModules: effectiveModules, // Use effective modules directly from backend
+      selectedModules: effectiveModules, // Use effective modules
       roleModules: roleModules, // Role's assigned modules
       extraModules: extraModules, // Extra modules beyond role
       removedModules,
@@ -796,6 +796,14 @@ const Users = () => {
     setEditRoleModal(prev => ({ ...prev, searchTerm }));
   };
 
+  const handleModulesTabClick = () => {
+    // When clicking modules tab, just switch to the tab - modules are already set correctly
+    setEditRoleModal(prev => ({
+      ...prev,
+      activeTab: "modules"
+    }));
+  };
+
   const handleModuleFilter = (moduleKey) => {
     setEditRoleModal(prev => ({
       ...prev,
@@ -861,7 +869,7 @@ const Users = () => {
       // Update local state with effective modules
       setAllUsers(prev => prev.map(u =>
         u._id === editRoleModal.userId
-          ? { ...u, modules: editRoleModal.selectedModules }
+          ? { ...u, modules: editRoleModal.selectedModules, extraModules: extraModules, removedModules: removedModules }
           : u
       ));
 
@@ -1909,7 +1917,7 @@ const Users = () => {
                     Role
                   </button>
                   <button
-                    onClick={() => setEditRoleModal(prev => ({ ...prev, activeTab: "modules" }))}
+                    onClick={handleModulesTabClick}
                     style={{
                       padding: "0.5rem 1rem",
                       border: "none",
@@ -2169,13 +2177,13 @@ const Users = () => {
                         error={assignReportingModal.error}
                     />
                 </div>
-                <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
-                    <Button variant="secondary" onClick={() => setAssignReportingModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
-                    <Button onClick={handleSubmitAssignReporting} disabled={assignReportingModal.isSubmitting}>
-                        {assignReportingModal.isSubmitting ? "Saving..." : "Save"}
-                    </Button>
-                </div>
              </div>
+              <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: "10px" }}>
+                  <Button variant="secondary" onClick={() => setAssignReportingModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
+                  <Button onClick={handleSubmitAssignReporting} disabled={assignReportingModal.isSubmitting}>
+                      {assignReportingModal.isSubmitting ? "Saving..." : "Save"}
+                  </Button>
+              </div>
           </Modal>
         )}
 

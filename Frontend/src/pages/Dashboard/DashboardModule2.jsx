@@ -76,10 +76,7 @@ const DashboardModule2 = () => {
 
   return (
     <div className="dashboard dashboard-module-2">
-      <div className="dash-header">
-        <h1>Module 2 Dashboard</h1>
-        <p>Coming soon - New features and capabilities</p>
-      </div>
+      
 
       {/* Profile Card for easy module switching */}
       <ProfileCard
@@ -93,13 +90,12 @@ const DashboardModule2 = () => {
         onApplyFilters={applyFilters}
       />
 
-      {/* Placeholder content for future Module 2 features */}
-      <div className="module-2-placeholder">
-        <div className="placeholder-card">
-          <h3>🚀 Module 2 Features</h3>
-          <p>New capabilities are being developed. Check back soon!</p>
-        </div>
+
+      <div className="dash-header">
+        <h1>Module 2 Dashboard</h1>
+        <p>Coming soon - New features and capabilities</p>
       </div>
+
     </div>
   );
 };

@@ -42,7 +42,10 @@ export const fetchAllUsers = async (limit = 100, page = 1) => {
       // Transform branchId array to branch string
       branch: user.branchId && user.branchId.length > 0 
         ? user.branchId.map(b => b.branchName || b).join(', ')
-        : '--'
+        : '--',
+      // Preserve raw modules as extraModules, use effectiveModules for display
+      extraModules: user.modules || [],
+      modules: user.effectiveModules || []
     }))
   } catch (error) {
     console.error('Failed to fetch users:', error)

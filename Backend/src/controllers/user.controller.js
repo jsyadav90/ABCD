@@ -377,7 +377,7 @@ export const listUsers = asyncHandler(async (req, res) => {
     return {
       ...it,
       role: it.roleId?.displayName || it.roleId?.name || null,
-      modules: effectiveModules,
+      effectiveModules: effectiveModules,
       // Add lock status information
       isLocked: loginData ? (loginData.isPermanentlyLocked || (loginData.lockUntil && new Date() < loginData.lockUntil)) : false,
       lockLevel: loginData?.lockLevel || 0,
