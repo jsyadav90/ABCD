@@ -131,8 +131,7 @@ const MultiSelect = ({
                     whiteSpace: 'nowrap'
                   }}>
                     {label}
-                    <button
-                      type="button"
+                    <span
                       onClick={(e) => {
                         e.stopPropagation();
                         const optionValue = options.find(
@@ -157,7 +156,7 @@ const MultiSelect = ({
                       title="Remove"
                     >
                       ×
-                    </button>
+                    </span>
                   </span>
                 ))}
               </div>
