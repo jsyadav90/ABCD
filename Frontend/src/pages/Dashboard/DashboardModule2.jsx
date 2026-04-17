@@ -7,7 +7,7 @@ import React from "react";
 import ProfileCard from "../../layouts/ProfileCard";
 import { useAuth } from "../../hooks/useAuth";
 import { getSelectedBranch, setSelectedBranch } from "../../utils/scope";
-import { getSelectedAppModule, setSelectedAppModule } from "../../utils/appModule";
+import { getSelectedAppModule, setSelectedAppModule, MODULES } from "../../utils/appModule";
 import { authAPI } from "../../services/api";
 import "./Dashboard.css";
 
@@ -27,18 +27,23 @@ const DashboardModule2 = () => {
   });
 
   const [branchOptions, setBranchOptions] = React.useState([]);
-  const [appModuleOptions, setAppModuleOptions] = React.useState([
-    { value: "module_1", label: "Module 1" },
-    { value: "module_2", label: "Module 2" },
-  ]);
+  const [appModuleOptions, setAppModuleOptions] = React.useState([]);
 
   // Initialize profile and branches (same as main dashboard)
   React.useEffect(() => {
+    const normalizeModuleId = (moduleId) => {
+      if (!moduleId) return moduleId;
+      return String(moduleId).replace(/^module([12])$/, 'module_$1');
+    };
+
     const init = async () => {
       try {
         const resp = await authAPI.getProfile();
         const data = resp.data?.data || {};
         const u = data.user || {};
+
+        let rawModules = Array.isArray(u.modules) ? u.modules : [];
+        const normalizedModules = rawModules.map(normalizeModuleId);
 
         const userInfo = {
           name: u.name || "",
@@ -47,9 +52,22 @@ const DashboardModule2 = () => {
           userId: u.userId || "",
           organizationId: u.organizationId || null,
           branchIds: Array.isArray(u.branchId) ? u.branchId.map(b => String(b)) : [],
+          modules: normalizedModules,
         };
 
         setProfile(userInfo);
+
+        // Filter app modules based on user's assigned modules
+        // If no modules assigned, user sees no module options and selector is disabled
+        let availableAppModules = [];
+        
+        if (userInfo.modules && userInfo.modules.length > 0) {
+          availableAppModules = MODULES
+            .filter(m => userInfo.modules.includes(m.id))
+            .map(m => ({ value: m.id, label: m.label }));
+        }
+        
+        setAppModuleOptions(availableAppModules);
 
         // For Module 2, we might not need branch filtering initially
         // But keeping the structure for future expansion
@@ -74,6 +92,8 @@ const DashboardModule2 = () => {
     }
   };
 
+  const moduleInfo = MODULES.find((item) => item.id === "module_2");
+
   return (
     <div className="dashboard dashboard-module-2">
       
@@ -92,7 +112,7 @@ const DashboardModule2 = () => {
 
 
       <div className="dash-header">
-        <h1>Module 2 Dashboard</h1>
+        <h1>{moduleInfo?.label || "Endpoint Management"} Dashboard</h1>
         <p>Coming soon - New features and capabilities</p>
       </div>
 

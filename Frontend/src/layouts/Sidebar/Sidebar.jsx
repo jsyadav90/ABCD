@@ -116,6 +116,10 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
     return isSuperAdmin() || canAccessModule(item.permission);
   });
 
+  // Check if user has no modules assigned - show no menu items
+  const hasNoModules = user?.modules && user.modules.length === 0;
+  const itemsToDisplay = hasNoModules ? [] : availableMenuItems;
+
   
 
   // Change Password Modal State
@@ -275,7 +279,7 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
     <>
       <nav className="menu-bar">
         <ul className="menu">
-          {availableMenuItems.map((item) => (
+          {itemsToDisplay.map((item) => (
             <li key={item.key}>
               <Link to={item.path} onClick={handleMenuItemClick}>
                 <span className="material-icons">{item.icon}</span>

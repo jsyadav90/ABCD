@@ -1,5 +1,6 @@
-// App Module Management - Track which module (Module 1 or Module 2) is selected
+import { APP_MODULES } from "../constants/appModules";
 
+// App Module Management - Track which app module is selected and persist selection.
 const SELECTED_APP_MODULE_KEY = "selectedAppModule";
 const DEFAULT_MODULE = "module_1";
 
@@ -22,7 +23,4 @@ export const setSelectedAppModule = (moduleId) => {
   }
 };
 
-export const MODULES = [
-  { id: "module_1", label: "Module 1" },
-  { id: "module_2", label: "Module 2" },
-];
+export const MODULES = APP_MODULES;

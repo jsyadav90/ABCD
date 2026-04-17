@@ -1,15 +1,26 @@
 // Permission Constants
+import { APP_MODULES } from "./appModules";
+
+const module1 = APP_MODULES.find((module) => module.id === "module_1") || {
+  id: "module_1",
+  label: "IT Operations",
+};
+
+const module2 = APP_MODULES.find((module) => module.id === "module_2") || {
+  id: "module_2",
+  label: "Endpoint Management",
+};
 
 export const MAIN_MODULES = [
   {
-    key: "module1",
-    label: "Module 1",
-    subModules: ["assets", "users", "upgrades", "reports", "setup"]
+    key: module1.id,
+    label: module1.label,
+    subModules: ["assets", "users", "upgrades", "reports", "setup"],
   },
   {
-    key: "module2",
-    label: "Module 2",
-    subModules: []
+    key: module2.id,
+    label: module2.label,
+    subModules: [],
   }
 ];
 
@@ -90,6 +101,8 @@ export const PERMISSION_MODULES = [
       },
     ],
   },
+
+  //! Additional modules can be added here following the same structure
   {
     key: "reports",
     label: "Reports",
@@ -105,6 +118,8 @@ export const PERMISSION_MODULES = [
       },
     ],
   },
+
+  //! Setup module with sub-pages and actions
   {
     key: "setup",
     label: "Setup",
@@ -114,10 +129,19 @@ export const PERMISSION_MODULES = [
         { key: "view", label: "View" },
         { key: "manage", label: "Manage" },
       ]},
-      { key: "roles", label: "Roles & Rights", actions: [
-        { key: "view", label: "View" },
-        { key: "manage", label: "Manage" },
-      ]},
+
+
+      {
+        key: "roles",
+        label: "Roles & Rights",
+        accessKey: "roles:access",
+        actions: [
+          { key: "add_role", label: "Add Role" },
+          { key: "edit", label: "Edit Role" },
+          { key: "role_rights", label: "Rights" },
+        ],
+      },
+
       { key: "branches", label: "Branches", actions: [
         { key: "view", label: "View" },
         { key: "manage", label: "Manage" },

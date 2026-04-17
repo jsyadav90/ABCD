@@ -3,6 +3,12 @@ import { User } from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
+import {
+  MODULE_PERMISSIONS_MAP,
+  getPermissionsForModules,
+  getRemovedModules,
+  getAddedModules,
+} from "../constants/modulePermissionsMap.js";
 
 export const listRoles = asyncHandler(async (req, res) => {
   const filter = { isDeleted: false };
@@ -324,16 +330,46 @@ export const updateRole = asyncHandler(async (req, res) => {
     role.permissionKeys = permissionKeys;
   }
 
+  // Handle module changes: update permissions when modules are added/removed
   if (Array.isArray(modules)) {
-    role.modules = Array.from(new Set(modules
+    const oldModules = role.modules || [];
+    let newModules = Array.from(new Set(modules
       .filter((m) => typeof m === "string")
       .map((m) => m.trim().toLowerCase())
       .filter(Boolean)
     ));
+    
     // Ensure at least default modules if explicitly set to empty
-    if (!role.modules || role.modules.length === 0) {
-      role.modules = ["module_1", "module_2"];
+    if (!newModules || newModules.length === 0) {
+      newModules = ["module_1", "module_2"];
     }
+
+    // Get removed modules
+    const removedModulesList = getRemovedModules(oldModules, newModules);
+    
+    if (removedModulesList.length > 0) {
+      // Get all permissions associated with removed modules
+      const removedPermissions = getPermissionsForModules(removedModulesList);
+      
+      // 2a: Remove all permissions of removed modules from role's permissionKeys
+      if (removedPermissions.length > 0) {
+        role.permissionKeys = (role.permissionKeys || []).filter(
+          (pk) => !removedPermissions.includes(pk)
+        );
+      }
+      
+      // 2b: For all users with this role, remove those permissions from extraPermissions
+      if (removedPermissions.length > 0) {
+        await User.updateMany(
+          { roleId: role._id },
+          {
+            $pullAll: { extraPermissions: removedPermissions },
+          }
+        );
+      }
+    }
+
+    role.modules = newModules;
   } else if (!role.modules || role.modules.length === 0) {
     // Ensure role has modules even if not provided in update
     role.modules = ["module_1", "module_2"];

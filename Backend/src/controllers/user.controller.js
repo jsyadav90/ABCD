@@ -574,7 +574,12 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     throw new apiError(403, "Forbidden");
   }
 
+  const oldRoleId = user.roleId ? String(user.roleId) : null;
+  let newRoleId = oldRoleId;
+  let roleChanged = false;
+
   if (roleId) {
+    newRoleId = String(roleId);
     const found = await Role.findById(roleId);
     if (!found || found.isDeleted) {
       throw new apiError(400, "Role not found");
@@ -583,6 +588,7 @@ export const changeUserRole = asyncHandler(async (req, res) => {
       throw new apiError(400, "Cannot assign an inactive role");
     }
     user.roleId = roleId;
+    roleChanged = oldRoleId !== newRoleId;
   } else if (role) {
     // If role name provided, try to resolve to roleId
     const found = await Role.findOne({ name: role, isDeleted: false });
@@ -592,27 +598,36 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     if (!found.isActive) {
       throw new apiError(400, "Cannot assign an inactive role");
     }
+    newRoleId = String(found._id);
     user.roleId = found._id;
+    roleChanged = oldRoleId !== newRoleId;
   }
 
-  // Update individual permissions if provided
-  if (Array.isArray(extraPermissions)) {
-    user.extraPermissions = extraPermissions;
-  }
-  if (Array.isArray(removedPermissions)) {
-    user.removedPermissions = removedPermissions;
-  }
-
-  // Update individual module overrides if provided
-  if (Array.isArray(extraModules)) {
-    user.modules = extraModules;
-  }
-  if (Array.isArray(removedModules)) {
-    user.removedModules = removedModules;
+  // If role changed, clear all individual module and permission overrides
+  // User gets only default modules and permissions from new role
+  if (roleChanged) {
+    user.extraPermissions = [];
+    user.removedPermissions = [];
+    user.modules = [];
+    user.removedModules = [];
+  } else {
+    // If role NOT changed, allow updates to individual permissions/modules
+    if (Array.isArray(extraPermissions)) {
+      user.extraPermissions = extraPermissions;
+    }
+    if (Array.isArray(removedPermissions)) {
+      user.removedPermissions = removedPermissions;
+    }
+    if (Array.isArray(extraModules)) {
+      user.modules = extraModules;
+    }
+    if (Array.isArray(removedModules)) {
+      user.removedModules = removedModules;
+    }
   }
 
   await user.save();
-  return res.status(200).json(new apiResponse(200, user, "User role, permissions, and module overrides updated successfully"));
+  return res.status(200).json(new apiResponse(200, user, "User role updated successfully. Individual module and permission overrides cleared."));
 });
 
 export const softDeleteUser = asyncHandler(async (req, res) => {

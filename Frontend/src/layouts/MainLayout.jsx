@@ -17,11 +17,13 @@ const MainLayout = ({ children }) => {
 
   // Check if we should show sidebar based on module selection and route
   const shouldShowSidebar = () => {
-    if (location.pathname === '/dashboard') {
-      return selectedModule === 'module_1' || selectedModule === 'module_2'
+    // Always show sidebar on non-dashboard routes
+    if (location.pathname !== '/dashboard') {
+      return true
     }
-    // Show sidebar on all other pages
-    return true
+    // On dashboard, show sidebar if user has a valid module selected
+    // (sidebar will handle rendering no items if user has no modules)
+    return selectedModule === 'module_1' || selectedModule === 'module_2'
   }
   
   const showSidebar = shouldShowSidebar()

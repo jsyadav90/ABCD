@@ -4,6 +4,7 @@ import { roleAPI } from "../../../services/api.js";
 import { MAIN_MODULES } from "../../../constants/permissions";
 import { Table, Button, Input, Modal, Card, Alert, MultiSelect } from "../../../components";
 import PermissionsModal from "../PermissionsModal";
+import { hasPermission } from "../../../utils/permissionHelper";
 
 const RoleRightsTab = ({ setToast }) => {
   const [roles, setRoles] = useState([]);
@@ -526,9 +527,11 @@ const RoleRightsTab = ({ setToast }) => {
     <div className="setup-section">
       <div className="setup-section-header">
         <h2>Roles & User Management Rights</h2>
-        <Button variant="primary" onClick={openCreateRoleModal}>
-          Add Role
-        </Button>
+        {hasPermission("setup:roles:add_role") && (
+          <Button variant="primary" onClick={openCreateRoleModal}>
+            Add Role
+          </Button>
+        )}
       </div>
 
       {!hasDefaultRole && (

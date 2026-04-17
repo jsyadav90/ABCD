@@ -1,6 +1,7 @@
 ﻿import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Role } from "../models/role.model.js";
+import { getModuleForPermission, getPermissionKeyFromFullPermission } from "../constants/modulePermissionsMap.js";
 
 /**
  * Permission Middleware
@@ -59,6 +60,25 @@ export const verifyPermission = (requiredPermission) => {
     // 4. Check if user has the required permission
     if (!permissions.includes(requiredPermission)) {
       throw new apiError(403, `Access denied. You do not have permission to perform this action. Required: ${requiredPermission}`);
+    }
+
+    // NEW: 5. Check if user's assigned modules include the required module
+    const permissionKey = getPermissionKeyFromFullPermission(requiredPermission);
+    const requiredModule = getModuleForPermission(permissionKey);
+    
+    if (requiredModule) {
+      const userModules = req.user.modules || [];
+      console.log(`   Module Check: Permission "${requiredPermission}" requires module "${requiredModule}"`);
+      console.log(`   User modules: ${userModules.join(", ") || "NONE"}`);
+      
+      if (!userModules.includes(requiredModule)) {
+        throw new apiError(
+          403, 
+          `Access denied. Module access required. You don't have access to module "${requiredModule}". ` +
+          `Your modules: ${userModules.length > 0 ? userModules.join(", ") : "NONE"}`
+        );
+      }
+      console.log(`   Module check: [OK] User has required module`);
     }
 
     next();

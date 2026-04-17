@@ -8,6 +8,11 @@
  * Backend must ALWAYS validate permissions independently
  */
 
+import { 
+  getModuleForPermission, 
+  getPermissionKeyFromFullPermission 
+} from "../constants/modulePermissionsMap";
+
 /**
  * Get current user's permissions from localStorage
  * @returns {Array<string>} - Array of permission keys, or empty array if not logged in
@@ -108,14 +113,43 @@ export const getAccessToken = () => {
 };
 
 /**
+ * Get current user's assigned modules
+ * @returns {Array<string>} - Array of module IDs (e.g., ["module_1", "module_2"]), or empty array if not logged in
+ */
+export const getCurrentUserModules = () => {
+  try {
+    const user = getCurrentUser();
+    if (!user) {
+      console.log(`[MODULE] No user found in localStorage`);
+      return [];
+    }
+
+    const modules = user.modules || [];
+    if (!Array.isArray(modules)) {
+      console.log(`[MODULE] User modules is not an array:`, modules);
+      return [];
+    }
+
+    // console.log(`[MODULE] User has modules:`, modules);
+    return modules;
+  } catch (error) {
+    console.error("Error fetching user modules from localStorage:", error);
+    return [];
+  }
+};
+
+/**
  * Check if current user has a specific permission
  * 
- * @param {string} permissionKey - Permission to check (e.g., "user:create")
- * @returns {boolean} - true if user has permission, false otherwise
+ * Also validates that the user's assigned modules include the module
+ * for this permission (module-based access control).
+ * 
+ * @param {string} permissionKey - Permission to check (e.g., "assets:access", "users:edit")
+ * @returns {boolean} - true if user has permission AND assigned module, false otherwise
  * 
  * Examples:
- * - hasPermission("user:create") → true/false
- * - hasPermission("asset:delete") → true/false
+ * - hasPermission("users:access") → checks "users:access" permission + "module_1" in user.modules
+ * - hasPermission("assets:access") → checks "assets:access" permission + "module_1" in user.modules
  */
 export const hasPermission = (permissionKey) => {
   const permissions = getCurrentUserPermissions();
@@ -133,19 +167,54 @@ export const hasPermission = (permissionKey) => {
 
   // Exact permission match
   if (permissions.includes(permissionKey)) {
+    // NEW: Check if user's modules include the module for this permission
+    const requiredModule = getModuleForPermission(
+      getPermissionKeyFromFullPermission(permissionKey)
+    );
+    
+    if (requiredModule) {
+      const userModules = getCurrentUserModules();
+      if (!userModules.includes(requiredModule)) {
+        console.log(
+          `[PERMISSION] User has permission "${permissionKey}" but missing required module "${requiredModule}". User modules:`,
+          userModules
+        );
+        return false;
+      }
+    }
+    
     return true;
   }
 
   // If module access is requested, allow access when any permission exists for that module
   if (typeof permissionKey === "string" && permissionKey.endsWith(":access")) {
     const moduleKey = permissionKey.slice(0, -":access".length);
-    return permissions.some((permission) => {
+    
+    // Check if user has any permission for this module
+    const hasModulePermission = permissions.some((permission) => {
       return (
         typeof permission === "string" &&
         permission.startsWith(`${moduleKey}:`) &&
         permission !== `${moduleKey}:access`
       );
     });
+
+    if (hasModulePermission) {
+      // NEW: Check if user's modules include this module
+      const requiredModule = getModuleForPermission(moduleKey);
+      if (requiredModule) {
+        const userModules = getCurrentUserModules();
+        if (!userModules.includes(requiredModule)) {
+          console.log(
+            `[PERMISSION] User has permissions for "${moduleKey}" but missing required module "${requiredModule}". User modules:`,
+            userModules
+          );
+          return false;
+        }
+      }
+    }
+
+    return hasModulePermission;
   }
 
   return false;

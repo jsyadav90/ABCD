@@ -266,7 +266,7 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
     setAssignedPermissions((prev) => {
       if (prev.includes("*")) return prev;
       let newKeys = [...prev];
-      
+
       // Toggle module access key
       if (module.accessKey) {
         if (isChecked) {
@@ -276,15 +276,46 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
         }
       }
 
-      // Toggle all pages/actions under this module
+      // When checking module, give basic view access
+      // When unchecking, remove view access
+      module.pages.forEach(page => {
+        // Find view action in this page, or use first action if no view exists
+        const viewAction = page.actions.find(action => action.key === "view") || page.actions[0];
+        if (viewAction) {
+          const viewKey = `${module.key}:${page.key}:${viewAction.key}`;
+          if (isChecked) {
+            if (!newKeys.includes(viewKey)) newKeys.push(viewKey);
+          } else {
+            // When unchecking module, remove all actions from this module
+            page.actions.forEach(action => {
+              const actionKey = `${module.key}:${page.key}:${action.key}`;
+              newKeys = newKeys.filter(k => k !== actionKey);
+            });
+          }
+        }
+      });
+
+      return newKeys;
+    });
+  };
+
+  const handleSelectAllModule = (module) => {
+    setAssignedPermissions((prev) => {
+      if (prev.includes("*")) return prev;
+      let newKeys = [...prev];
+
+      // Add module access key if it exists
+      if (module.accessKey && !newKeys.includes(module.accessKey)) {
+        newKeys.push(module.accessKey);
+      }
+
+      // Add all actions for all pages in this module
       module.pages.forEach(page => {
         page.actions.forEach(action => {
-           const fullKey = `${module.key}:${page.key}:${action.key}`;
-           if (isChecked) {
-             if (!newKeys.includes(fullKey)) newKeys.push(fullKey);
-           } else {
-             newKeys = newKeys.filter(k => k !== fullKey);
-           }
+          const fullKey = `${module.key}:${page.key}:${action.key}`;
+          if (!newKeys.includes(fullKey)) {
+            newKeys.push(fullKey);
+          }
         });
       });
 
@@ -294,11 +325,20 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
 
   const isModuleFullySelected = (assignedKeys, module) => {
     if (assignedKeys.includes("*")) return true;
-    
+
+    // Module is considered selected if it has the access key
     if (module.accessKey) {
-        return assignedKeys.includes(module.accessKey);
+      return assignedKeys.includes(module.accessKey);
     }
-    return false;
+
+    // For modules without access key, check if at least view actions are selected
+    return module.pages?.some((page) => {
+      const viewAction = page.actions.find(action => action.key === "view");
+      if (viewAction) {
+        return assignedKeys.includes(`${module.key}:${page.key}:${viewAction.key}`);
+      }
+      return false;
+    });
   };
 
   // Check if a page has all its actions selected
@@ -473,27 +513,49 @@ const PermissionsModal = ({ isOpen, onClose, role, onSaveSuccess, onSave }) => {
             {finalSelectedModules.map((module) => (
               <div key={module.key} className="tree-module">
                 {/* Module Header */}
-                <div 
-                  className="module-header" 
+                <div
+                  className="module-header"
                   onClick={(e) => {
                     // @ts-ignore
-                    if (e.target.type !== 'checkbox') {
+                    if (e.target.type !== 'checkbox' && e.target.tagName !== 'BUTTON') {
                       toggleModuleExpand(module.key);
                     }
                   }}
                 >
                   <span className={`expand-icon ${expandedModules[module.key] ? 'expanded' : ''}`}>▶</span>
                   {module.accessKey && (
-                    <input 
+                    <input
                       type="checkbox"
                       checked={isModuleFullySelected(assignedPermissions, module)}
                       disabled={isSuperAdmin}
                       onChange={(e) => handleModuleToggle(module, e.target.checked)}
                       onClick={(e) => e.stopPropagation()}
-                      title="Enable/Disable entire module"
+                      title="Give view access to this module"
                     />
                   )}
                   <span>{module.label}</span>
+                  {!isSuperAdmin && (
+                    <button
+                      className="select-all-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectAllModule(module);
+                      }}
+                      title="Select all actions in this module"
+                      style={{
+                        marginLeft: 'auto',
+                        padding: '2px 8px',
+                        fontSize: '0.8rem',
+                        background: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Select All
+                    </button>
+                  )}
                 </div>
 
                 {/* Submodules (Pages) */}

@@ -128,8 +128,8 @@ const Dashboard = () => {
         setProfile(userInfo);
 
         // Filter app modules based on user's assigned modules
-        // If no modules assigned, show all available modules (for backward compatibility)
-        let availableAppModules = MODULES.map(m => ({ value: m.id, label: m.label }));
+        // If no modules assigned, user sees no module options and selector is disabled
+        let availableAppModules = [];
         
         if (userInfo.modules && userInfo.modules.length > 0) {
           availableAppModules = MODULES
