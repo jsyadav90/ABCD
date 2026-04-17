@@ -2,7 +2,7 @@ import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Loading } from '../index'
-import { hasPermission } from '../../utils/permissionHelper'
+import { hasPermission, getCurrentUserModules } from '../../utils/permissionHelper'
 import { getModuleForPermission, getPermissionKeyFromFullPermission } from '../../constants/modulePermissionsMap'
 import NotFound from '../../pages/NotFound/NotFound'
 
@@ -31,7 +31,7 @@ const ProtectedRoute = ({ children, requiredPermission }) => {
     const requiredModule = getModuleForPermission(permissionKey)
     
     if (requiredModule) {
-      const userModules = user?.modules || []
+      const userModules = getCurrentUserModules()
       if (!userModules.includes(requiredModule)) {
         console.log(
           `[ROUTE GUARD] User has permission "${requiredPermission}" but missing module "${requiredModule}". User modules:`,

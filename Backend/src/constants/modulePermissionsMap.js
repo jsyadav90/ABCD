@@ -14,7 +14,7 @@ export const MODULE_PERMISSIONS_MAP = {
     "setup"
   ],
   module_2: [
-    // Module 2 currently has no sub-modules/permissions
+    "endpoints"
   ],
 };
 

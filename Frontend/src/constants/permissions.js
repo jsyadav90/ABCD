@@ -20,7 +20,7 @@ export const MAIN_MODULES = [
   {
     key: module2.id,
     label: module2.label,
-    subModules: [],
+    subModules: ["endpoints"],
   }
 ];
 
@@ -146,6 +146,32 @@ export const PERMISSION_MODULES = [
         { key: "view", label: "View" },
         { key: "manage", label: "Manage" },
       ]},
+    ],
+  },
+
+  {
+    key: "endpoints",
+    label: "Endpoint Management",
+    accessKey: "endpoints:access",
+    pages: [
+      {
+        key: "page_buttons",
+        label: "Page Buttons",
+        actions: [
+          { key: "add", label: "Add Endpoint" },
+          { key: "view", label: "View Endpoints" },
+        ],
+      },
+      {
+        key: "rows_buttons",
+        label: "Rows Buttons",
+        actions: [
+          { key: "edit", label: "Edit Endpoint" },
+          { key: "delete", label: "Delete Endpoint" },
+          { key: "disable", label: "Disable Endpoint" },
+          { key: "enable", label: "Enable Endpoint" },
+        ],
+      },
     ],
   },
 ];

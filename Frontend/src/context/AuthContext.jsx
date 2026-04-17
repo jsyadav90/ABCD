@@ -105,7 +105,8 @@ export const AuthProvider = ({ children }) => {
                 role: data.user.role,
                 roleId: data.user.roleId,
                 organizationId: data.user.organizationId || null,
-                branchIds: Array.isArray(data.user.branchId) ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b)) : []
+                branchIds: Array.isArray(data.user.branchId) ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b)) : [],
+                modules: data.user.modules || []
               }))
               setUser({
                 id: data.user._id || data.user.id,
@@ -115,7 +116,8 @@ export const AuthProvider = ({ children }) => {
                 role: data.user.role,
                 roleId: data.user.roleId,
                 organizationId: data.user.organizationId || null,
-                branchIds: Array.isArray(data.user.branchId) ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b)) : []
+                branchIds: Array.isArray(data.user.branchId) ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b)) : [],
+                modules: data.user.modules || []
               })
             }
             if (Array.isArray(data?.permissions)) {
@@ -170,6 +172,7 @@ export const AuthProvider = ({ children }) => {
       // Role: prefer populated role name if available (fullUser.roleId.name), else keep roleId
       role: fullUser.roleId?.name || null,
       roleId: fullUser.roleId?._id || fullUser.roleId || null,
+      modules: fullUser.modules || [], // Include modules for permission checks
     }
   }
 
@@ -254,7 +257,8 @@ export const AuthProvider = ({ children }) => {
         organizationId: data.user.organizationId || null,
         branchIds: Array.isArray(data.user.branchId)
           ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b))
-          : []
+          : [],
+        modules: data.user.modules || [], // Include modules
       }
 
       setUser(updatedUser)
@@ -331,6 +335,13 @@ export const AuthProvider = ({ children }) => {
         } else if (minimalUser?.role === 'super_admin') {
           localStorage.setItem('permissions', JSON.stringify(['*']))
         }
+        
+        // Update user in localStorage with modules from profile
+        if (data?.user?.modules) {
+          const updatedUser = { ...minimalUser, modules: data.user.modules }
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+          setUser(updatedUser)
+        }
       } catch (e) {
         console.warn('[AUTH] Profile fetch after login failed:', e?.message)
         if (minimalUser?.role === 'super_admin') {
@@ -400,6 +411,13 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('permissions', JSON.stringify(perms))
         } else if (minimalUser?.role === 'super_admin') {
           localStorage.setItem('permissions', JSON.stringify(['*']))
+        }
+        
+        // Update user in localStorage with modules from profile
+        if (data?.user?.modules) {
+          const updatedUser = { ...minimalUser, modules: data.user.modules }
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+          setUser(updatedUser)
         }
       } catch (e) {
         console.warn('[AUTH] Profile fetch after reauth failed:', e?.message)

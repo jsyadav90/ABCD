@@ -34,6 +34,8 @@ const AssetPage = lazy(() => import("./pages/Assets/asset"));
 const AddAssetPage = lazy(() => import("./pages/Assets/addasset"));
 // @ts-ignore
 const AssetDetails = lazy(() => import("./pages/Assets/AssetDetails"));
+// @ts-ignore
+const Endpoints = lazy(() => import("./pages/Endpoints/Endpoints"));
 
 // Dashboard Router Component
 const DashboardRouter = () => {
@@ -69,9 +71,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute 
-// @ts-ignore
-              children={undefined} requiredPermission={undefined}>
+              <ProtectedRoute requiredPermission={undefined}>
                 <MainLayout>
                   <DashboardRouter />
                 </MainLayout>
@@ -179,6 +179,17 @@ function App() {
               <ProtectedRoute requiredPermission="assets:access">
                 <MainLayout>
                   <AssetDetails />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/endpoints"
+            element={
+              <ProtectedRoute requiredPermission="endpoints:access">
+                <MainLayout>
+                  <Endpoints />
                 </MainLayout>
               </ProtectedRoute>
             }

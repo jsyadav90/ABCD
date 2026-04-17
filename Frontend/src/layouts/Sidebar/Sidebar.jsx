@@ -1,17 +1,3 @@
-/**
- * Sidebar Layout
- * 
- * Logics:
- * - Navigation and User Panel:
- *   Renders main menu, handles mobile/desktop behavior, click-outside to close user panel.
- * - Assets Dropdown:
- *   Hover on desktop and toggle on mobile for asset module links.
- * - Change Password Modal:
- *   Local state for old/new/confirm, client-side validations,
- *   calls authAPI.changePassword(old, new, confirm), handles errors, forces logout on success.
- * - Logout:
- *   Calls backend logout and clears local session, with fallback on failure.
- */
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
@@ -19,83 +5,13 @@ import { useAuth } from "../../hooks/useAuth";
 import { isSuperAdmin, canAccessModule } from "../../utils/permissionHelper";
 import { authAPI } from "../../services/api";
 import { Modal, Input, Button } from "../../components";
+import { getSidebarItemsForModule } from "../../constants/navigationConfig";
 import "./Sidebar.css";
 
-const sidebarMenuItems = [
-  // {
-  //   key: "dashboard",
-  //   label: "Dashboard",
-  //   icon: "dashboard",
-  //   path: "/dashboard",
-  //   permission: null,
-  //   modules: ["module_1"],
-  // },
-  {
-    key: "users",
-    label: "User",
-    icon: "people",
-    path: "/users",
-    permission: "users",
-    modules: ["module_1"],
-  },
-  {
-    key: "assets",
-    label: "Asset",
-    icon: "inventory_2",
-    path: "/assets",
-    permission: "assets",
-    modules: ["module_1"],
-  },
-  {
-    key: "upgrades",
-    label: "Upgrade",
-    icon: "assignment",
-    path: "/requests",
-    permission: "upgrades",
-    modules: ["module_1"],
-  },
-  {
-    key: "issueTo",
-    label: "Issue To",
-    icon: "assignment",
-    path: "/requests",
-    permission: "issueTo",
-    modules: ["module_1"],
-  },
-  {
-    key: "reports",
-    label: "Report",
-    icon: "bar_chart",
-    path: "/report",
-    permission: "reports",
-    modules: ["module_1"],
-  },
-  {
-    key: "setup",
-    label: "Setup",
-    icon: "settings",
-    path: "/setup",
-    permission: "setup",
-    modules: ["module_1", "module_2"],
-  },
-  // Example future items:
-  // {
-  //   key: "module2Feature",
-  //   label: "Module 2 Feature",
-  //   icon: "extension",
-  //   path: "/module2-feature",
-  //   permission: "module2Feature",
-  //   modules: ["module_2"],
-  // },
-  // {
-  //   key: "sharedFeature",
-  //   label: "Shared",
-  //   icon: "device_hub",
-  //   path: "/shared",
-  //   permission: "shared",
-  //   modules: ["module_1", "module_2"],
-  // },
-];
+// Sidebar items are now generated from centralized config
+const getSidebarMenuItems = (moduleId = "module_1") => {
+  return getSidebarItemsForModule(moduleId);
+};
 
 const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => {
   const { user, logout } = useAuth();
@@ -110,8 +26,7 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
   const [flyoutWidth, setFlyoutWidth] = useState(260);
   const flyoutRef = useRef(null);
 
-  const availableMenuItems = sidebarMenuItems.filter((item) => {
-    if (!item.modules.includes(selectedModule)) return false;
+  const availableMenuItems = getSidebarMenuItems(selectedModule).filter((item) => {
     if (!item.permission) return true;
     return isSuperAdmin() || canAccessModule(item.permission);
   });

@@ -1,22 +1,19 @@
 /**
  * Frontend Module & Permissions Mapping
  * 
+ * ⚠️  AUTO-GENERATED - Do NOT edit manually
+ * 
+ * This is generated from navigationConfig.js which is the single source of truth.
+ * To change which pages are in which modules, edit navigationConfig.js instead.
+ * 
  * Maps modules to their associated permission keys.
  * Used to validate that a user has access to a module before allowing page access.
  */
 
-export const MODULE_PERMISSIONS_MAP = {
-  module_1: [
-    "assets",
-    "users",
-    "upgrades",
-    "reports",
-    "setup"
-  ],
-  module_2: [
-    // Module 2 currently has no sub-modules/permissions
-  ],
-};
+import { generateModulePermissionsMap } from './navigationConfig';
+
+// Auto-generate the mapping from navigation config
+export const MODULE_PERMISSIONS_MAP = generateModulePermissionsMap();
 
 /**
  * Get all permission keys (sub-modules) associated with given modules

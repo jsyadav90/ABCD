@@ -67,7 +67,7 @@ export const getCurrentUser = () => {
     if (userStr && userStr !== 'undefined' && userStr !== 'null') {
       try {
         const parsed = JSON.parse(userStr);
-        if (parsed && parsed._id) {
+        if (parsed && (parsed._id || parsed.id)) {
           return parsed;
         }
       } catch (e) {
