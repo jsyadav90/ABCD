@@ -358,14 +358,39 @@ export const updateRole = asyncHandler(async (req, res) => {
         );
       }
       
-      // 2b: For all users with this role, remove those permissions from extraPermissions
+      // 2b: For all users with this role, handle extraPermissions and modules
       if (removedPermissions.length > 0) {
+        // First, remove those permissions from extraPermissions
         await User.updateMany(
           { roleId: role._id },
           {
             $pullAll: { extraPermissions: removedPermissions },
           }
         );
+
+        // 2c: Check if users have extraPermissions for removed modules, if so, add those modules to user.modules
+        for (const removedModule of removedModulesList) {
+          const modulePermissions = getPermissionsForModules([removedModule]);
+          
+          // Find users who have extraPermissions for this module
+          const usersWithExtraPerms = await User.find({
+            roleId: role._id,
+            extraPermissions: { $in: modulePermissions }
+          });
+
+          if (usersWithExtraPerms.length > 0) {
+            // Add the removed module to these users' modules array
+            await User.updateMany(
+              {
+                roleId: role._id,
+                extraPermissions: { $in: modulePermissions }
+              },
+              {
+                $addToSet: { modules: removedModule }
+              }
+            );
+          }
+        }
       }
     }
 

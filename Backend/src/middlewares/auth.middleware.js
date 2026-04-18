@@ -118,7 +118,14 @@ export const verifyJWT = async (req, res, next) => {
     const rolePerms = Array.isArray(user.roleId?.permissionKeys) ? user.roleId.permissionKeys : [];
     const extraPerms = Array.isArray(user.extraPermissions) ? user.extraPermissions : [];
     const removedPerms = Array.isArray(user.removedPermissions) ? user.removedPermissions : [];
-    
+
+    const roleModules = Array.isArray(user.roleId?.modules) ? user.roleId.modules : [];
+    const userModules = Array.isArray(user.modules) ? user.modules : [];
+    const removedModules = Array.isArray(user.removedModules) ? user.removedModules : [];
+    const effectiveModules = Array.from(new Set([...(roleModules || []), ...userModules])).filter(
+      (moduleKey) => !removedModules.includes(moduleKey)
+    );
+
     req.user = {
       id: decoded.id,
       username: decoded.username,
@@ -127,7 +134,9 @@ export const verifyJWT = async (req, res, next) => {
       roleId: user.roleId?._id || null,
       rolePermissionKeys: rolePerms,
       userPermissionKeys: extraPerms,
-      removedPermissions: removedPerms
+      removedPermissions: removedPerms,
+      modules: effectiveModules.length > 0 ? effectiveModules : (roleModules.length > 0 ? roleModules : userModules),
+      removedModules,
     };
 
     next();

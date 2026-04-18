@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { roleAPI } from "../../../services/api.js";
 import { MAIN_MODULES } from "../../../constants/permissions";
+import { generateModulePermissionsMap } from "../../../constants/navigationConfig";
 import { Table, Button, Input, Modal, Card, Alert, MultiSelect } from "../../../components";
 import PermissionsModal from "../PermissionsModal";
 import { hasPermission } from "../../../utils/permissionHelper";
@@ -53,6 +54,14 @@ const RoleRightsTab = ({ setToast }) => {
     } finally {
       setRolesLoading(false);
     }
+  };
+
+  // Get all permission keys allowed for the given modules
+  const getPermissionsForModules = (modules) => {
+    if (!Array.isArray(modules)) return [];
+    
+    const modulePermissionsMap = generateModulePermissionsMap();
+    return modules.flatMap(moduleId => modulePermissionsMap[moduleId] || []).filter(Boolean);
   };
 
   useEffect(() => {
@@ -178,10 +187,16 @@ const RoleRightsTab = ({ setToast }) => {
 
   const handleRoleModulesChange = (/** @type {{ target: { value: any; }; }} */ e) => {
     const selectedModules = Array.isArray(e.target.value) ? e.target.value : [];
+    const cleanedModules = Array.from(new Set(selectedModules.filter((value) => typeof value === "string" && value.trim() !== "")));
+
+    // Get all permissions allowed for the selected modules
+    const allowedPermissions = getPermissionsForModules(cleanedModules);
 
     setRoleForm((prev) => ({
       ...prev,
-      modules: Array.from(new Set(selectedModules.filter((value) => typeof value === "string" && value.trim() !== ""))),
+      modules: cleanedModules,
+      // Filter out permissions that are not allowed for the selected modules
+      permissionKeys: (prev.permissionKeys || []).filter(pk => allowedPermissions.includes(pk)),
     }));
   };
 

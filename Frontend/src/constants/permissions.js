@@ -159,6 +159,7 @@ export const PERMISSION_MODULES = [
         label: "Page Buttons",
         actions: [
           { key: "add", label: "Add Endpoint" },
+          { key: "edit", label: "Edit Endpoint" },
           { key: "view", label: "View Endpoints" },
         ],
       },

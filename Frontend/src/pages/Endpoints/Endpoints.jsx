@@ -111,6 +111,14 @@ const Endpoints = () => {
           >
           Add Endpoint
         </Button>)}
+        {hasPermission("endpoints:page_buttons:edit") && (
+          <Button
+            variant="primary"
+            onClick={handleAddEndpoint}
+            icon="edit"
+          >
+          Edit Endpoint
+        </Button>)}
       </div>
 
       <div className="endpoints-summary">
