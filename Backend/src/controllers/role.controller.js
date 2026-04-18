@@ -8,6 +8,7 @@ import {
   getPermissionsForModules,
   getRemovedModules,
   getAddedModules,
+  getPermissionKeyFromFullPermission,
 } from "../constants/modulePermissionsMap.js";
 
 export const listRoles = asyncHandler(async (req, res) => {
@@ -351,39 +352,43 @@ export const updateRole = asyncHandler(async (req, res) => {
       // Get all permissions associated with removed modules
       const removedPermissions = getPermissionsForModules(removedModulesList);
       
-      // 2a: Remove all permissions of removed modules from role's permissionKeys
+      // 2a: Remove only permissions from removed modules from role's permissionKeys
       if (removedPermissions.length > 0) {
-        role.permissionKeys = (role.permissionKeys || []).filter(
-          (pk) => !removedPermissions.includes(pk)
-        );
+        const removedPermissionSet = new Set(removedPermissions);
+        role.permissionKeys = (role.permissionKeys || []).filter((pk) => {
+          const permissionKey = getPermissionKeyFromFullPermission(pk) || pk;
+          return !removedPermissionSet.has(permissionKey);
+        });
       }
       
       // 2b: For all users with this role, handle extraPermissions and modules
       if (removedPermissions.length > 0) {
-        // First, remove those permissions from extraPermissions
+        const removedRegex = new RegExp(`^(${removedPermissions.join("|")}):`);
+
+        // First, remove only those extraPermissions belonging to removed modules
         await User.updateMany(
           { roleId: role._id },
           {
-            $pullAll: { extraPermissions: removedPermissions },
+            $pull: { extraPermissions: { $regex: removedRegex } },
           }
         );
 
         // 2c: Check if users have extraPermissions for removed modules, if so, add those modules to user.modules
         for (const removedModule of removedModulesList) {
           const modulePermissions = getPermissionsForModules([removedModule]);
+          const moduleRegex = new RegExp(`^(${modulePermissions.join("|")}):`);
           
-          // Find users who have extraPermissions for this module
+          // Find users who have extraPermissions for this removed module
           const usersWithExtraPerms = await User.find({
             roleId: role._id,
-            extraPermissions: { $in: modulePermissions }
+            extraPermissions: { $in: [moduleRegex] }
           });
 
           if (usersWithExtraPerms.length > 0) {
-            // Add the removed module to these users' modules array
             await User.updateMany(
               {
                 roleId: role._id,
-                extraPermissions: { $in: modulePermissions }
+                extraPermissions: { $in: [moduleRegex] }
               },
               {
                 $addToSet: { modules: removedModule }

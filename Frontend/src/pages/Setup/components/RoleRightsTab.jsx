@@ -64,6 +64,11 @@ const RoleRightsTab = ({ setToast }) => {
     return modules.flatMap(moduleId => modulePermissionsMap[moduleId] || []).filter(Boolean);
   };
 
+  const getPermissionKeyFromFullPermission = (fullPermission) => {
+    if (!fullPermission || typeof fullPermission !== "string") return null;
+    return fullPermission.split(":")[0];
+  };
+
   useEffect(() => {
     loadRoles();
   }, []);
@@ -196,7 +201,10 @@ const RoleRightsTab = ({ setToast }) => {
       ...prev,
       modules: cleanedModules,
       // Filter out permissions that are not allowed for the selected modules
-      permissionKeys: (prev.permissionKeys || []).filter(pk => allowedPermissions.includes(pk)),
+      permissionKeys: (prev.permissionKeys || []).filter((pk) => {
+        const permissionKey = getPermissionKeyFromFullPermission(pk) || pk;
+        return allowedPermissions.includes(permissionKey);
+      }),
     }));
   };
 
