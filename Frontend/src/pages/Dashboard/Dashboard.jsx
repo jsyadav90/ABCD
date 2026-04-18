@@ -22,13 +22,6 @@ const Dashboard = () => {
   const statsRef = useRef(null);
   const { user } = useAuth();
 
-  const [isDown, setIsDown] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
-  const wheelTimeoutRef = useRef(null);
-  const [isMarqueeEnabled, setIsMarqueeEnabled] = useState(false);
-
   const navigate = useNavigate();
   
   const [branch, setBranch] = useState("");
@@ -213,113 +206,6 @@ const Dashboard = () => {
     }
   };
 
-  // Check if marquee should be enabled based on overflow
-  useEffect(() => {
-    const checkOverflow = () => {
-      const el = statsRef.current;
-      if (el) {
-        // Force reflow to ensure accurate measurements
-        el.offsetHeight;
-        const grid = el.querySelector('.stats-grid');
-        if (grid) {
-          const containerWidth = el.clientWidth;
-          const contentWidth = grid.scrollWidth;
-          const hasOverflow = contentWidth > containerWidth;
-         
-          setIsMarqueeEnabled(hasOverflow);
-          if (!hasOverflow) {
-            setIsAutoScrolling(false);
-            el.scrollLeft = 0; // Reset scroll position
-          } else {
-            setIsAutoScrolling(true);
-          }
-        }
-      }
-    };
-
-    const handleResize = () => {
-      checkOverflow();
-    };
-
-    // Check multiple times to ensure DOM is fully rendered
-    const timeout1 = setTimeout(checkOverflow, 100);
-    const timeout2 = setTimeout(checkOverflow, 500);
-    const timeout3 = setTimeout(checkOverflow, 1000);
-
-    // Listen for window resize
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
-      clearTimeout(timeout3);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [totalUsers, totalAssets]);
-
-  // Auto-scroll loop (for continuous marquee effect)
-  useEffect(() => {
-    const el = statsRef.current;
-    if (!el || !isAutoScrolling || isDown || !isMarqueeEnabled) return;
-
-    const interval = setInterval(() => {
-      const third = el.scrollWidth / 3;
-      let next = el.scrollLeft + 1.3;
-      if (next >= third) next -= third;
-      el.scrollLeft = next;
-    }, 16);
-
-    return () => clearInterval(interval);
-  }, [isAutoScrolling, isDown, isMarqueeEnabled]);
-
-  const resetAutoScrollDelay = () => {
-    setIsAutoScrolling(false);
-    if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
-    wheelTimeoutRef.current = setTimeout(() => setIsAutoScrolling(true), 1500);
-  };
-
-  // [ARROW] Drag Scroll Logic
-  const handleMouseDown = (e) => {
-    if (!isMarqueeEnabled) return;
-    setIsDown(true);
-    setIsAutoScrolling(false);
-    setStartX(e.pageX - statsRef.current.offsetLeft);
-    setScrollLeft(statsRef.current.scrollLeft);
-  };
-
-  const handleMouseLeave = () => {
-    if (!isMarqueeEnabled) return;
-    setIsDown(false);
-    setIsAutoScrolling(true);
-  };
-  const handleMouseUp = () => {
-    if (!isMarqueeEnabled) return;
-    setIsDown(false);
-    setIsAutoScrolling(true);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDown || !isMarqueeEnabled) return;
-    e.preventDefault();
-    const x = e.pageX - statsRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    statsRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleWheel = (e) => {
-    if (!isMarqueeEnabled) return;
-    e.preventDefault();
-    setIsAutoScrolling(false);
-    resetAutoScrollDelay();
-    statsRef.current.scrollLeft += e.deltaY; // touchpad/wheel control
-    const third = statsRef.current.scrollWidth / 3;
-    if (statsRef.current.scrollLeft >= third) {
-      statsRef.current.scrollLeft -= third;
-    } else if (statsRef.current.scrollLeft < 0) {
-      statsRef.current.scrollLeft += third;
-    }
-  };
-
   const alertsColumns = [
     { header: "Asset Name", key: "assetName", sortable: true },
     { header: "Category", key: "category", sortable: true },
@@ -341,16 +227,7 @@ const Dashboard = () => {
     { title: "Total Asset", value: totalAssets ?? "--" },
     { title: "Computers", value: 110 },
     { title: "Faulty Items", value: 6, danger: true },
-    // { title: "Total Desktop", value: 110 }, 
-    // { title: "Total CPU", value: 110 },
-    // { title: "Total Monitor", value: 110 },
-    // { title: "Total Printers", value: 20 },
-    // { title: "Total Servers", value: 6 },
-    // { title: "Total Laptops", value: 10 },
-    // { title: "Total Keyboard", value: 200 },
-    // { title: "Total Faulty", value: 70, danger: true },
   ];
-  const animatedTiles = isMarqueeEnabled ? [...statsTiles, ...statsTiles, ...statsTiles] : statsTiles;
 
   const alertsData = [
     {
@@ -406,15 +283,9 @@ const Dashboard = () => {
       <div
         className="stats-wrapper"
         ref={statsRef}
-        onMouseDown={isMarqueeEnabled ? handleMouseDown : undefined}
-        onMouseUp={isMarqueeEnabled ? handleMouseUp : undefined}
-        onMouseLeave={isMarqueeEnabled ? handleMouseLeave : undefined}
-        onMouseMove={isMarqueeEnabled ? handleMouseMove : undefined}
-        onWheel={isMarqueeEnabled ? handleWheel : undefined}
-        onMouseEnter={isMarqueeEnabled ? () => setIsAutoScrolling(false) : undefined}
       >
         <div className="stats-grid">
-          {animatedTiles.map((stat, idx) => (
+          {statsTiles.map((stat, idx) => (
             <div key={`${stat.title}-${idx}`} className="stat-tile">
               <div className="stat-title">{stat.title}</div>
               <div className={`stat-value ${stat.danger ? "danger" : ""}`}>{stat.value}</div>

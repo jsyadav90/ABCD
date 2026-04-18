@@ -25,7 +25,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   margin-bottom: 0.8rem;
-  cursor: grab;
+  /* cursor: grab; */
   scroll-behavior: smooth;
 }
 
