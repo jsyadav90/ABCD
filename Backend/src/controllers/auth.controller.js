@@ -334,11 +334,19 @@ export const changePasswordController = asyncHandler(async (req, res) => {
     throw new apiError(400, "New password must be at least 8 characters long");
   }
 
+  // Extract IP and user agent from request
+  const ipAddress = req.ip || req.connection?.remoteAddress || req.headers["x-forwarded-for"] || "Unknown";
+  const userAgent = req.headers["user-agent"] || "Unknown";
+  const deviceId = req.deviceId || null; // From auth middleware if available
+
   // Call service
   const result = await authService.changePassword(
     userId,
     oldPassword,
-    newPassword
+    newPassword,
+    ipAddress,
+    userAgent,
+    deviceId
   );
 
   // Clear refresh token cookie
@@ -347,6 +355,44 @@ export const changePasswordController = asyncHandler(async (req, res) => {
   res.cookie("refreshToken", "", { ...clearOpts, sameSite: "lax" });
 
   return res.status(200).json(new apiResponse(200, null, result.message));
+});
+
+// =====================================================
+// GET PASSWORD CHANGE HISTORY CONTROLLER
+// =====================================================
+export const getPasswordChangeHistoryController = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const { limit = 10 } = req.query;
+
+  if (!userId) {
+    throw new apiError(401, "Unauthorized");
+  }
+
+  const userLogin = await UserLogin.findOne({ user: userId });
+  if (!userLogin) {
+    throw new apiError(404, "User login record not found");
+  }
+
+  const history = userLogin.getPasswordChangeHistory(parseInt(limit) || 10);
+
+  // Sanitize sensitive data before sending to frontend
+  const sanitizedHistory = history.map(record => ({
+    changedAt: record.changedAt,
+    ipAddress: record.ipAddress,
+    deviceId: record.deviceId,
+    changedBy: record.changedBy,
+    changedByUsername: record.changedByUsername,
+    changeType: record.changeType,
+    method: record.method,
+    reason: record.reason,
+    status: record.status,
+    mfaVerified: record.mfaVerified,
+    // Don't include sensitive fields like previousPasswordHash, verificationCode
+  }));
+
+  return res.status(200).json(
+    new apiResponse(200, { history: sanitizedHistory }, "Password change history retrieved successfully")
+  );
 });
 
 // =====================================================

@@ -60,6 +60,42 @@ const userLoginSchema = new Schema(
     isPermanentlyLocked: { type: Boolean, default: false },
     isLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date },
+    lastPasswordChange: [
+      {
+        // When the password was changed
+        changedAt: { type: Date, default: Date.now },
+        
+        // Network and Device Information
+        ipAddress: String, // IP address from which change was initiated
+        
+        deviceId: String, // Device identifier if changed from logged-in device
+        
+        // Who Changed It
+       
+        changedByUserId: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          default: null, // Null if self, otherwise admin user ID
+        },
+        
+        
+          
+        // Previous Password Hash (for recovery purposes - encrypted)
+        previousPasswordHash: String, // Can be used to prevent reuse
+        
+        // Audit Trail
+        // mfaVerified: { type: Boolean, default: false }, // Was MFA verified for this change
+        requiresVerification: { type: Boolean, default: false }, // Needs email/phone verification
+        verificationCode: { type: String, select: false }, // Hashed verification code
+        verificationExpiresAt: Date,
+        verificationAttempts: { type: Number, default: 0 },
+        
+        // Session Information
+        sessionId: String, // Session ID in which change was made
+        correlationId: String, // For tracking related operations
+      }
+      
+    ],
     totalLoginCount: { type: Number, default: 0 }, // Total number of successful logins across all devices
     loggedInDevices: [
       {
@@ -282,6 +318,65 @@ userLoginSchema.methods.revokeRefreshToken = async function (token) {
   }
   await this.save();
   return hadToken;
-};  
+};
+
+// Record password change in audit trail
+userLoginSchema.methods.recordPasswordChange = async function (options = {}) {
+  const {
+    ipAddress = null,
+    userAgent = null,
+    deviceId = null,
+    changedBy = "Self", // "Self", "Admin", "System"
+    changedByUserId = null,
+    changedByUsername = null,
+    changeType = "SelfInitiated", // SelfInitiated, AdminForcedReset, AdminPasswordSet, etc.
+    method = "DirectChange", // DirectChange, EmailVerification, PhoneOTP, etc.
+    reason = null,
+    previousPasswordHash = null,
+    mfaVerified = false,
+    sessionId = null,
+    correlationId = null,
+  } = options;
+
+  if (!Array.isArray(this.lastPasswordChange)) {
+    this.lastPasswordChange = [];
+  }
+
+  // Record the password change
+  this.lastPasswordChange.push({
+    changedAt: new Date(),
+    ipAddress,
+    userAgent,
+    deviceId,
+    changedBy,
+    changedByUserId: changedByUserId || null,
+    // changedByUsername,
+    changeType,
+    method,
+    reason,
+    status: "Completed",
+    previousPasswordHash,
+    // mfaVerified,
+    requiresVerification: false,
+    verificationAttempts: 0,
+    sessionId,
+    correlationId,
+  });
+
+  // Keep only last 50 password change records
+  if (this.lastPasswordChange.length > 50) {
+    this.lastPasswordChange = this.lastPasswordChange.slice(-50);
+  }
+
+  await this.save();
+};
+
+// Get password change history
+userLoginSchema.methods.getPasswordChangeHistory = function (limit = 10) {
+  if (!Array.isArray(this.lastPasswordChange)) {
+    return [];
+  }
+  return this.lastPasswordChange.slice(-limit).reverse();
+};
 
 export const UserLogin = mongoose.model("UserLogin", userLoginSchema);

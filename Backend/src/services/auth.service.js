@@ -588,7 +588,7 @@ export const authService = {
    * @param {string} newPassword - New password
    * @returns {Promise<Boolean>} - Success status
    */
-  async changePassword(userId, oldPassword, newPassword) {
+  async changePassword(userId, oldPassword, newPassword, ipAddress = null, userAgent = null, deviceId = null) {
     try {
       const userLogin = await UserLogin.findOne({ user: userId }).select(
         "+password"
@@ -629,9 +629,26 @@ export const authService = {
         }
       }
 
+      // Store previous password hash for audit
+      const previousPasswordHash = userLogin.password;
+
       // Update password
       userLogin.password = String(newPassword);
       await userLogin.save();
+
+      // Record password change in audit trail
+      await userLogin.recordPasswordChange({
+        ipAddress,
+        userAgent,
+        deviceId,
+        changedBy: "Self",
+        changedByUserId: userId,
+        changedByUsername: userLogin.username,
+        changeType: "SelfInitiated",
+        method: "DirectChange",
+        previousPasswordHash,
+        mfaVerified: false,
+      });
 
       // Logout from all devices after password change (security)
       await userLogin.logoutAllDevices();

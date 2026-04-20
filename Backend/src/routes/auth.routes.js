@@ -9,6 +9,7 @@ import {
   getActiveDevicesController,
   revokeTokenController,
   changePasswordController,
+  getPasswordChangeHistoryController,
   lockAccountController,
   unlockAccountController,
   validateTokenController,
@@ -62,6 +63,10 @@ router.post("/revoke-token", verifyJWT, revokeTokenController);
 // Purpose: Change authenticated user's password and clear refresh tokens
 // POST /change-password { oldPassword, newPassword, confirmPassword } (Auth: Bearer token)
 router.post("/change-password", verifyJWT, changePasswordController);
+
+// Purpose: Get password change history for authenticated user
+// GET /password-change-history?limit=10 (Auth: Bearer token)
+router.get("/password-change-history", verifyJWT, getPasswordChangeHistoryController);
 
 
 //! Admin routes

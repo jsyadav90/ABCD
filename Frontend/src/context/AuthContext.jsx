@@ -512,14 +512,15 @@ export const AuthProvider = ({ children }) => {
   const changePassword = useCallback(async (oldPassword, newPassword, confirmPassword) => {
     try {
       setError('')
-      const response = await authAPI.changePassword(oldPassword, newPassword, confirmPassword)
+      // Pass device ID along with password change request for audit trail
+      const response = await authAPI.changePassword(oldPassword, newPassword, confirmPassword, deviceId)
       return { success: true, message: response.data.message }
     } catch (err) {
       const message = err.response?.data?.message || 'Password change failed'
       setError(message)
       return { success: false, error: message }
     }
-  }, [])
+  }, [deviceId])
 
   const clearError = useCallback(() => {
     setError('')

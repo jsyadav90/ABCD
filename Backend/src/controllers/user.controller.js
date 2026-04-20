@@ -963,10 +963,33 @@ export const changeUserPassword = asyncHandler(async (req, res) => {
     throw new apiError(400, "User does not have login credentials. Enable login first.");
   }
 
+  // Extract IP and user agent from request
+  const ipAddress = req.ip || req.connection?.remoteAddress || req.headers["x-forwarded-for"] || "Unknown";
+  const userAgent = req.headers["user-agent"] || "Unknown";
+  const adminId = req.user?.id; // Current logged in admin
+  const adminUsername = req.user?.username;
+
+  // Store previous password hash for audit
+  const previousPasswordHash = userLogin.password;
+
   // Update password in UserLogin model
   userLogin.password = String(newPassword).trim();
   userLogin.forcePasswordChange = false; // User has now changed password
   await userLogin.save();
+
+  // Record password change in audit trail (Admin changed it)
+  await userLogin.recordPasswordChange({
+    ipAddress,
+    userAgent,
+    changedBy: "Admin",
+    changedByUserId: adminId,
+    changedByUsername: adminUsername,
+    changeType: "AdminPasswordSet",
+    method: "AdminPanel",
+    reason: "Password reset by administrator",
+    previousPasswordHash,
+    mfaVerified: false,
+  });
 
   console.log('[OK] Password changed successfully for user:', user.name);
 

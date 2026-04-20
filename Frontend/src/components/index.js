@@ -20,6 +20,7 @@ export { default as Alert } from './Alert/Alert';
 export { default as Modal } from './Modal/Modal';
 export { default as Loading } from './Loading/Loading';
 export { default as ChangePasswordModal } from './ChangePasswordModal/ChangePasswordModal';
+export { default as PasswordChangeHistory } from './PasswordChangeHistory/PasswordChangeHistory';
 
 // Navigation Components
 export { default as Pagination } from './Pagination/Pagination';

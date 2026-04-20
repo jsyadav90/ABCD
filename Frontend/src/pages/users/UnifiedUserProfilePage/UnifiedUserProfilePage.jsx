@@ -5,7 +5,7 @@ import { fetchUserById } from "../../../services/userApi";
 import { authAPI } from "../../../services/api";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle";
 import { PageLoader } from "../../../components/Loader/Loader";
-import { ChangePasswordModal } from "../../../components";
+import { ChangePasswordModal, PasswordChangeHistory } from "../../../components";
 import "./UnifiedUserProfilePage.css";
 
 const UnifiedUserProfilePage = () => {
@@ -348,6 +348,7 @@ const UnifiedUserProfilePage = () => {
                 <div className="info-row"><span>Two Factor Authentication</span><strong className="status-badge status-active">{securityInfo.twoFactor}</strong></div>
                 <div className="info-row"><span>Recent Login</span><strong>{securityInfo.recentLogin}</strong></div>
                 <div className="info-row"><span>Password Status</span><strong className="status-badge status-warning">{securityInfo.passwordStatus}</strong></div>
+                <div className="info-row"><span>Last Password Change</span><strong className="status-badge status-warning">{securityInfo.lastPasswordChange}</strong></div>
               </section>
             </div>
 
@@ -410,6 +411,9 @@ const UnifiedUserProfilePage = () => {
               </section>
             </div>
           </main>
+
+          {/* Password Change History */}
+          <PasswordChangeHistory limit={10} />
 
           {/* Change Password Modal */}
           <ChangePasswordModal

@@ -252,8 +252,10 @@ export const authAPI = {
     API.get('/auth/profile'),
   refreshToken: (deviceId) =>
     API.post('/auth/refresh', { deviceId }),
-  changePassword: (oldPassword, newPassword, confirmPassword) =>
-    API.post('/auth/change-password', { oldPassword, newPassword, confirmPassword }),
+  changePassword: (oldPassword, newPassword, confirmPassword, deviceId = null) =>
+    API.post('/auth/change-password', { oldPassword, newPassword, confirmPassword, deviceId }),
+  getPasswordChangeHistory: (limit = 10) =>
+    API.get(`/auth/password-change-history?limit=${limit}`),
   getDevices: () =>
     API.get('/auth/devices'),
   validateToken: (token) =>
