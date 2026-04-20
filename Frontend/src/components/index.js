@@ -19,6 +19,7 @@ export { default as Badge } from './Badge/Badge';
 export { default as Alert } from './Alert/Alert';
 export { default as Modal } from './Modal/Modal';
 export { default as Loading } from './Loading/Loading';
+export { default as ChangePasswordModal } from './ChangePasswordModal/ChangePasswordModal';
 
 // Navigation Components
 export { default as Pagination } from './Pagination/Pagination';

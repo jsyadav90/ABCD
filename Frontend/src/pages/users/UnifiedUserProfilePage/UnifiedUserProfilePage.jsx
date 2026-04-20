@@ -2,15 +2,17 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { fetchUserById } from "../../../services/userApi";
+import { authAPI } from "../../../services/api";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle";
 import { PageLoader } from "../../../components/Loader/Loader";
+import { ChangePasswordModal } from "../../../components";
 import "./UnifiedUserProfilePage.css";
 
 const UnifiedUserProfilePage = () => {
   const navigate = useNavigate();
   const { id: routeUserId } = useParams();
-  const authContext = /** @type {{ user?: any; loading: boolean }} */ (useAuth());
-  const { user: authUser, loading: authLoading } = authContext;
+  const authContext = /** @type {{ user?: any; loading: boolean; logout?: Function }} */ (useAuth());
+  const { user: authUser, loading: authLoading, logout } = authContext;
 
   const [user, setUser] = useState(/** @type {any} */ (null));
   const [assignedAssets, setAssignedAssets] = useState(/** @type {any[]} */ ([]));
@@ -19,6 +21,7 @@ const UnifiedUserProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [profileSidebarOpen, setProfileSidebarOpen] = useState(false);
+  const [isChangePwdModalOpen, setIsChangePwdModalOpen] = useState(false);
   const isOwnProfile = !routeUserId;
 
   // When auth finishes loading and we have authUser, set it immediately
@@ -140,6 +143,11 @@ const UnifiedUserProfilePage = () => {
     };
   }, [authUser, routeUserId, authLoading]);
 
+  // Close sidebar when navigating to a different profile or when page loads
+  useEffect(() => {
+    setProfileSidebarOpen(false);
+  }, [routeUserId]);
+
   if (loading) return <PageLoader message="Loading profile..." />;
 
   if (!user) {
@@ -194,6 +202,26 @@ const UnifiedUserProfilePage = () => {
     twoFactor: "Enabled",
     recentLogin: loginSessions[0]?.device ? `${loginSessions[0].device} - ${loginSessions[0].location}` : "Unknown",
     passwordStatus: "Needs Update",
+  };
+
+  // Handle logout all devices
+  const handleLogoutAllDevices = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to logout from all devices? You will be logged out immediately."
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      await authAPI.logoutAll();
+      alert("Successfully logged out from all devices. Please login again.");
+      logout?.();
+      navigate("/login");
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Failed to logout from all devices";
+      alert(errorMsg);
+      console.error("Logout all devices error:", err);
+    }
   };
 
   return (
@@ -251,9 +279,19 @@ const UnifiedUserProfilePage = () => {
 
             <div className="sidebar-actions">
               <button className="sidebar-btn sidebar-btn-primary">Edit Profile</button>
-              <button className="sidebar-btn sidebar-btn-outline">Change Password</button>
+              <button 
+                className="sidebar-btn sidebar-btn-outline"
+                onClick={() => setIsChangePwdModalOpen(true)}
+              >
+                Change Password
+              </button>
               <button className="sidebar-btn sidebar-btn-outline">Notification Settings</button>
-              <button className="sidebar-btn sidebar-btn-danger">Logout All Devices</button>
+              <button 
+                className="sidebar-btn sidebar-btn-danger"
+                onClick={handleLogoutAllDevices}
+              >
+                Logout All Devices
+              </button>
             </div>
 
             <div className="permission-block quick-stats-block">
@@ -372,6 +410,12 @@ const UnifiedUserProfilePage = () => {
               </section>
             </div>
           </main>
+
+          {/* Change Password Modal */}
+          <ChangePasswordModal
+            isOpen={isChangePwdModalOpen}
+            onClose={() => setIsChangePwdModalOpen(false)}
+          />
       </div>
     </>
   );

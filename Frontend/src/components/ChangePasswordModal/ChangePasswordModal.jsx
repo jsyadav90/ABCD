@@ -1,0 +1,154 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { authAPI } from "../../services/api";
+import Modal from "../Modal/Modal";
+import Input from "../Input/Input";
+import Button from "../Button/Button";
+
+/**
+ * Reusable Change Password Modal Component
+ * Used in Sidebar and UnifiedUserProfilePage
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Modal open state
+ * @param {Function} props.onClose - Callback when modal closes
+ */
+const ChangePasswordModal = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const [formData, setFormData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    error: "",
+    isSubmitting: false,
+  });
+
+  // Handle input changes
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+      error: "", // Clear error on input change
+    }));
+  };
+
+  // Validate form
+  const validateForm = () => {
+    if (!formData.oldPassword || !formData.newPassword || !formData.confirmPassword) {
+      setFormData(prev => ({ ...prev, error: "All fields are required" }));
+      return false;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setFormData(prev => ({ ...prev, error: "New passwords do not match" }));
+      return false;
+    }
+
+    if (formData.newPassword.length < 8) {
+      setFormData(prev => ({ ...prev, error: "Password must be at least 8 characters" }));
+      return false;
+    }
+
+    return true;
+  };
+
+  // Handle password change submission
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setFormData(prev => ({ ...prev, isSubmitting: true, error: "" }));
+
+    try {
+      await authAPI.changePassword(
+        formData.oldPassword,
+        formData.newPassword,
+        formData.confirmPassword
+      );
+      
+      alert("Password changed successfully. Please login again.");
+      handleClose();
+      logout?.();
+      navigate("/login");
+    } catch (err) {
+      setFormData(prev => ({ 
+        ...prev, 
+        isSubmitting: false, 
+        error: err.response?.data?.message || "Failed to change password" 
+      }));
+    }
+  };
+
+  // Handle modal close and reset form
+  const handleClose = () => {
+    setFormData({
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+      error: "",
+      isSubmitting: false,
+    });
+    onClose?.();
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Change Password"
+    >
+      <div className="modal-body">
+        <Input
+          type="password"
+          label="Current Password"
+          placeholder="Enter current password"
+          value={formData.oldPassword}
+          onChange={(e) => handleInputChange("oldPassword", e.target.value)}
+          required
+          disabled={formData.isSubmitting}
+        />
+        <Input
+          type="password"
+          label="New Password"
+          placeholder="Enter new password (min 8 characters)"
+          value={formData.newPassword}
+          onChange={(e) => handleInputChange("newPassword", e.target.value)}
+          required
+          disabled={formData.isSubmitting}
+        />
+        <Input
+          type="password"
+          label="Confirm New Password"
+          placeholder="Enter new password again"
+          value={formData.confirmPassword}
+          onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+          required
+          disabled={formData.isSubmitting}
+        />
+        {formData.error && (
+          <div className="modal-error">{formData.error}</div>
+        )}
+      </div>
+      <div className="modal-footer">
+        <Button
+          variant="secondary"
+          onClick={handleClose}
+          disabled={formData.isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleSubmit}
+          disabled={formData.isSubmitting}
+        >
+          {formData.isSubmitting ? "Updating..." : "Update Password"}
+        </Button>
+      </div>
+    </Modal>
+  );
+};
+
+export default ChangePasswordModal;

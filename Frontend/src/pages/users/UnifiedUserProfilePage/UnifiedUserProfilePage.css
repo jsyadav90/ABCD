@@ -160,9 +160,9 @@
 }
 
 /* When main sidebar is hidden */
-.layout-body.sidebar-open .profile-main {
+/* .layout-body.sidebar-open .profile-main {
   margin-left: 318px;
-}
+} */
 
 .profile-sidebar-panel,
 .profile-info-card,
@@ -582,6 +582,10 @@
   .profile-sidebar-panel {
     padding: 40px;
   }
+
+  .profile-sidebar-close-btn {
+    display: none !important;
+  }
 }
 
 /* Medium Screens (992px - 1439px) */
@@ -614,6 +618,10 @@
   .dashboard-card-actions .topbar-btn {
     flex: 1;
     min-width: 140px;
+  }
+
+  .profile-sidebar-close-btn {
+    display: none !important;
   }
 }
 

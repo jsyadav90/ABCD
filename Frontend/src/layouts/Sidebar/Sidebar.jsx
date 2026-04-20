@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { isSuperAdmin, canAccessModule } from "../../utils/permissionHelper";
 import { authAPI } from "../../services/api";
-import { Modal, Input, Button } from "../../components";
+import { Modal, Input, Button, ChangePasswordModal } from "../../components";
 import { getSidebarItemsForModule } from "../../constants/navigationConfig";
 import "./Sidebar.css";
 
@@ -35,17 +35,8 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
   const hasNoModules = user?.modules && user.modules.length === 0;
   const itemsToDisplay = hasNoModules ? [] : availableMenuItems;
 
-  
-
   // Change Password Modal State
-  const [changePwdModal, setChangePwdModal] = useState({
-    isOpen: false,
-    oldPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-    error: "",
-    isSubmitting: false,
-  });
+  const [isChangePwdModalOpen, setIsChangePwdModalOpen] = useState(false);
 
   // Handle click outside user panel
   useEffect(() => {
@@ -139,57 +130,6 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
     }
   }, [userOpen]);
 
-
-  const handleCloseChangePwdModal = () => {
-    setChangePwdModal({
-      isOpen: false,
-      oldPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-      error: "",
-      isSubmitting: false,
-    });
-    setUserOpen(false);
-  };
-
-  const handleChangePasswordSubmit = async () => {
-    // Basic validation
-    if (!changePwdModal.oldPassword || !changePwdModal.newPassword || !changePwdModal.confirmPassword) {
-      setChangePwdModal(prev => ({ ...prev, error: "All fields are required" }));
-      return;
-    }
-
-    if (changePwdModal.newPassword !== changePwdModal.confirmPassword) {
-      setChangePwdModal(prev => ({ ...prev, error: "New passwords do not match" }));
-      return;
-    }
-
-    if (changePwdModal.newPassword.length < 8) {
-      setChangePwdModal(prev => ({ ...prev, error: "Password must be at least 8 characters" }));
-      return;
-    }
-
-    setChangePwdModal(prev => ({ ...prev, isSubmitting: true, error: "" }));
-
-    try {
-      await authAPI.changePassword(
-        changePwdModal.oldPassword,
-        changePwdModal.newPassword,
-        changePwdModal.confirmPassword
-      );
-      
-      alert("Password changed successfully. Please login again.");
-      logout();
-      navigate("/login");
-    } catch (err) {
-      setChangePwdModal(prev => ({ 
-        ...prev, 
-        isSubmitting: false, 
-        error: err.response?.data?.message || "Failed to change password" 
-      }));
-    }
-  };
-
   return (
     <>
       <nav className="menu-bar">
@@ -251,11 +191,7 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
                 </button>
                 <button
                   onClick={() => {
-                    setChangePwdModal((prev) => ({
-                      ...prev,
-                      isOpen: true,
-                      error: "",
-                    }));
+                    setIsChangePwdModalOpen(true);
                     setUserOpen(false);
                   }}
                 >
@@ -275,81 +211,11 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
               document.body
             )}
           <div className="portal-anchor">
-          <Modal
-            isOpen={changePwdModal.isOpen}
-            onClose={handleCloseChangePwdModal}
-            title="Change Password"
-          >
-            <div className="modal-body">
-          <Input
-            type="password"
-            label="Current Password"
-            placeholder="Enter current password"
-            value={changePwdModal.oldPassword}
-            onChange={(e) =>
-              setChangePwdModal((prev) => ({
-                ...prev,
-                oldPassword: e.target.value,
-                error: "",
-              }))
-            }
-            required
-            disabled={changePwdModal.isSubmitting}
-          />
-          <Input
-            type="password"
-            label="New Password"
-            placeholder="Enter new password (min 8 characters)"
-            value={changePwdModal.newPassword}
-            onChange={(e) =>
-              setChangePwdModal((prev) => ({
-                ...prev,
-                newPassword: e.target.value,
-                error: "",
-              }))
-            }
-            required
-            disabled={changePwdModal.isSubmitting}
-          />
-          <Input
-            type="password"
-            label="Confirm New Password"
-            placeholder="Enter new password again"
-            value={changePwdModal.confirmPassword}
-            onChange={(e) =>
-              setChangePwdModal((prev) => ({
-                ...prev,
-                confirmPassword: e.target.value,
-                error: "",
-              }))
-            }
-            required
-            disabled={changePwdModal.isSubmitting}
-          />
-          {changePwdModal.error && (
-            <div style={{ color: "#dc3545", fontSize: "0.875rem", marginTop: "0.5rem" }}>
-              {changePwdModal.error}
-            </div>
-          )}
-            </div>
-            <div className="modal-footer" style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-            <Button
-              variant="secondary"
-              onClick={handleCloseChangePwdModal}
-              disabled={changePwdModal.isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleChangePasswordSubmit}
-              disabled={changePwdModal.isSubmitting}
-            >
-              {changePwdModal.isSubmitting ? "Changing..." : "Change Password"}
-            </Button>
-            </div>
-          </Modal>
-      </div>
+            <ChangePasswordModal
+              isOpen={isChangePwdModalOpen}
+              onClose={() => setIsChangePwdModalOpen(false)}
+            />
+          </div>
         </div>
       )}
     </nav>
