@@ -5,7 +5,7 @@ import { fetchUserById } from "../../../services/userApi";
 import { authAPI } from "../../../services/api";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle";
 import { PageLoader } from "../../../components/Loader/Loader";
-import { ChangePasswordModal, PasswordChangeHistory } from "../../../components";
+import { ChangePasswordModal } from "../../../components";
 import "./UnifiedUserProfilePage.css";
 
 const UnifiedUserProfilePage = () => {
@@ -22,6 +22,7 @@ const UnifiedUserProfilePage = () => {
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [profileSidebarOpen, setProfileSidebarOpen] = useState(false);
   const [isChangePwdModalOpen, setIsChangePwdModalOpen] = useState(false);
+  const [lastPasswordChangeDate, setLastPasswordChangeDate] = useState(/** @type {string | null} */ (null));
   const isOwnProfile = !routeUserId;
 
   // When auth finishes loading and we have authUser, set it immediately
@@ -148,6 +149,35 @@ const UnifiedUserProfilePage = () => {
     setProfileSidebarOpen(false);
   }, [routeUserId]);
 
+  // Fetch password change history
+  useEffect(() => {
+    const fetchPasswordHistory = async () => {
+      try {
+        const response = await authAPI.getPasswordChangeHistory(1);
+        const history = response.data?.data?.history || [];
+        if (history.length > 0) {
+          const mostRecentChange = history[0];
+          const changeDate = new Date(mostRecentChange.changedAt);
+          const formattedDate = new Intl.DateTimeFormat("en-IN", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(changeDate);
+          setLastPasswordChangeDate(formattedDate);
+        }
+      } catch (err) {
+        console.error("Failed to fetch password change history:", err);
+        setLastPasswordChangeDate(null);
+      }
+    };
+
+    if (!authLoading && user) {
+      fetchPasswordHistory();
+    }
+  }, [authLoading, user]);
+
   if (loading) return <PageLoader message="Loading profile..." />;
 
   if (!user) {
@@ -202,6 +232,7 @@ const UnifiedUserProfilePage = () => {
     twoFactor: "Enabled",
     recentLogin: loginSessions[0]?.device ? `${loginSessions[0].device} - ${loginSessions[0].location}` : "Unknown",
     passwordStatus: "Needs Update",
+    lastPasswordChange: lastPasswordChangeDate || "Never",
   };
 
   // Handle logout all devices
@@ -411,9 +442,6 @@ const UnifiedUserProfilePage = () => {
               </section>
             </div>
           </main>
-
-          {/* Password Change History */}
-          <PasswordChangeHistory limit={10} />
 
           {/* Change Password Modal */}
           <ChangePasswordModal
