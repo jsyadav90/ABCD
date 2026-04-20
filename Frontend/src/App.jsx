@@ -27,6 +27,7 @@ const Users = lazy(() => import("./pages/users/UsersList/Users"));
 const AddUser = lazy(() => import("./pages/users/AddUserPage/AddUser"));
 const EditUser = lazy(() => import("./pages/users/EditUserPage/EditUser"));
 const UserDetails = lazy(() => import("./pages/users/UserDetailsPage/UserDetails"));
+const UnifiedUserProfilePage = lazy(() => import("./pages/users/UnifiedUserProfilePage/UnifiedUserProfilePage"));
 const Setup = lazy(() => import("./pages/Setup/Setup"));
 // @ts-ignore
 const AssetPage = lazy(() => import("./pages/Assets/asset"));
@@ -118,6 +119,28 @@ function App() {
               <ProtectedRoute requiredPermission="users:access">
                 <MainLayout>
                   <UserDetails />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <UnifiedUserProfilePage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/user-profile/:id"
+            element={
+              <ProtectedRoute requiredPermission="users:access">
+                <MainLayout>
+                  <UnifiedUserProfilePage />
                 </MainLayout>
               </ProtectedRoute>
             }
