@@ -373,7 +373,13 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       setError('')
       
-      const response = await authAPI.reauth(password, deviceId)
+      const activeDeviceId = (deviceId && deviceId !== 'undefined' && deviceId !== 'null') ? deviceId : generateValidDeviceId()
+      const response = await authAPI.reauth({
+        credentialType: 'password',
+        credential: password,
+        deviceId: activeDeviceId,
+        userAgent: navigator.userAgent
+      })
       
       // Backend returns: { user, accessToken, deviceId, forcePasswordChange }
       const { user: userData, accessToken, deviceId: returnedDeviceId, forcePasswordChange, permissions } = response.data.data
@@ -392,7 +398,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Preserve device ID; prefer backend returned value if available
-      const finalDeviceId = returnedDeviceId || deviceId
+      const finalDeviceId = returnedDeviceId || activeDeviceId
       if (finalDeviceId && finalDeviceId !== 'undefined' && finalDeviceId !== 'null') {
         setDeviceId(finalDeviceId)
         localStorage.setItem('deviceId', finalDeviceId)

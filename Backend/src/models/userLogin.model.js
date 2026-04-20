@@ -42,6 +42,13 @@ const userLoginSchema = new Schema(
       required: true,
       select: false,
     },
+    // PIN for quick re-authentication (optional, 4-6 digits)
+    pin: {
+      type: String,
+      default: null,
+      select: false,
+      note: 'Hashed PIN for optional quick authentication (4-6 digits)'
+    },
     // Force user to change password on next login
     forcePasswordChange: {
       type: Boolean,
@@ -117,21 +124,38 @@ const userLoginSchema = new Schema(
   { timestamps: true }
 );
 
-// Password Hash - Modern mongoose async pre-hook (no next param)
+// Password and PIN Hash - Modern mongoose async pre-hook (no next param)
 userLoginSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  
-  try {
-    const salt = await bcryptjs.genSalt(10);
-    this.password = await bcryptjs.hash(this.password, salt);
-  } catch (error) {
-    throw new Error(`Password hashing failed: ${error.message}`);
+  // Hash password if modified
+  if (this.isModified("password")) {
+    try {
+      const salt = await bcryptjs.genSalt(10);
+      this.password = await bcryptjs.hash(this.password, salt);
+    } catch (error) {
+      throw new Error(`Password hashing failed: ${error.message}`);
+    }
+  }
+
+  // Hash PIN if modified
+  if (this.isModified("pin") && this.pin) {
+    try {
+      const salt = await bcryptjs.genSalt(10);
+      this.pin = await bcryptjs.hash(this.pin, salt);
+    } catch (error) {
+      throw new Error(`PIN hashing failed: ${error.message}`);
+    }
   }
 });
 
 // Password Compare
 userLoginSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcryptjs.compare(candidatePassword, this.password);
+};
+
+// PIN Compare
+userLoginSchema.methods.comparePin = async function (candidatePin) {
+  if (!this.pin) return false; // PIN not set
+  return await bcryptjs.compare(candidatePin, this.pin);
 };
 
 // Token Generators

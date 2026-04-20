@@ -6,6 +6,7 @@ import { authAPI } from "../../../services/api";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle";
 import { PageLoader } from "../../../components/Loader/Loader";
 import { ChangePasswordModal } from "../../../components";
+import SetPinModal from "../../../components/SetPinModal/SetPinModal";
 import "./UnifiedUserProfilePage.css";
 
 const UnifiedUserProfilePage = () => {
@@ -22,7 +23,10 @@ const UnifiedUserProfilePage = () => {
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [profileSidebarOpen, setProfileSidebarOpen] = useState(false);
   const [isChangePwdModalOpen, setIsChangePwdModalOpen] = useState(false);
+  const [isSetPinModalOpen, setIsSetPinModalOpen] = useState(false);
   const [lastPasswordChangeDate, setLastPasswordChangeDate] = useState(/** @type {string | null} */ (null));
+  const [isPinSet, setIsPinSet] = useState(/** @type {boolean | null} */ (null));
+  const [showPinNotification, setShowPinNotification] = useState(false);
   const isOwnProfile = !routeUserId;
 
   // When auth finishes loading and we have authUser, set it immediately
@@ -148,6 +152,34 @@ const UnifiedUserProfilePage = () => {
   useEffect(() => {
     setProfileSidebarOpen(false);
   }, [routeUserId]);
+
+  // Fetch PIN status
+  useEffect(() => {
+    const fetchPinStatus = async () => {
+      try {
+        const response = await authAPI.checkPinStatus();
+        const isPinSetStatus = response.data?.data?.isPinSet || false;
+        setIsPinSet(isPinSetStatus);
+        
+        // Show notification if PIN is not set
+        if (!isPinSetStatus && isOwnProfile) {
+          setShowPinNotification(true);
+          // Auto-hide notification after 5 seconds
+          const timer = setTimeout(() => {
+            setShowPinNotification(false);
+          }, 5000);
+          return () => clearTimeout(timer);
+        }
+      } catch (err) {
+        console.error("Failed to fetch PIN status:", err);
+        setIsPinSet(null);
+      }
+    };
+
+    if (!authLoading && user && isOwnProfile) {
+      fetchPinStatus();
+    }
+  }, [authLoading, user, isOwnProfile]);
 
   // Fetch password change history
   useEffect(() => {
@@ -316,7 +348,13 @@ const UnifiedUserProfilePage = () => {
               >
                 Change Password
               </button>
-              <button className="sidebar-btn sidebar-btn-outline">Notification Settings</button>
+              <button 
+                className="sidebar-btn sidebar-btn-outline"
+                onClick={() => setIsSetPinModalOpen(true)}
+              >
+                {isPinSet ? "Update PIN" : "Set PIN"}
+              </button>
+              
               <button 
                 className="sidebar-btn sidebar-btn-danger"
                 onClick={handleLogoutAllDevices}
@@ -350,6 +388,30 @@ const UnifiedUserProfilePage = () => {
         </aside>
 
         <main className="profile-main">
+            {/* PIN Not Set Notification */}
+            {showPinNotification && (
+              <div className="pin-notification-toast">
+                <div className="notification-content">
+                  <svg className="notification-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  <span>Please set a PIN for quick re-authentication</span>
+                </div>
+                <button 
+                  className="notification-close"
+                  onClick={() => setShowPinNotification(false)}
+                  aria-label="Close notification"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            )}
+
             <section className="profile-card profile-dashboard-card">
               <div className="dashboard-card-header">
                 <div>
@@ -447,6 +509,17 @@ const UnifiedUserProfilePage = () => {
           <ChangePasswordModal
             isOpen={isChangePwdModalOpen}
             onClose={() => setIsChangePwdModalOpen(false)}
+          />
+
+          {/* Set/Update PIN Modal */}
+          <SetPinModal
+            isOpen={isSetPinModalOpen}
+            onClose={() => setIsSetPinModalOpen(false)}
+            isUpdate={isPinSet}
+            onSuccess={() => {
+              setIsPinSet(true);
+              setShowPinNotification(false);
+            }}
           />
       </div>
     </>

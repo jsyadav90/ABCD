@@ -100,14 +100,14 @@ export const loginController = asyncHandler(async (req, res) => {
 });
 
 // =====================================================
-// REAUTH CONTROLLER (Password-only re-authentication)
+// REAUTH CONTROLLER (Password or PIN re-authentication)
 // =====================================================
 export const reauthController = asyncHandler(async (req, res) => {
-  const { password, deviceId = uuidv4() } = req.body;
+  const { credentialType = "password", credential, deviceId = uuidv4() } = req.body;
 
   // Validation
-  if (!password) {
-    throw new apiError(400, "Password is required");
+  if (!credential) {
+    throw new apiError(400, "Credential (password or PIN) is required");
   }
 
   // Get userId from refresh token in cookie (user must have valid refresh token)
@@ -133,10 +133,11 @@ export const reauthController = asyncHandler(async (req, res) => {
     req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
   const userAgent = req.get("user-agent");
 
-  // Call service
+  // Call service with credentialType
   const result = await authService.reauth(
     userId,
-    String(password),
+    credentialType,
+    String(credential),
     deviceId,
     ipAddress,
     userAgent
@@ -241,6 +242,61 @@ export const logoutAllDevicesController = asyncHandler(async (req, res) => {
   res.cookie("accessToken", "", { ...clearOpts, sameSite: "lax" });
 
   return res.status(200).json(new apiResponse(200, null, result.message));
+});
+
+// =====================================================
+// SET PIN CONTROLLER
+// =====================================================
+export const setPinController = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const { pin } = req.body;
+
+  if (!userId) {
+    throw new apiError(401, "Unauthorized");
+  }
+
+  if (!pin) {
+    throw new apiError(400, "PIN is required");
+  }
+
+  const result = await authService.setPin(userId, pin);
+
+  return res.status(200).json(new apiResponse(200, null, result.message));
+});
+
+// =====================================================
+// UPDATE PIN CONTROLLER
+// =====================================================
+export const updatePinController = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+  const { oldPin, newPin } = req.body;
+
+  if (!userId) {
+    throw new apiError(401, "Unauthorized");
+  }
+
+  if (!oldPin || !newPin) {
+    throw new apiError(400, "Both old PIN and new PIN are required");
+  }
+
+  const result = await authService.updatePin(userId, oldPin, newPin);
+
+  return res.status(200).json(new apiResponse(200, null, result.message));
+});
+
+// =====================================================
+// CHECK PIN STATUS CONTROLLER
+// =====================================================
+export const checkPinStatusController = asyncHandler(async (req, res) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new apiError(401, "Unauthorized");
+  }
+
+  const result = await authService.checkPinStatus(userId);
+
+  return res.status(200).json(new apiResponse(200, result, "PIN status retrieved"));
 });
 
 // =====================================================

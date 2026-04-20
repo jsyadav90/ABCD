@@ -95,6 +95,67 @@
   -o-transform: scale(1.05);
 }
 
+/* PIN Notification Toast */
+.pin-notification-toast {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  padding: 14px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.3);
+  animation: slideIn 0.3s ease forwards;
+  z-index: 1000;
+  max-width: 360px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.pin-notification-toast .notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.pin-notification-toast .notification-icon {
+  color: white;
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.pin-notification-toast .notification-close {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.pin-notification-toast .notification-close:hover {
+  opacity: 1;
+}
+
 .profile-sidebar-overlay {
   display: none;
   position: fixed;

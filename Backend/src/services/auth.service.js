@@ -219,18 +219,19 @@ export const authService = {
   },
 
   /**
-   * Re-authenticate user with password only (for session timeout)
+   * Re-authenticate user with password or PIN (for session timeout)
    * @param {string} userId - User ID from refresh token
-   * @param {string} password - Plain password
+   * @param {string} credentialType - Type: "password" or "pin"
+   * @param {string} credential - Plain password or PIN
    * @param {string} deviceId - Device identifier
    * @param {string} ipAddress - Client IP address
    * @param {string} userAgent - Client user agent
    * @returns {Promise<Object>} - User data, access token, refresh token, permissions
    */
-  async reauth(userId, password, deviceId, ipAddress = null, userAgent = null) {
+  async reauth(userId, credentialType, credential, deviceId, ipAddress = null, userAgent = null) {
     try {
       // Find UserLogin by user ID
-      const userLogin = await UserLogin.findOne({ user: userId }).select("+password");
+      const userLogin = await UserLogin.findOne({ user: userId }).select("+password +pin");
       if (!userLogin) {
         throw new apiError(404, "User not found");
       }
@@ -248,9 +249,32 @@ export const authService = {
         throw new apiError(429, `Account is locked. Try again in ${remainingTime} minutes.`);
       }
 
-      // Verify password (convert to string in case it's sent as number)
-      const isPasswordValid = await userLogin.comparePassword(String(password));
-      if (!isPasswordValid) {
+      let isCredentialValid = false;
+      let usedCredentialType = credentialType;
+      
+      // Determine which credential to check
+      // If PIN is not set, always use password
+      if (!userLogin.pin) {
+        // PIN not set - must use password
+        isCredentialValid = await userLogin.comparePassword(String(credential));
+        usedCredentialType = "password";
+      } else if (credentialType === "pin") {
+        // PIN is set and user trying to use PIN
+        isCredentialValid = await userLogin.comparePin(String(credential));
+      } else {
+        // PIN is set but user trying password - allow either
+        // Try password first
+        isCredentialValid = await userLogin.comparePassword(String(credential));
+        if (!isCredentialValid) {
+          // Try PIN if password fails
+          isCredentialValid = await userLogin.comparePin(String(credential));
+          if (isCredentialValid) {
+            usedCredentialType = "pin";
+          }
+        }
+      }
+
+      if (!isCredentialValid) {
         // Increment failed attempts
         userLogin.failedLoginAttempts = (userLogin.failedLoginAttempts || 0) + 1;
 
@@ -270,7 +294,7 @@ export const authService = {
         }
 
         await userLogin.save();
-        throw new apiError(401, "Invalid password");
+        throw new apiError(401, `Invalid ${usedCredentialType}`);
       }
 
       // Reset failed attempts on successful reauth
@@ -526,6 +550,103 @@ export const authService = {
   },
 
   /**
+   * Set PIN for user
+   * @param {string} userId - User ID
+   * @param {string} pin - PIN (4-6 digits)
+   * @returns {Promise<Object>} - Success status
+   */
+  async setPin(userId, pin) {
+    try {
+      // Validate PIN format (4-6 digits)
+      if (!/^\d{4,6}$/.test(String(pin).trim())) {
+        throw new apiError(400, "PIN must be 4-6 digits");
+      }
+
+      const userLogin = await UserLogin.findOne({ user: userId }).select("+password +pin");
+      if (!userLogin) {
+        throw new apiError(404, "User not found");
+      }
+
+      // Set PIN (will be hashed in pre-save hook)
+      userLogin.pin = String(pin).trim();
+      await userLogin.save();
+
+      return {
+        success: true,
+        message: "PIN set successfully",
+      };
+    } catch (error) {
+      if (error instanceof apiError) throw error;
+      throw new apiError(500, error.message);
+    }
+  },
+
+  /**
+   * Update PIN for user
+   * @param {string} userId - User ID
+   * @param {string} oldPin - Current PIN
+   * @param {string} newPin - New PIN (4-6 digits)
+   * @returns {Promise<Object>} - Success status
+   */
+  async updatePin(userId, oldPin, newPin) {
+    try {
+      // Validate new PIN format (4-6 digits)
+      if (!/^\d{4,6}$/.test(String(newPin).trim())) {
+        throw new apiError(400, "New PIN must be 4-6 digits");
+      }
+
+      const userLogin = await UserLogin.findOne({ user: userId }).select("+pin");
+      if (!userLogin) {
+        throw new apiError(404, "User not found");
+      }
+
+      if (!userLogin.pin) {
+        throw new apiError(400, "PIN is not set. Use Set PIN instead");
+      }
+
+      // Verify old PIN
+      const isPinValid = await userLogin.comparePin(String(oldPin).trim());
+      if (!isPinValid) {
+        throw new apiError(401, "Current PIN is incorrect");
+      }
+
+      // Update PIN (will be hashed in pre-save hook)
+      userLogin.pin = String(newPin).trim();
+      await userLogin.save();
+
+      return {
+        success: true,
+        message: "PIN updated successfully",
+      };
+    } catch (error) {
+      if (error instanceof apiError) throw error;
+      throw new apiError(500, error.message);
+    }
+  },
+
+  /**
+   * Check if user has PIN set
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} - Object with isPinSet boolean
+   */
+  async checkPinStatus(userId) {
+    try {
+      const userLogin = await UserLogin.findOne({ user: userId }).select("+pin").lean();
+      if (!userLogin) {
+        throw new apiError(404, "User not found");
+      }
+
+      return {
+        success: true,
+        isPinSet: !!userLogin.pin,
+      };
+    } catch (error) {
+      if (error instanceof apiError) throw error;
+      throw new apiError(500, error.message);
+    }
+  },
+
+  /**
    * Lock user account
    * @param {string} userId - User ID to lock
    * @param {string} reason - Reason for locking
@@ -632,8 +753,9 @@ export const authService = {
       // Store previous password hash for audit
       const previousPasswordHash = userLogin.password;
 
-      // Update password
+      // Update password and reset PIN
       userLogin.password = String(newPassword);
+      userLogin.pin = null; // Reset PIN when password is changed
       await userLogin.save();
 
       // Record password change in audit trail

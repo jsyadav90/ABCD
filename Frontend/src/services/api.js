@@ -240,8 +240,8 @@ export default API
 export const authAPI = {
   login: (loginId, password, deviceId) =>
     API.post('/auth/login', { loginId, password, deviceId }),
-  reauth: (password, deviceId) =>
-    API.post('/auth/reauth', { password, deviceId }),
+  reauth: (data) =>
+    API.post('/auth/reauth', data),
   register: (userData) =>
     API.post('/auth/register', userData),
   logout: (deviceId) =>
@@ -256,6 +256,12 @@ export const authAPI = {
     API.post('/auth/change-password', { oldPassword, newPassword, confirmPassword, deviceId }),
   getPasswordChangeHistory: (limit = 10) =>
     API.get(`/auth/password-change-history?limit=${limit}`),
+  setPin: (pin) =>
+    API.post('/auth/set-pin', { pin }),
+  updatePin: (oldPin, newPin) =>
+    API.post('/auth/update-pin', { oldPin, newPin }),
+  checkPinStatus: () =>
+    API.get('/auth/check-pin-status'),
   getDevices: () =>
     API.get('/auth/devices'),
   validateToken: (token) =>

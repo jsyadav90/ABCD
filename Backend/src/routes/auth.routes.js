@@ -14,6 +14,9 @@ import {
   unlockAccountController,
   validateTokenController,
   profileController,
+  setPinController,
+  updatePinController,
+  checkPinStatusController,
 } from "../controllers/auth.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyPermission } from "../middlewares/permission.middleware.js";
@@ -67,6 +70,18 @@ router.post("/change-password", verifyJWT, changePasswordController);
 // Purpose: Get password change history for authenticated user
 // GET /password-change-history?limit=10 (Auth: Bearer token)
 router.get("/password-change-history", verifyJWT, getPasswordChangeHistoryController);
+
+// Purpose: Set PIN for authenticated user
+// POST /set-pin { pin } (Auth: Bearer token)
+router.post("/set-pin", verifyJWT, setPinController);
+
+// Purpose: Update PIN for authenticated user
+// POST /update-pin { oldPin, newPin } (Auth: Bearer token)
+router.post("/update-pin", verifyJWT, updatePinController);
+
+// Purpose: Check if PIN is set for authenticated user
+// GET /check-pin-status (Auth: Bearer token)
+router.get("/check-pin-status", verifyJWT, checkPinStatusController);
 
 
 //! Admin routes
