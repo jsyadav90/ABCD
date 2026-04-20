@@ -36,6 +36,7 @@ import { Organization } from "../models/organization.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
+import { getPermissionsForModules, getRemovedModules, getAddedModules } from "../constants/modulePermissionsMap.js";
 
 // =====================================================
 // HELPER FUNCTION: Check hierarchical access (reporting chain)
@@ -603,10 +604,35 @@ export const changeUserRole = asyncHandler(async (req, res) => {
     roleChanged = oldRoleId !== newRoleId;
   }
 
-  // If role changed, clear all individual module and permission overrides
+  // If role changed, handle module and permission overrides
   // User gets only default modules and permissions from new role
+  // But remove extraPermissions related to modules that were removed from the role
   if (roleChanged) {
-    user.extraPermissions = [];
+    // Get old and new role modules
+    let oldRoleModules = [];
+    let newRoleModules = [];
+    
+    if (oldRoleId) {
+      const oldRole = await Role.findById(oldRoleId).select("modules");
+      oldRoleModules = oldRole ? oldRole.modules || [] : [];
+    }
+    
+    const newRole = await Role.findById(newRoleId).select("modules");
+    newRoleModules = newRole ? newRole.modules || [] : [];
+    
+    // Find removed modules
+    const removedModulesFromRole = getRemovedModules(oldRoleModules, newRoleModules);
+    
+    // Get permissions for removed modules
+    const permissionsToRemove = getPermissionsForModules(removedModulesFromRole);
+    
+    // Remove extraPermissions that belong to removed modules
+    user.extraPermissions = user.extraPermissions.filter(perm => {
+      const permKey = perm.split(':')[0]; // Extract permission key (e.g., "assets" from "assets:inventory:view")
+      return !permissionsToRemove.includes(permKey);
+    });
+    
+    // Clear other role-specific overrides
     user.removedPermissions = [];
     user.modules = [];
     user.removedModules = [];
@@ -619,9 +645,56 @@ export const changeUserRole = asyncHandler(async (req, res) => {
       user.removedPermissions = removedPermissions;
     }
     if (Array.isArray(extraModules)) {
+      // Before updating modules, remove permissions related to modules being removed
+      const currentModules = user.modules || [];
+      const removedModulesFromUser = getRemovedModules(currentModules, extraModules);
+      const permissionsToRemove = getPermissionsForModules(removedModulesFromUser);
+      
+      // Remove from extraPermissions
+      user.extraPermissions = user.extraPermissions.filter(perm => {
+        const permKey = perm.split(':')[0];
+        return !permissionsToRemove.includes(permKey);
+      });
+      
+      // Remove from removedPermissions
+      user.removedPermissions = user.removedPermissions.filter(perm => {
+        const permKey = perm.split(':')[0];
+        return !permissionsToRemove.includes(permKey);
+      });
+      
       user.modules = extraModules;
     }
     if (Array.isArray(removedModules)) {
+      // Before updating removedModules, check for newly removed modules from role
+      const currentRemovedModules = user.removedModules || [];
+      const newlyRemovedModules = getRemovedModules(currentRemovedModules, removedModules); // Wait, no: getAddedModules would be better
+      
+      // Actually, since removedModules is the list of modules removed from role,
+      // when removedModules is updated, if new modules are added to this list,
+      // it means those modules are now removed from the role for this user.
+      // So, we should remove extraPermissions for those newly removed modules.
+      
+      // But getRemovedModules(old, new) gives modules removed from old to new,
+      // but here old is currentRemovedModules, new is removedModules,
+      // if removedModules has more, then newly added are the ones not in old but in new.
+      // So, getAddedModules(currentRemovedModules, removedModules)
+      
+      // I need to import getAddedModules
+      const newlyRemovedFromRole = getAddedModules(currentRemovedModules, removedModules);
+      const permissionsToRemove = getPermissionsForModules(newlyRemovedFromRole);
+      
+      // Remove from extraPermissions
+      user.extraPermissions = user.extraPermissions.filter(perm => {
+        const permKey = perm.split(':')[0];
+        return !permissionsToRemove.includes(permKey);
+      });
+      
+      // Remove from removedPermissions (though less likely)
+      user.removedPermissions = user.removedPermissions.filter(perm => {
+        const permKey = perm.split(':')[0];
+        return !permissionsToRemove.includes(permKey);
+      });
+      
       user.removedModules = removedModules;
     }
   }
