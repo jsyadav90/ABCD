@@ -241,6 +241,9 @@ const Sidebar = ({ onCloseSidebar, selectedModule = "module_1", collapsed }) => 
                   onClick={() => {
                     navigate("/profile");
                     setUserOpen(false);
+                    if (onCloseSidebar) {
+                      onCloseSidebar();
+                    }
                   }}
                 >
                   <span className="material-icons">person</span>

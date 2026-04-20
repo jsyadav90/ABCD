@@ -18,6 +18,7 @@ const UnifiedUserProfilePage = () => {
   const [recentActivity, setRecentActivity] = useState(/** @type {string[]} */ ([]));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(/** @type {string | null} */ (null));
+  const [profileSidebarOpen, setProfileSidebarOpen] = useState(false);
   const isOwnProfile = !routeUserId;
 
   // When auth finishes loading and we have authUser, set it immediately
@@ -198,14 +199,54 @@ const UnifiedUserProfilePage = () => {
   return (
     <>
       <SetPageTitle title={`${user.name} - User Profile`} />
-      <div className="unified-profile-page">
-        <aside className="profile-sidebar">
+      <div className="unified-profile-page" onClick={(e) => {
+        // Close sidebar if clicking outside on mobile
+        if (profileSidebarOpen && e.target === e.currentTarget) {
+          setProfileSidebarOpen(false);
+        }
+      }}>
+        {/* Toggle Button - Shows user initials to open sidebar (only visible on mobile) */}
+        <div className={`profile-sidebar-toggle ${profileSidebarOpen ? 'hidden' : ''}`}>
+          <button 
+            className="profile-hamburger-btn"
+            onClick={() => setProfileSidebarOpen(true)}
+            aria-label="Open profile sidebar"
+            title="Open profile sidebar"
+          >
+            {user.name && <span>{getInitials(user.name)}</span>}
+          </button>
+        </div>
+
+        {/* Mobile Sidebar Overlay */}
+        {profileSidebarOpen && (
+          <div 
+            className="profile-sidebar-overlay"
+            onClick={() => setProfileSidebarOpen(false)}
+          ></div>
+        )}
+
+        <aside className={`profile-sidebar ${profileSidebarOpen ? 'sidebar-open' : ''}`}>
           <div className="profile-card profile-sidebar-panel">
+            {/* Close button - visible when sidebar is open */}
+            <button 
+              className="profile-sidebar-close-btn"
+              onClick={() => setProfileSidebarOpen(false)}
+              aria-label="Close profile sidebar"
+              title="Close profile sidebar"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
             <div className="sidebar-top">
               <div className="sidebar-avatar">{getInitials(user.name)}</div>
+              <div>
               <h2>{user.name}</h2>
-              <p>{user.roleId?.name || user.role || "Enterprise Administrator"}</p>
-              <span className="status-badge status-active">Active</span>
+              <p><span>ID : </span> {user.roleId?.name || user.role || "NA"}</p>
+              </div>
+              {/* <span className="status-badge status-active">Active</span> */}
             </div>
 
             <div className="sidebar-actions">
