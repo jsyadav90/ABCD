@@ -54,11 +54,14 @@ import { UserLogin } from "../models/userLogin.model.js";
 // LOGIN CONTROLLER
 // =====================================================
 export const loginController = asyncHandler(async (req, res) => {
-  const { loginId, password, deviceId = uuidv4() } = req.body;
+  const { loginId, credentialType = 'password', credential, password, deviceId = uuidv4() } = req.body;
+
+  // Support both old (password) and new (credential with credentialType) formats for backwards compatibility
+  const actualCredential = credential !== undefined ? credential : password;
 
   // Validation
-  if (!loginId || !password) {
-    throw new apiError(400, "Login ID (username/userId/email) and password are required");
+  if (!loginId || !actualCredential) {
+    throw new apiError(400, "Login ID (username/userId/email) and password/PIN are required");
   }
 
   // Get client IP and user agent
@@ -66,10 +69,11 @@ export const loginController = asyncHandler(async (req, res) => {
     req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
   const userAgent = req.get("user-agent");
 
-  // Call service (convert password to string if it's a number)
+  // Call service (convert credential to string if it's a number)
   const result = await authService.login(
     loginId,
-    String(password),
+    credentialType,
+    String(actualCredential),
     deviceId,
     ipAddress,
     userAgent

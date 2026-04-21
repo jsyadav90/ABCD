@@ -293,9 +293,14 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       setError('')
       
+      // Auto-detect credential type: if input is all digits, treat as PIN, else password
+      const credentialInput = String(password).trim()
+      const isNumericOnly = /^\d+$/.test(credentialInput)
+      const credentialType = isNumericOnly ? 'pin' : 'password'
+      
       // Send loginId (can be username, userId, or email) instead of email
       const activeDeviceId = (deviceId && deviceId !== 'undefined' && deviceId !== 'null') ? deviceId : generateValidDeviceId()
-      const response = await authAPI.login(loginId, password, activeDeviceId)
+      const response = await authAPI.login(loginId, credentialType, password, activeDeviceId)
    
       
       // Backend returns: { user, accessToken, deviceId, forcePasswordChange }
@@ -373,9 +378,14 @@ export const AuthProvider = ({ children }) => {
       setLoading(true)
       setError('')
       
+      // Auto-detect credential type: if input is all digits, treat as PIN, else password
+      const credentialInput = String(password).trim()
+      const isNumericOnly = /^\d+$/.test(credentialInput)
+      const credentialType = isNumericOnly ? 'pin' : 'password'
+      
       const activeDeviceId = (deviceId && deviceId !== 'undefined' && deviceId !== 'null') ? deviceId : generateValidDeviceId()
       const response = await authAPI.reauth({
-        credentialType: 'password',
+        credentialType: credentialType,
         credential: password,
         deviceId: activeDeviceId,
         userAgent: navigator.userAgent

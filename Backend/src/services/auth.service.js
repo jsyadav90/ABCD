@@ -38,15 +38,16 @@ import { apiError } from "../utils/apiError.js";
 // =====================================================
 export const authService = {
   /**
-   * Login user with loginId (username/userId/email) and password
+   * Login user with loginId (username/userId/email) and password/PIN
    * @param {string} loginId - Username, userId, or email
-   * @param {string} password - Plain password
+   * @param {string} credentialType - Type: "password" or "pin"
+   * @param {string} credential - Plain password or PIN
    * @param {string} deviceId - Device identifier
    * @param {string} ipAddress - Client IP address
    * @param {string} userAgent - Client user agent
    * @returns {Promise<Object>} - User data, access token, refresh token, forcePasswordChange flag
    */
-  async login(loginId, password, deviceId, ipAddress = null, userAgent = null) {
+  async login(loginId, credentialType = 'password', credential, deviceId, ipAddress = null, userAgent = null) {
     try {
       const loginIdStr = String(loginId || "").trim();
       if (!loginIdStr) {
@@ -54,7 +55,7 @@ export const authService = {
       }
 
       // Find UserLogin by username first (case-insensitive)
-      let userLogin = await UserLogin.findOne({ username: loginIdStr.toLowerCase() }).select("+password");
+      let userLogin = await UserLogin.findOne({ username: loginIdStr.toLowerCase() }).select("+password +pin");
 
       // If not found by username, try User by userId or email (case-insensitive)
       if (!userLogin) {
@@ -69,7 +70,7 @@ export const authService = {
         });
 
         if (user) {
-          userLogin = await UserLogin.findOne({ user: user._id }).select("+password");
+          userLogin = await UserLogin.findOne({ user: user._id }).select("+password +pin");
         }
       }
 
@@ -78,7 +79,7 @@ export const authService = {
         throw new apiError(401, "Invalid login credentials");
       }
       
-      console.log(`[LOGIN] ✅ User found: ${loginIdStr}, checking password...`);
+      console.log(`[LOGIN] ✅ User found: ${loginIdStr}, checking credential...`);
 
       // Check if account is permanently locked
       if (userLogin.isPermanentlyLocked) {
@@ -97,19 +98,42 @@ export const authService = {
         );
       }
 
-      // Verify password (convert to string in case it's sent as number)
-      const passwordStr = String(password);
-      const isPasswordValid = await userLogin.comparePassword(passwordStr);
+      // Verify credential (password or PIN)
+      const credentialStr = String(credential);
+      let isCredentialValid = false;
+      let usedCredentialType = credentialType;
       
-      console.log(`[LOGIN] Password verification for ${loginIdStr}:`, {
-        passwordProvided: passwordStr.substring(0, 3) + '***',
+      // Determine which credential to check
+      // If PIN is not set, always use password
+      if (!userLogin.pin) {
+        // PIN not set - must use password
+        isCredentialValid = await userLogin.comparePassword(credentialStr);
+        usedCredentialType = "password";
+      } else if (credentialType === "pin") {
+        // PIN is set and user trying to use PIN
+        isCredentialValid = await userLogin.comparePin(credentialStr);
+      } else {
+        // PIN is set but user trying password - allow either
+        // Try password first
+        isCredentialValid = await userLogin.comparePassword(credentialStr);
+        if (!isCredentialValid) {
+          // Try PIN if password fails
+          isCredentialValid = await userLogin.comparePin(credentialStr);
+          if (isCredentialValid) {
+            usedCredentialType = "pin";
+          }
+        }
+      }
+      
+      console.log(`[LOGIN] Credential verification for ${loginIdStr}:`, {
+        credentialProvided: credentialStr.substring(0, 3) + '***',
         userFound: true,
-        passwordMatch: isPasswordValid,
+        credentialMatch: isCredentialValid,
         failedAttempts: userLogin.failedLoginAttempts,
-        storageStatus: userLogin.password ? 'hash_stored' : 'no_hash'
+        credentialType: usedCredentialType
       });
       
-      if (!isPasswordValid) {
+      if (!isCredentialValid) {
         // Increment failed attempts
         userLogin.failedLoginAttempts = (userLogin.failedLoginAttempts || 0) + 1;
 
@@ -129,7 +153,7 @@ export const authService = {
         }
 
         await userLogin.save();
-        console.error(`[LOGIN] Password mismatch for ${loginIdStr}. Attempts: ${userLogin.failedLoginAttempts}, Lock Level: ${userLogin.lockLevel}`);
+        console.error(`[LOGIN] Credential mismatch for ${loginIdStr}. Attempts: ${userLogin.failedLoginAttempts}, Lock Level: ${userLogin.lockLevel}`);
         throw new apiError(401, "Invalid login credentials");
       }
 
@@ -217,17 +241,6 @@ export const authService = {
       throw new apiError(500, error.message);
     }
   },
-
-  /**
-   * Re-authenticate user with password or PIN (for session timeout)
-   * @param {string} userId - User ID from refresh token
-   * @param {string} credentialType - Type: "password" or "pin"
-   * @param {string} credential - Plain password or PIN
-   * @param {string} deviceId - Device identifier
-   * @param {string} ipAddress - Client IP address
-   * @param {string} userAgent - Client user agent
-   * @returns {Promise<Object>} - User data, access token, refresh token, permissions
-   */
   async reauth(userId, credentialType, credential, deviceId, ipAddress = null, userAgent = null) {
     try {
       // Find UserLogin by user ID

@@ -238,8 +238,8 @@ export default API
 
 // Auth API endpoints
 export const authAPI = {
-  login: (loginId, password, deviceId) =>
-    API.post('/auth/login', { loginId, password, deviceId }),
+  login: (loginId, credentialType = 'password', credential, deviceId) =>
+    API.post('/auth/login', { loginId, credentialType, credential, deviceId }),
   reauth: (data) =>
     API.post('/auth/reauth', data),
   register: (userData) =>

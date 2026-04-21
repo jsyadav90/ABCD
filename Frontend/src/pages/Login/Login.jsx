@@ -73,17 +73,34 @@ const Login = () => {
       setFlashMessage({
         type: 'warning',
         title: 'Validation Error',
-        message: 'Password is required'
+        message: 'PIN or Password is required'
       })
       return false
     }
-    if (formData.password.length < 6) {
-      setFlashMessage({
-        type: 'warning',
-        title: 'Validation Error',
-        message: 'Password must be at least 8 characters'
-      })
-      return false
+    
+    // Check if input is PIN (all digits) or Password
+    const isNumericOnly = /^\d+$/.test(formData.password.trim())
+    
+    if (isNumericOnly) {
+      // PIN must be 4-6 digits
+      if (formData.password.length < 4 || formData.password.length > 6) {
+        setFlashMessage({
+          type: 'warning',
+          title: 'Validation Error',
+          message: 'PIN must be 4-6 digits'
+        })
+        return false
+      }
+    } else {
+      // Password must be at least 6 characters
+      if (formData.password.length < 6) {
+        setFlashMessage({
+          type: 'warning',
+          title: 'Validation Error',
+          message: 'Password must be at least 6 characters'
+        })
+        return false
+      }
     }
     return true
   }
@@ -189,8 +206,8 @@ const Login = () => {
         <Input
           type="password"
           name="password"
-          label={isReauthMode ? "Enter Password" : "Password"}
-          placeholder={isReauthMode ? "Enter your password to continue" : "Enter your password"}
+          label={isReauthMode ? "Enter PIN or Password" : "Password"}
+          placeholder={isReauthMode ? "Enter PIN or Password to continue" : "Enter your password"}
           value={formData.password}
           onChange={handleChange}
           required
