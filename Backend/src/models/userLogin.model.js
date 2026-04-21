@@ -67,6 +67,8 @@ const userLoginSchema = new Schema(
     isPermanentlyLocked: { type: Boolean, default: false },
     isLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date },
+    // Start date for password expiry clock (set on first login after password change)
+    passwordExpiryStart: { type: Date, default: null },
     lastPasswordChange: [
       {
         // When the password was changed

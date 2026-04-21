@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Users Controller
  * 
  * Logics:
@@ -967,6 +967,10 @@ export const changeUserPassword = asyncHandler(async (req, res) => {
   // Update password in UserLogin model
   userLogin.password = normalizedPassword;
   userLogin.forcePasswordChange = false; // User has now changed password
+  
+  // Reset expiry clock to null so it starts counting from user's next login
+  userLogin.passwordExpiryStart = null;
+  
   await userLogin.save();
 
   // Record password change in audit trail (Admin changed it)

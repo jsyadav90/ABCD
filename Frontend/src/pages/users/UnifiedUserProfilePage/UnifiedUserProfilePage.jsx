@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { fetchUserById } from "../../../services/userApi";
@@ -27,7 +27,102 @@ const UnifiedUserProfilePage = () => {
   const [lastPasswordChangeDate, setLastPasswordChangeDate] = useState(/** @type {string | null} */ (null));
   const [isPinSet, setIsPinSet] = useState(/** @type {boolean | null} */ (null));
   const [showPinNotification, setShowPinNotification] = useState(false);
+  const [btnPosition, setBtnPosition] = useState({ x: 18, y: 65 }); // Default position
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const [wasDragged, setWasDragged] = useState(false);
+  
   const isOwnProfile = !routeUserId;
+
+  // Load saved position from localStorage
+  useEffect(() => {
+    const savedPos = localStorage.getItem("profile-hamburger-pos");
+    if (savedPos) {
+      try {
+        setBtnPosition(JSON.parse(savedPos));
+      } catch (e) {
+        console.error("Failed to parse saved position", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setBtnPosition(prev => {
+        const padding = 10;
+        const btnSize = 48;
+        const newX = Math.max(padding, Math.min(window.innerWidth - btnSize - padding, prev.x));
+        const newY = Math.max(padding, Math.min(window.innerHeight - btnSize - padding, prev.y));
+        return { x: newX, y: newY };
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Draggable Handlers
+   const handleDragStart = (e) => {
+     const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+     const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+     
+     dragStartPos.current = {
+       x: clientX - btnPosition.x,
+       y: clientY - btnPosition.y
+     };
+     
+     setIsDragging(true);
+     setWasDragged(false);
+   };
+
+   const handleDragMove = (e) => {
+     if (!isDragging) return;
+
+     const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+     const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+
+     let newX = clientX - dragStartPos.current.x;
+     let newY = clientY - dragStartPos.current.y;
+
+    // Boundary checks
+    const padding = 10;
+    const btnSize = 48;
+    newX = Math.max(padding, Math.min(window.innerWidth - btnSize - padding, newX));
+    newY = Math.max(padding, Math.min(window.innerHeight - btnSize - padding, newY));
+
+    // Check if movement is significant enough to be called a drag
+    if (Math.abs(newX - btnPosition.x) > 5 || Math.abs(newY - btnPosition.y) > 5) {
+      setWasDragged(true);
+    }
+
+    setBtnPosition({ x: newX, y: newY });
+  };
+
+  const handleDragEnd = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      localStorage.setItem("profile-hamburger-pos", JSON.stringify(btnPosition));
+    }
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("mousemove", handleDragMove);
+      window.addEventListener("mouseup", handleDragEnd);
+      window.addEventListener("touchmove", handleDragMove, { passive: false });
+      window.addEventListener("touchend", handleDragEnd);
+    } else {
+      window.removeEventListener("mousemove", handleDragMove);
+      window.removeEventListener("mouseup", handleDragEnd);
+      window.removeEventListener("touchmove", handleDragMove);
+      window.removeEventListener("touchend", handleDragEnd);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleDragMove);
+      window.removeEventListener("mouseup", handleDragEnd);
+      window.removeEventListener("touchmove", handleDragMove);
+      window.removeEventListener("touchend", handleDragEnd);
+    };
+  }, [isDragging, btnPosition]);
 
   // Derived ID to use as a stable dependency
   const authUserId = authUser?._id || authUser?.id;
@@ -247,12 +342,31 @@ const UnifiedUserProfilePage = () => {
         }
       }}>
         {/* Toggle Button - Shows user initials to open sidebar (only visible on mobile) */}
-        <div className={`profile-sidebar-toggle ${profileSidebarOpen ? 'hidden' : ''}`}>
+        <div 
+          className={`profile-sidebar-toggle ${profileSidebarOpen ? 'hidden' : ''}`}
+          style={{ 
+            left: `${btnPosition.x}px`, 
+            top: `${btnPosition.y}px`,
+            position: 'fixed',
+            zIndex: 1000,
+            touchAction: 'none' // Prevent scrolling while dragging
+          }}
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+        >
           <button 
-            className="profile-hamburger-btn"
-            onClick={() => setProfileSidebarOpen(true)}
+            className={`profile-hamburger-btn ${isDragging ? 'dragging' : ''}`}
+            onClick={() => {
+              if (!wasDragged) {
+                setProfileSidebarOpen(true);
+              }
+            }}
             aria-label="Open profile sidebar"
             title="Open profile sidebar"
+            style={{ 
+              cursor: isDragging ? 'grabbing' : 'grab',
+              userSelect: 'none'
+            }}
           >
             {user.name && <span>{getInitials(user.name)}</span>}
           </button>

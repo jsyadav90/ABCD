@@ -10,8 +10,6 @@
 .profile-sidebar-toggle {
   display: none;
   position: fixed;
-  top: var(--header-height, 70px);
-  left: 18px;
   z-index: 50;
 }
 
@@ -31,11 +29,17 @@
   border: none;
   color: #ffffff;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease, transform 0.1s ease;
   box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
   font-weight: 700;
   font-size: 0.75rem;
   opacity: 0.5;
+}
+
+.profile-hamburger-btn.dragging {
+  transition: none !important;
+  opacity: 0.9 !important;
+  transform: scale(1.1);
 }
 
 .profile-hamburger-btn:hover {
@@ -699,7 +703,6 @@
 @media (max-width: 991px) {
   .profile-sidebar-toggle {
     display: flex;
-    top: calc(15px + var(--header-height));
   }
 
   .unified-profile-page {

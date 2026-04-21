@@ -10,6 +10,7 @@ const AuthContext = createContext({
   isAuthenticated: false,
   deviceId: null,
   needsReauth: false,
+  forcePasswordChange: false,
   login: async () => ({ success: false }),
   reauth: async () => ({ success: false }),
   register: async () => ({ success: false }),
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [needsReauth, setNeedsReauth] = useState(false)
+  const [forcePasswordChange, setForcePasswordChange] = useState(false)
   const generateValidDeviceId = () => {
     const stored = localStorage.getItem('deviceId')
 
@@ -97,7 +99,7 @@ export const AuthProvider = ({ children }) => {
           try {
             const data = await fetchProfileWithRetry(2)
             if (data?.user) {
-              localStorage.setItem('user', JSON.stringify({
+              const updatedUser = {
                 id: data.user._id || data.user.id,
                 userId: data.user.userId,
                 name: data.user.name,
@@ -106,19 +108,14 @@ export const AuthProvider = ({ children }) => {
                 roleId: data.user.roleId,
                 organizationId: data.user.organizationId || null,
                 branchIds: Array.isArray(data.user.branchId) ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b)) : [],
-                modules: data.user.modules || []
-              }))
-              setUser({
-                id: data.user._id || data.user.id,
-                userId: data.user.userId,
-                name: data.user.name,
-                email: data.user.email,
-                role: data.user.role,
-                roleId: data.user.roleId,
-                organizationId: data.user.organizationId || null,
-                branchIds: Array.isArray(data.user.branchId) ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b)) : [],
-                modules: data.user.modules || []
-              })
+                modules: data.user.modules || [],
+                forcePasswordChange: data.user.forcePasswordChange || false
+              }
+              localStorage.setItem('user', JSON.stringify(updatedUser))
+              setUser(updatedUser)
+              if (data.user.forcePasswordChange) {
+                setForcePasswordChange(true)
+              }
             }
             if (Array.isArray(data?.permissions)) {
               localStorage.setItem('permissions', JSON.stringify(data.permissions))
@@ -259,10 +256,14 @@ export const AuthProvider = ({ children }) => {
           ? data.user.branchId.map(b => typeof b === 'object' ? String(b._id || b) : String(b))
           : [],
         modules: data.user.modules || [], // Include modules
+        forcePasswordChange: data.user.forcePasswordChange || false
       }
 
       setUser(updatedUser)
       localStorage.setItem('user', JSON.stringify(updatedUser))
+      if (data.user.forcePasswordChange) {
+        setForcePasswordChange(true)
+      }
 
       if (Array.isArray(data.permissions)) {
         localStorage.setItem('permissions', JSON.stringify(data.permissions))
@@ -330,6 +331,7 @@ export const AuthProvider = ({ children }) => {
       setUser(minimalUser)
       setIsAuthenticated(true)
       setNeedsReauth(false) // Clear reauth flag on successful login
+      setForcePasswordChange(forcePasswordChange || false)
       updateActivity() // Update activity timestamp
       
       try {
@@ -342,11 +344,18 @@ export const AuthProvider = ({ children }) => {
         }
         
         // Update user in localStorage with modules from profile
-        if (data?.user?.modules) {
-          const updatedUser = { ...minimalUser, modules: data.user.modules }
-          localStorage.setItem('user', JSON.stringify(updatedUser))
-          setUser(updatedUser)
+      if (data?.user) {
+        const updatedUser = { 
+          ...minimalUser, 
+          modules: data.user.modules,
+          forcePasswordChange: data.user.forcePasswordChange || false
         }
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        setUser(updatedUser)
+        if (data.user.forcePasswordChange) {
+          setForcePasswordChange(true)
+        }
+      }
       } catch (e) {
         console.warn('[AUTH] Profile fetch after login failed:', e?.message)
         if (minimalUser?.role === 'super_admin') {
@@ -418,6 +427,7 @@ export const AuthProvider = ({ children }) => {
       setUser(minimalUser)
       setIsAuthenticated(true)
       setNeedsReauth(false) // Clear reauth flag on successful reauth
+      setForcePasswordChange(forcePasswordChange || false)
       updateActivity() // Update activity timestamp
       
       try {
@@ -430,11 +440,18 @@ export const AuthProvider = ({ children }) => {
         }
         
         // Update user in localStorage with modules from profile
-        if (data?.user?.modules) {
-          const updatedUser = { ...minimalUser, modules: data.user.modules }
-          localStorage.setItem('user', JSON.stringify(updatedUser))
-          setUser(updatedUser)
+      if (data?.user) {
+        const updatedUser = { 
+          ...minimalUser, 
+          modules: data.user.modules,
+          forcePasswordChange: data.user.forcePasswordChange || false
         }
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        setUser(updatedUser)
+        if (data.user.forcePasswordChange) {
+          setForcePasswordChange(true)
+        }
+      }
       } catch (e) {
         console.warn('[AUTH] Profile fetch after reauth failed:', e?.message)
         if (minimalUser?.role === 'super_admin') {
@@ -549,6 +566,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     deviceId,
     needsReauth,
+    forcePasswordChange,
     login,
     reauth,
     register,

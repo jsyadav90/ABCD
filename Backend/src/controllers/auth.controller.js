@@ -1,4 +1,4 @@
-import { authService } from "../services/auth.service.js";
+import { authService, parseExpiry } from "../services/auth.service.js";
 import {
   getRefreshTokenCookieOptions,
   getClearRefreshTokenCookieOptions,
@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { UserLogin } from "../models/userLogin.model.js";
+import { getEnvConfig } from "../config/env.js";
 
 /**
  * Auth Controller - Handles HTTP requests for authentication
@@ -564,8 +565,31 @@ export const profileController = asyncHandler(async (req, res) => {
 
     // Fetch user login information for total login count
     let userLoginDoc = null;
+    let forcePasswordChange = false;
     try {
-      userLoginDoc = await UserLogin.findOne({ user: userId }).select("totalLoginCount");
+      userLoginDoc = await UserLogin.findOne({ user: userId }).select("totalLoginCount forcePasswordChange lastPasswordChange createdAt passwordExpiryStart");
+      
+      if (userLoginDoc) {
+        forcePasswordChange = !!userLoginDoc.forcePasswordChange;
+        
+        // If not already forced, check for expiry
+        if (!forcePasswordChange) {
+          const config = getEnvConfig();
+          const expiryStr = config.passwordExpiry || '45D';
+          const expiryMs = parseExpiry(expiryStr);
+          
+          // Only check expiry if the clock has started
+          if (userLoginDoc.passwordExpiryStart) {
+            const expiryDate = new Date(new Date(userLoginDoc.passwordExpiryStart).getTime() + expiryMs);
+            if (new Date() > expiryDate) {
+              forcePasswordChange = true;
+              // Proactively update userLoginDoc in DB if expired
+              userLoginDoc.forcePasswordChange = true;
+              await userLoginDoc.save();
+            }
+          }
+        }
+      }
     } catch (loginErr) {
       console.warn(`[PROFILE] Warning: Failed to fetch UserLogin for ${userId}:`, loginErr.message);
     }
@@ -597,6 +621,7 @@ export const profileController = asyncHandler(async (req, res) => {
         : [],
       organizationId: userDoc.organizationId || null,
       totalLoginCount: userLoginDoc?.totalLoginCount || 0,
+      forcePasswordChange: forcePasswordChange,
     };
 
     // Build permissions array safely

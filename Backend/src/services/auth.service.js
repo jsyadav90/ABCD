@@ -24,15 +24,31 @@
  */
 
 import jwt from "jsonwebtoken";
+import bcryptjs from "bcryptjs";
 import { UserLogin } from "../models/userLogin.model.js";
 import { User } from "../models/user.model.js";
 import { Organization } from "../models/organization.model.js";
 import { apiError } from "../utils/apiError.js";
 import { validatePasswordPolicy, validatePINPolicy } from "../utils/passwordPolicy.js";
+import { getEnvConfig } from "../config/env.js";
 
 /**
  * Auth Service - Handles all authentication business logic
  */
+
+/**
+ * Helper function to parse expiry string (e.g., '45D', '1M', '2H')
+ * @param {string} str - Expiry string
+ * @returns {number} - Expiry in milliseconds
+ */
+export const parseExpiry = (str) => {
+  const val = parseInt(str);
+  const unit = String(str).replace(/[0-9]/g, "").toUpperCase().trim();
+  if (unit === "M") return val * 60 * 1000; // Minutes
+  if (unit === "H") return val * 60 * 60 * 1000; // Hours
+  if (unit === "D") return val * 24 * 60 * 60 * 1000; // Days
+  return val * 24 * 60 * 60 * 1000; // Default to Days
+};
 
 // =====================================================
 // LOGIN SERVICE
@@ -191,6 +207,29 @@ export const authService = {
       userLogin.lastLogin = new Date();
       userLogin.totalLoginCount = (userLogin.totalLoginCount || 0) + 1; // Increment total login count
 
+      // Set password expiry start date if it's the first login after a password set/change
+      if (!userLogin.passwordExpiryStart) {
+        userLogin.passwordExpiryStart = new Date();
+        // Save immediately to ensure it's persisted even if subsequent steps fail
+        await userLogin.save();
+        console.log(`[LOGIN] Initializing password expiry clock for ${loginIdStr}: ${userLogin.passwordExpiryStart}`);
+      }
+
+      // Password Expiry Check
+      const config = getEnvConfig();
+      const expiryStr = config.passwordExpiry || '45D';
+      const expiryMs = parseExpiry(expiryStr);
+      
+      // Use passwordExpiryStart as the base for the clock
+      let clockBase = userLogin.passwordExpiryStart || userLogin.createdAt;
+
+      const expiryDate = new Date(new Date(clockBase).getTime() + expiryMs);
+      
+      if (new Date() > expiryDate) {
+        console.log(`[LOGIN] Password expired for ${loginIdStr}. Clock started at: ${clockBase}`);
+        userLogin.forcePasswordChange = true;
+      }
+
       // Generate tokens
       const accessToken = userLogin.generateAccessToken(deviceId);
       const refreshToken = await userLogin.generateRefreshToken(
@@ -318,6 +357,25 @@ export const authService = {
       userLogin.isLoggedIn = true;
       userLogin.lastLogin = new Date();
       userLogin.totalLoginCount = (userLogin.totalLoginCount || 0) + 1; // Increment total login count
+
+      // Set password expiry start date if it's the first login after a password set/change
+      if (!userLogin.passwordExpiryStart) {
+        userLogin.passwordExpiryStart = new Date();
+        await userLogin.save();
+      }
+
+      // Password Expiry Check
+      const config = getEnvConfig();
+      const expiryStr = config.passwordExpiry || '45D';
+      const expiryMs = parseExpiry(expiryStr);
+      
+      let clockBase = userLogin.passwordExpiryStart || userLogin.createdAt;
+
+      const expiryDate = new Date(new Date(clockBase).getTime() + expiryMs);
+      
+      if (new Date() > expiryDate) {
+        userLogin.forcePasswordChange = true;
+      }
 
       // Generate tokens
       const accessToken = userLogin.generateAccessToken(deviceId);
@@ -734,6 +792,30 @@ export const authService = {
         throw new apiError(401, "Current password is incorrect");
       }
 
+      // Password History Check (Last 3 used passwords)
+      // 1. Check against current password
+      const isCurrentMatch = await bcryptjs.compare(String(newPassword), userLogin.password);
+      if (isCurrentMatch) {
+        throw new apiError(400, "New password cannot be the same as your current password");
+      }
+
+      // 2. Check against last 2 previous passwords (total 3 including current)
+      if (Array.isArray(userLogin.lastPasswordChange) && userLogin.lastPasswordChange.length > 0) {
+        // Get previous password hashes from history, most recent first
+        const historyHashes = userLogin.lastPasswordChange
+          .filter(h => h.previousPasswordHash)
+          .map(h => h.previousPasswordHash)
+          .reverse()
+          .slice(0, 2); // Get last 2 previous hashes
+
+        for (const hash of historyHashes) {
+          const isMatch = await bcryptjs.compare(String(newPassword), hash);
+          if (isMatch) {
+            throw new apiError(400, "You cannot reuse any of your last 3 passwords");
+          }
+        }
+      }
+
       const user = await User.findById(userId).select("organizationId userId name email personalEmail").lean();
       let orgPolicy = null;
       if (user?.organizationId) {
@@ -765,6 +847,11 @@ export const authService = {
       // Update password and reset PIN
       userLogin.password = normalizedPassword;
       userLogin.pin = null; // Reset PIN when password is changed
+      userLogin.forcePasswordChange = false; // Reset the force change flag
+      
+      // Reset expiry clock to now (since user just changed it and is already logged in)
+      userLogin.passwordExpiryStart = new Date();
+      
       await userLogin.save();
 
       // Record password change in audit trail

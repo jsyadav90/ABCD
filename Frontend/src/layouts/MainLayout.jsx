@@ -4,12 +4,15 @@ import Header from './Header'
 import Sidebar from './Sidebar'
 import { getSelectedAppModule, setSelectedAppModule } from '../utils/appModule'
 import { authAPI } from '../services/api'
+import { useAuth } from '../hooks/useAuth'
+import ChangePasswordModal from '../components/ChangePasswordModal/ChangePasswordModal'
 import './MainLayout.css'
 
 /**
  * @param {{ children: React.ReactNode }} props
  */
 const MainLayout = ({ children }) => {
+  const { forcePasswordChange } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 992)
   const [selectedModule, setSelectedModule] = useState(getSelectedAppModule())
@@ -103,7 +106,15 @@ const MainLayout = ({ children }) => {
 
   return (
     <div className="main-layout">
-      <Header onToggleSidebar={handleToggle} />
+      {forcePasswordChange && (
+        <ChangePasswordModal 
+          isOpen={true} 
+          onClose={() => {}} 
+          isForceChange={true} 
+        />
+      )}
+      <Header 
+        onToggleSidebar={handleToggle} />
       <div className={`layout-body ${collapsed ? 'sidebar-open' : ''} ${!isDesktop ? 'mobile' : 'desktop'}`}>
         {/* Overlay backdrop for mobile only */}
         {showSidebar && collapsed && !isDesktop && <div className="sidebar-overlay" onClick={() => setCollapsed(false)} />}

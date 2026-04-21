@@ -3,9 +3,15 @@
  * Description: .env load + validation + parsed config helpers (CORS origin parsing etc.)
  */
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load environment variables
-dotenv.config({ path: './.env' });
+// Support for ES modules to get __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from the Backend root directory (.env is two levels up from src/config)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const requiredEnvVars = [
   'PORT',
@@ -22,6 +28,7 @@ const optionalEnvVars = [
   'PASSWORD_LENGTH',
   'ACCESS_TOKEN_EXPIRY',
   'REFRESH_TOKEN_EXPIRY',
+  'PASSWORD_EXPIRY',
 ];
 
 /**
@@ -57,6 +64,7 @@ export function validateEnv() {
   }
 
   console.log('Environment variables validated successfully');
+  console.log(`[ENV] Password Expiry Policy: ${process.env.PASSWORD_EXPIRY || '45D (Default)'}`);
 }
 
 /**
@@ -86,6 +94,7 @@ export function getEnvConfig() {
     accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || '15m',
     refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
     refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || '10d',
+    passwordExpiry: process.env.PASSWORD_EXPIRY || '45D',
     isDevelopment: process.env.NODE_ENV === 'development',
     isProduction: process.env.NODE_ENV === 'production',
   };

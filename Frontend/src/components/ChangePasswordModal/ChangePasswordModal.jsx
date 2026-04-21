@@ -14,8 +14,9 @@ import Button from "../Button/Button";
  * @param {Object} props
  * @param {boolean} props.isOpen - Modal open state
  * @param {Function} props.onClose - Callback when modal closes
+ * @param {boolean} props.isForceChange - If true, prevents closing and shows warning
  */
-const ChangePasswordModal = ({ isOpen, onClose }) => {
+const ChangePasswordModal = ({ isOpen, onClose, isForceChange = false }) => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
@@ -99,10 +100,16 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
-      title="Change Password"
+      onClose={isForceChange ? undefined : handleClose}
+      title={isForceChange ? "Force Password Change" : "Change Password"}
+      closeButton={!isForceChange}
     >
       <div className="modal-body">
+        {isForceChange && (
+          <div className="modal-warning" style={{ color: '#d9534f', marginBottom: '15px', fontWeight: 'bold' }}>
+            Your password has expired or needs to be changed for security reasons. Please change it to continue.
+          </div>
+        )}
         {/* Dummy inputs to prevent Edge/Chrome autofill */}
         <input type="text" style={{ display: "none" }} aria-hidden="true" />
         <input type="password" style={{ display: "none" }} aria-hidden="true" autoComplete="new-password" />
@@ -145,17 +152,20 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         )}
       </div>
       <div className="modal-footer">
-        <Button
-          variant="secondary"
-          onClick={handleClose}
-          disabled={formData.isSubmitting}
-        >
-          Cancel
-        </Button>
+        {!isForceChange && (
+          <Button
+            variant="secondary"
+            onClick={handleClose}
+            disabled={formData.isSubmitting}
+          >
+            Cancel
+          </Button>
+        )}
         <Button
           variant="primary"
           onClick={handleSubmit}
           disabled={formData.isSubmitting}
+          fullWidth={isForceChange}
         >
           {formData.isSubmitting ? "Updating..." : "Update Password"}
         </Button>
