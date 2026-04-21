@@ -1,5 +1,84 @@
 import bcryptjs from "bcryptjs";
 
+const COMMON_PASSWORDS = new Set([
+  "password", "123456", "12345678", "qwerty", "abc123",
+  "monkey", "1234567", "letmein", "trustno1", "dragon",
+  "baseball", "111111", "iloveyou", "master", "sunshine",
+  "ashley", "bailey", "passw0rd", "shadow", "123123",
+  "654321", "superman", "qazwsx", "michael", "football",
+]);
+
+const COMMON_PINS = new Set([
+  "0000", "1111", "2222", "3333", "4444", "5555", "6666", "7777", "8888", "9999",
+  "1234", "4321", "1212", "2121", "1010", "0101",
+  "1357", "2468", "9876", "8765", "5678", "7654",
+]);
+
+const toComparable = (value) => String(value || "").trim().toLowerCase();
+
+const hasPasswordSequentialPattern = (value) => {
+  const input = toComparable(value);
+  for (let i = 0; i < input.length - 2; i++) {
+    const charCode1 = input.charCodeAt(i);
+    const charCode2 = input.charCodeAt(i + 1);
+    const charCode3 = input.charCodeAt(i + 2);
+    if (charCode2 === charCode1 + 1 && charCode3 === charCode2 + 1) {
+      return true;
+    }
+    if (charCode2 === charCode1 - 1 && charCode3 === charCode2 - 1) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const hasPINSequentialPattern = (value) => {
+  const input = String(value || "");
+  if (input.length < 4) return false;
+  
+  // Check for sequential patterns (123, 321, etc.)
+  for (let i = 0; i < input.length - 2; i++) {
+    const digit1 = parseInt(input[i], 10);
+    const digit2 = parseInt(input[i + 1], 10);
+    const digit3 = parseInt(input[i + 2], 10);
+    
+    if ((digit2 === digit1 + 1 && digit3 === digit2 + 1) ||
+        (digit2 === digit1 - 1 && digit3 === digit2 - 1)) {
+      return true;
+    }
+  }
+  
+  // Check for repeating digits (1111, 2222, etc.)
+  if (/(\d)\1{3,}/.test(input)) {
+    return true;
+  }
+  
+  return false;
+};
+
+const validatePINInput = (pin) => {
+  const pinString = String(pin || "").trim();
+  
+  if (!pinString) return { valid: false, error: "PIN is required" };
+  if (!/^\d+$/.test(pinString)) return { valid: false, error: "PIN must contain only digits" };
+  if (pinString.length < 4 || pinString.length > 10) return { valid: false, error: "PIN must be 4-10 digits long" };
+  if (COMMON_PINS.has(pinString)) return { valid: false, error: "PIN is too common" };
+  if (hasPINSequentialPattern(pinString)) return { valid: false, error: "PIN cannot contain sequential or repeating patterns" };
+  
+  return { valid: true };
+};
+
+const validatePasswordInput = (password) => {
+  const passString = String(password || "").trim();
+  
+  if (!passString) return { valid: false, error: "Password is required" };
+  if (passString.length < 8) return { valid: false, error: "Password must be at least 8 characters long" };
+  if (COMMON_PASSWORDS.has(toComparable(passString))) return { valid: false, error: "Password is too common" };
+  if (hasPasswordSequentialPattern(passString)) return { valid: false, error: "Password cannot contain sequential patterns" };
+  
+  return { valid: true };
+};
+
 const DEFAULT_POLICY = {
   minLength: 8,
   maxLength: 128,
@@ -12,48 +91,7 @@ const DEFAULT_POLICY = {
   minimumChangeCooldownMinutes: 5,
 };
 
-const COMMON_PASSWORDS = new Set([
-  "password",
-  "password123",
-  "password@123",
-  "qwerty",
-  "qwerty123",
-  "qwerty@123",
-  "admin123",
-  "welcome123",
-  "letmein123",
-  "abc@123",
-  "12345678",
-  "123456789",
-  "1234567890",
-]);
-
 const normalize = (value) => String(value || "");
-
-const toComparable = (value) => normalize(value).toLowerCase().replace(/[^a-z0-9]/g, "");
-
-const hasSequentialPattern = (value) => {
-  const input = toComparable(value);
-  if (!input) return false;
-
-  const sequences = [
-    "abcdefghijklmnopqrstuvwxyz",
-    "0123456789",
-    "qwertyuiopasdfghjklzxcvbnm",
-  ];
-
-  for (const seq of sequences) {
-    for (let i = 0; i <= seq.length - 4; i += 1) {
-      const piece = seq.slice(i, i + 4);
-      const rev = piece.split("").reverse().join("");
-      if (input.includes(piece) || input.includes(rev)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-};
 
 const hasRepeatedPattern = (value) => {
   const input = normalize(value);
@@ -142,7 +180,7 @@ export const validatePasswordPolicy = async ({
     throw new Error("Password is too common. Please choose a stronger password");
   }
 
-  if (hasSequentialPattern(trimmedPassword)) {
+  if (hasPasswordSequentialPattern(trimmedPassword)) {
     throw new Error("Password must not include easy sequential patterns");
   }
 
@@ -198,6 +236,39 @@ export const validatePasswordPolicy = async ({
     normalizedPassword: trimmedPassword,
     policy,
     breachedCheckProvider: "common-passwords-local-list",
+  };
+};
+
+export const validatePINPolicy = (pin) => {
+  const rawPin = normalize(pin);
+  const trimmedPin = rawPin.trim();
+
+  if (rawPin !== trimmedPin) {
+    throw new Error("PIN must not include leading or trailing spaces");
+  }
+
+  if (!/^\d+$/.test(trimmedPin)) {
+    throw new Error("PIN must contain only numbers");
+  }
+
+  if (trimmedPin.length < 4) {
+    throw new Error("PIN must be at least 4 digits");
+  }
+
+  if (trimmedPin.length > 10) {
+    throw new Error("PIN must not exceed 10 digits");
+  }
+
+  if (COMMON_PINS.has(trimmedPin)) {
+    throw new Error("PIN is too common. Please choose a different PIN");
+  }
+
+  if (hasPINSequentialPattern(trimmedPin)) {
+    throw new Error("PIN must not include easy sequential or repeating patterns");
+  }
+
+  return {
+    normalizedPIN: trimmedPin,
   };
 };
 

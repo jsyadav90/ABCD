@@ -6,6 +6,7 @@ import {
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { apiError } from "../utils/apiError.js";
+import { validatePINPolicy } from "../utils/passwordPolicy.js";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
@@ -263,6 +264,13 @@ export const setPinController = asyncHandler(async (req, res) => {
     throw new apiError(400, "PIN is required");
   }
 
+  // Validate PIN using password policy
+  try {
+    validatePINPolicy(pin);
+  } catch (error) {
+    throw new apiError(400, error.message);
+  }
+
   const result = await authService.setPin(userId, pin);
 
   return res.status(200).json(new apiResponse(200, null, result.message));
@@ -281,6 +289,13 @@ export const updatePinController = asyncHandler(async (req, res) => {
 
   if (!oldPin || !newPin) {
     throw new apiError(400, "Both old PIN and new PIN are required");
+  }
+
+  // Validate new PIN using password policy
+  try {
+    validatePINPolicy(newPin);
+  } catch (error) {
+    throw new apiError(400, error.message);
   }
 
   const result = await authService.updatePin(userId, oldPin, newPin);

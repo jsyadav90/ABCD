@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authAPI } from "../../services/api";
+import { validatePINInput } from "../../utils/passwordPolicy";
 import Modal from "../Modal/Modal";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
@@ -49,9 +50,10 @@ const SetPinModal = ({ isOpen, onClose, isUpdate = false, onSuccess }) => {
       return false;
     }
 
-    // Check if PIN is 4-6 digits
-    if (!/^\d{4,6}$/.test(formData.pin)) {
-      setFormData(prev => ({ ...prev, error: "PIN must be 4-6 digits" }));
+    // Validate PIN using password policy function
+    const pinValidationError = validatePINInput(formData.pin);
+    if (pinValidationError) {
+      setFormData(prev => ({ ...prev, error: pinValidationError }));
       return false;
     }
 

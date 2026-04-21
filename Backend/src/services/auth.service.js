@@ -28,7 +28,7 @@ import { UserLogin } from "../models/userLogin.model.js";
 import { User } from "../models/user.model.js";
 import { Organization } from "../models/organization.model.js";
 import { apiError } from "../utils/apiError.js";
-import { validatePasswordPolicy } from "../utils/passwordPolicy.js";
+import { validatePasswordPolicy, validatePINPolicy } from "../utils/passwordPolicy.js";
 
 /**
  * Auth Service - Handles all authentication business logic
@@ -571,10 +571,8 @@ export const authService = {
    */
   async setPin(userId, pin) {
     try {
-      // Validate PIN format (4-6 digits)
-      if (!/^\d{4,6}$/.test(String(pin).trim())) {
-        throw new apiError(400, "PIN must be 4-6 digits");
-      }
+      // Validate PIN using password policy
+      validatePINPolicy(pin);
 
       const userLogin = await UserLogin.findOne({ user: userId }).select("+password +pin");
       if (!userLogin) {
@@ -604,10 +602,8 @@ export const authService = {
    */
   async updatePin(userId, oldPin, newPin) {
     try {
-      // Validate new PIN format (4-6 digits)
-      if (!/^\d{4,6}$/.test(String(newPin).trim())) {
-        throw new apiError(400, "New PIN must be 4-6 digits");
-      }
+      // Validate new PIN using password policy
+      validatePINPolicy(newPin);
 
       const userLogin = await UserLogin.findOne({ user: userId }).select("+pin");
       if (!userLogin) {
