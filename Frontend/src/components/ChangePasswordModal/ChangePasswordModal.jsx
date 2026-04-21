@@ -103,6 +103,10 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       title="Change Password"
     >
       <div className="modal-body">
+        {/* Dummy inputs to prevent Edge/Chrome autofill */}
+        <input type="text" style={{ display: "none" }} aria-hidden="true" />
+        <input type="password" style={{ display: "none" }} aria-hidden="true" autoComplete="new-password" />
+
         <Input
           type="password"
           label="Current Password"
@@ -111,6 +115,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           onChange={(e) => handleInputChange("oldPassword", e.target.value)}
           required
           disabled={formData.isSubmitting}
+          autoComplete="new-password"
+          name="old-pwd-field"
         />
         <Input
           type="password"
@@ -120,6 +126,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           onChange={(e) => handleInputChange("newPassword", e.target.value)}
           required
           disabled={formData.isSubmitting}
+          autoComplete="new-password"
+          name="new-pwd-field"
         />
         <Input
           type="password"
@@ -129,6 +137,8 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
           required
           disabled={formData.isSubmitting}
+          autoComplete="new-password"
+          name="confirm-pwd-field"
         />
         {formData.error && (
           <div className="modal-error">{formData.error}</div>

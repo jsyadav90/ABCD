@@ -110,6 +110,10 @@ const SetPinModal = ({ isOpen, onClose, isUpdate = false, onSuccess }) => {
       title={isUpdate ? "Update PIN" : "Set PIN"}
     >
       <div className="modal-body">
+        {/* Dummy inputs to prevent Edge/Chrome autofill */}
+        <input type="text" style={{ display: "none" }} aria-hidden="true" />
+        <input type="password" style={{ display: "none" }} aria-hidden="true" autoComplete="new-password" />
+
         {isUpdate && (
           <Input
             type="password"
@@ -119,6 +123,8 @@ const SetPinModal = ({ isOpen, onClose, isUpdate = false, onSuccess }) => {
             onChange={(e) => handleInputChange("oldPin", e.target.value)}
             required
             disabled={formData.isSubmitting}
+            autoComplete="one-time-code"
+            name="current-pin-input"
           />
         )}
         <Input
@@ -130,6 +136,8 @@ const SetPinModal = ({ isOpen, onClose, isUpdate = false, onSuccess }) => {
           required
           disabled={formData.isSubmitting}
           maxLength="6"
+          autoComplete="one-time-code"
+          name="new-pin-input"
         />
         <Input
           type="password"
@@ -140,6 +148,8 @@ const SetPinModal = ({ isOpen, onClose, isUpdate = false, onSuccess }) => {
           required
           disabled={formData.isSubmitting}
           maxLength="6"
+          autoComplete="one-time-code"
+          name="confirm-pin-input"
         />
         {formData.error && (
           <div className="modal-error">{formData.error}</div>

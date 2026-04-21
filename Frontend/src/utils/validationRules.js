@@ -32,8 +32,6 @@ export const COMMON_PINS = new Set([
   "0001", "0010", "0100", "1000",
   // Sequential repeating pairs
   "0011", "1100", "1122", "2211", "2233", "3322", "3344", "4433",
-  // Common years/dates
-  "1984", "1990", "2000", "2020", "2021", "2022", "2023", "2024", "2025",
 ]);
 
 const normalize = (value) => String(value || "");

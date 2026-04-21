@@ -61,6 +61,14 @@
   box-shadow: 0 0 0 0.1875rem rgba(220, 53, 69, 0.1);
 }
 
+/* Hide Microsoft Edge and IE default password reveal and clear buttons */
+.input-field::-ms-reveal,
+.input-field::-ms-clear {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+
 .input-error-text {
   color: #dc3545;
   font-size: 0.75rem;

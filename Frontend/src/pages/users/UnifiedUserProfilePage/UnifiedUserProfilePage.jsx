@@ -29,97 +29,103 @@ const UnifiedUserProfilePage = () => {
   const [showPinNotification, setShowPinNotification] = useState(false);
   const isOwnProfile = !routeUserId;
 
-  // When auth finishes loading and we have authUser, set it immediately
-  useEffect(() => {
-    if (!authLoading) {
-      const authUserId = authUser?._id || authUser?.id;
-      if (authUser && authUserId) {
-        setUser(authUser);
-        setAssignedAssets([]);
-        setLoginSessions([]);
-        setRecentActivity([]);
-        setLoading(false);
-        setError(null);
-      } else {
-        setLoading(false);
-        setError("User session expired. Please log in again.");
-      }
-    }
-  }, [authLoading, authUser]);
+  // Derived ID to use as a stable dependency
+  const authUserId = authUser?._id || authUser?.id;
+  const targetUserId = routeUserId || authUserId;
 
-  // Fetch additional user profile data and assets
+  // Main data fetching effect - Unified and optimized
   useEffect(() => {
     let mounted = true;
-    /** @type {ReturnType<typeof setTimeout> | null} */
-    let timeout = null;
+    
+    const fetchData = async () => {
+      // Don't do anything if auth is still loading
+      if (authLoading) return;
 
-    const fetchAdditionalData = async () => {
+      // If no user ID is available, we can't fetch anything
+      if (!targetUserId) {
+        if (mounted) {
+          setLoading(false);
+          setError("User session expired. Please log in again.");
+        }
+        return;
+      }
+
       try {
-        if (authLoading) {
-          timeout = setTimeout(fetchAdditionalData, 500);
-          return;
-        }
+        if (mounted) setLoading(true);
 
-        const userIdToFetch = routeUserId || authUser?._id || authUser?.id;
-        if (!userIdToFetch) {
-          return;
-        }
-
+        // 1. Fetch User Profile Data
+        let userData = isOwnProfile ? authUser : null;
         try {
-          const apiData = await fetchUserById(userIdToFetch);
-          if (mounted && apiData) {
-            setUser((/** @type {any} */ prev) => ({
-              ...((prev || {})),
+          const apiData = await fetchUserById(targetUserId);
+          if (apiData) {
+            userData = {
+              ...(userData || {}),
               ...apiData,
-              _id: apiData._id || apiData.id || prev?._id,
+              _id: apiData._id || apiData.id || userData?._id,
               status: apiData.isActive !== undefined
                 ? (apiData.isActive ? "Active" : "Inactive")
-                : prev?.status,
-            }));
+                : userData?.status,
+            };
           }
         } catch (fetchErr) {
-          const err = /** @type {any} */ (fetchErr);
-          console.warn("[Profile] Could not fetch from API:", err.message || err);
+          console.warn("[Profile] Could not fetch user from API:", fetchErr);
+          // If it's own profile, we can fallback to authUser if API fails
+          if (!isOwnProfile && !userData) {
+            throw new Error("Could not load user profile");
+          }
         }
 
+        // 2. Fetch PIN Status (only for own profile)
+        let pinStatus = null;
+        if (isOwnProfile) {
+          try {
+            const response = await authAPI.checkPinStatus();
+            pinStatus = response.data?.data?.isPinSet || false;
+          } catch (err) {
+            console.error("Failed to fetch PIN status:", err);
+          }
+        }
+
+        // 3. Fetch Password History
+        let pwdDate = null;
+        try {
+          const response = await authAPI.getPasswordChangeHistory(1);
+          const history = response.data?.data?.history || [];
+          if (history.length > 0) {
+            const changeDate = new Date(history[0].changedAt);
+            pwdDate = new Intl.DateTimeFormat("en-IN", {
+              year: "numeric", month: "short", day: "numeric",
+              hour: "2-digit", minute: "2-digit",
+            }).format(changeDate);
+          }
+        } catch (err) {
+          console.error("Failed to fetch password history:", err);
+        }
+
+        // 4. Update state with all gathered data at once
         if (mounted) {
+          setUser(userData);
+          setIsPinSet(pinStatus);
+          setLastPasswordChangeDate(pwdDate);
+          
+          // Show PIN notification if not set (for own profile)
+          if (pinStatus === false && isOwnProfile) {
+            setShowPinNotification(true);
+            setTimeout(() => {
+              if (mounted) setShowPinNotification(false);
+            }, 5000);
+          }
+
+          // Set Mock Data (until real APIs are available)
           setAssignedAssets([
-            {
-              _id: "1",
-              assetCode: "DEL-LT-001",
-              assetName: "Dell Latitude",
-              assetType: "Laptop",
-              status: "Assigned",
-            },
-            {
-              _id: "2",
-              assetCode: "HP-PR-005",
-              assetName: "HP Printer",
-              assetType: "Printer",
-              status: "Repair Pending",
-            },
-            {
-              _id: "3",
-              assetCode: "LEN-MB-002",
-              assetName: "Lenovo Monitor",
-              assetType: "Monitor",
-              status: "Assigned",
-            },
+            { _id: "1", assetCode: "DEL-LT-001", assetName: "Dell Latitude", assetType: "Laptop", status: "Assigned" },
+            { _id: "2", assetCode: "HP-PR-005", assetName: "HP Printer", assetType: "Printer", status: "Repair Pending" },
+            { _id: "3", assetCode: "LEN-MB-002", assetName: "Lenovo Monitor", assetType: "Monitor", status: "Assigned" },
           ]);
 
           setLoginSessions([
-            {
-              device: "Chrome",
-              location: "Gurgaon",
-              lastActive: "Active Now",
-              timestamp: new Date(),
-            },
-            {
-              device: "Firefox",
-              location: "Delhi",
-              lastActive: "Yesterday",
-              timestamp: new Date(Date.now() - 86400000),
-            },
+            { device: "Chrome", location: "Gurgaon", lastActive: "Active Now", timestamp: new Date() },
+            { device: "Firefox", location: "Delhi", lastActive: "Yesterday", timestamp: new Date(Date.now() - 86400000) },
           ]);
 
           setRecentActivity([
@@ -128,87 +134,31 @@ const UnifiedUserProfilePage = () => {
             "Approved upgrade request",
             "Logged in from Chrome - Gurgaon",
           ]);
+
+          setError(null);
+          setLoading(false);
         }
       } catch (err) {
-        const errorObj = /** @type {any} */ (err);
         if (mounted) {
-          setError(errorObj.message || "Error loading profile");
+          setError(err.message || "Error loading profile");
+          setLoading(false);
         }
       }
     };
 
-    const authUserId = authUser?._id || authUser?.id;
-    if (authUserId && !authLoading) {
-      fetchAdditionalData();
-    }
+    fetchData();
 
     return () => {
       mounted = false;
-      if (timeout) clearTimeout(timeout);
     };
-  }, [authUser, routeUserId, authLoading]);
+    // Dependency on targetUserId (string) ensures this only runs when the user ID changes
+    // Dependency on authLoading ensures we wait for auth to stabilize
+  }, [targetUserId, authLoading, isOwnProfile]);
 
   // Close sidebar when navigating to a different profile or when page loads
   useEffect(() => {
     setProfileSidebarOpen(false);
   }, [routeUserId]);
-
-  // Fetch PIN status
-  useEffect(() => {
-    const fetchPinStatus = async () => {
-      try {
-        const response = await authAPI.checkPinStatus();
-        const isPinSetStatus = response.data?.data?.isPinSet || false;
-        setIsPinSet(isPinSetStatus);
-        
-        // Show notification if PIN is not set
-        if (!isPinSetStatus && isOwnProfile) {
-          setShowPinNotification(true);
-          // Auto-hide notification after 5 seconds
-          const timer = setTimeout(() => {
-            setShowPinNotification(false);
-          }, 5000);
-          return () => clearTimeout(timer);
-        }
-      } catch (err) {
-        console.error("Failed to fetch PIN status:", err);
-        setIsPinSet(null);
-      }
-    };
-
-    if (!authLoading && user && isOwnProfile) {
-      fetchPinStatus();
-    }
-  }, [authLoading, user, isOwnProfile]);
-
-  // Fetch password change history
-  useEffect(() => {
-    const fetchPasswordHistory = async () => {
-      try {
-        const response = await authAPI.getPasswordChangeHistory(1);
-        const history = response.data?.data?.history || [];
-        if (history.length > 0) {
-          const mostRecentChange = history[0];
-          const changeDate = new Date(mostRecentChange.changedAt);
-          const formattedDate = new Intl.DateTimeFormat("en-IN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }).format(changeDate);
-          setLastPasswordChangeDate(formattedDate);
-        }
-      } catch (err) {
-        console.error("Failed to fetch password change history:", err);
-        setLastPasswordChangeDate(null);
-      }
-    };
-
-    if (!authLoading && user) {
-      fetchPasswordHistory();
-    }
-  }, [authLoading, user]);
 
   if (loading) return <PageLoader message="Loading profile..." />;
 
