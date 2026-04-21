@@ -37,6 +37,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { getPermissionsForModules, getRemovedModules, getAddedModules } from "../constants/modulePermissionsMap.js";
+import { validatePasswordPolicy } from "../utils/passwordPolicy.js";
 
 // =====================================================
 // HELPER FUNCTION: Check hierarchical access (reporting chain)
@@ -924,43 +925,34 @@ export const changeUserPassword = asyncHandler(async (req, res) => {
   }
 
   const orgId = user.organizationId;
+  let orgPolicy = null;
   if (orgId) {
     const org = await Organization.findById(orgId).select("enabledFeatures settings").lean();
     const enabled = Array.isArray(org?.enabledFeatures) ? org.enabledFeatures : [];
     const policy = org?.settings?.passwordPolicy;
     if (enabled.includes("PASSWORD_POLICY") && policy?.enabled) {
-      const pwd = String(newPassword || "").trim();
-      const minLength = Number(policy.minLength);
-      if (Number.isFinite(minLength) && pwd.length < minLength) {
-        throw new apiError(400, `Password must be at least ${minLength} characters long`);
-      }
-      if (policy.requireUppercase && !/[A-Z]/.test(pwd)) {
-        throw new apiError(400, "Password must contain at least one uppercase letter");
-      }
-      if (policy.requireLowercase && !/[a-z]/.test(pwd)) {
-        throw new apiError(400, "Password must contain at least one lowercase letter");
-      }
-      if (policy.requireNumber && !/[0-9]/.test(pwd)) {
-        throw new apiError(400, "Password must contain at least one number");
-      }
-      if (policy.requireSpecial && !/[^A-Za-z0-9]/.test(pwd)) {
-        throw new apiError(400, "Password must contain at least one special character");
-      }
-    } else {
-      if (String(newPassword).trim().length < 6) {
-        throw new apiError(400, "Password must be at least 6 characters long");
-      }
-    }
-  } else {
-    if (String(newPassword).trim().length < 6) {
-      throw new apiError(400, "Password must be at least 6 characters long");
+      orgPolicy = policy;
     }
   }
 
   // Check if user has login credentials
-  let userLogin = await UserLogin.findOne({ user: id });
+  let userLogin = await UserLogin.findOne({ user: id }).select("+password");
   if (!userLogin) {
     throw new apiError(400, "User does not have login credentials. Enable login first.");
+  }
+
+  let normalizedPassword = "";
+  try {
+    const policyResult = await validatePasswordPolicy({
+      password: newPassword,
+      user,
+      userLogin,
+      orgPolicy,
+      enforceCooldown: false,
+    });
+    normalizedPassword = policyResult.normalizedPassword;
+  } catch (err) {
+    throw new apiError(400, err.message);
   }
 
   // Extract IP and user agent from request
@@ -973,7 +965,7 @@ export const changeUserPassword = asyncHandler(async (req, res) => {
   const previousPasswordHash = userLogin.password;
 
   // Update password in UserLogin model
-  userLogin.password = String(newPassword).trim();
+  userLogin.password = normalizedPassword;
   userLogin.forcePasswordChange = false; // User has now changed password
   await userLogin.save();
 

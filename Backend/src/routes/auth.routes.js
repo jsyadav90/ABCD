@@ -28,6 +28,7 @@ const router = express.Router();
 // POST /login { loginId, password, deviceId? }
 const useLimiter = process.env.NODE_ENV === "production";
 const authLimiter = createRateLimiter({ windowMs: 60_000, max: 30 });
+const passwordChangeLimiter = createRateLimiter({ windowMs: 5 * 60_000, max: 5 });
 router.post("/login", useLimiter ? authLimiter : (req, res, next) => next(), loginController);
 
 // Purpose: Re-authenticate user with password only (for session timeout)
@@ -65,7 +66,12 @@ router.post("/revoke-token", verifyJWT, revokeTokenController);
 
 // Purpose: Change authenticated user's password and clear refresh tokens
 // POST /change-password { oldPassword, newPassword, confirmPassword } (Auth: Bearer token)
-router.post("/change-password", verifyJWT, changePasswordController);
+router.post(
+  "/change-password",
+  verifyJWT,
+  useLimiter ? passwordChangeLimiter : (req, res, next) => next(),
+  changePasswordController,
+);
 
 // Purpose: Get password change history for authenticated user
 // GET /password-change-history?limit=10 (Auth: Bearer token)

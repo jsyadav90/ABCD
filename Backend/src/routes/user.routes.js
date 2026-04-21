@@ -21,6 +21,7 @@
 import express from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { verifyPermission } from "../middlewares/permission.middleware.js";
+import { createRateLimiter } from "../middlewares/security.middleware.js";
 import {
   createUser,
   getUserById,
@@ -40,6 +41,8 @@ import {
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
+const useLimiter = process.env.NODE_ENV === "production";
+const passwordResetLimiter = createRateLimiter({ windowMs: 5 * 60_000, max: 10 });
 
 // All user routes require authentication
 router.use(verifyJWT);
@@ -79,7 +82,12 @@ router.post("/:id/toggle-is-active", verifyPermission("users:rows_buttons:edit")
 router.post("/:id/change-role", verifyPermission("users:rows_buttons:edit_role"), changeUserRole);
 
 // Change user password
-router.post("/:id/change-password", verifyPermission("users:rows_buttons:change_password"), changeUserPassword);
+router.post(
+  "/:id/change-password",
+  useLimiter ? passwordResetLimiter : (req, res, next) => next(),
+  verifyPermission("users:rows_buttons:change_password"),
+  changeUserPassword,
+);
 
 // Soft-delete user (deactivate)
 router.post("/:id/soft-delete", verifyPermission("users:rows_buttons:edit"), softDeleteUser);

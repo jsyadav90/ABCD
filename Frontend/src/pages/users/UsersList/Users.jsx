@@ -36,6 +36,7 @@ import Select from "../../../components/Select/Select.jsx";
 import MultiSelect from "../../../components/Select/MultiSelect.jsx";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle.jsx";
 import { getSelectedBranch, onBranchChange } from "../../../utils/scope";
+import { validatePasswordInput } from "../../../utils/passwordPolicy";
 
 const Users = () => {
   const navigate = useNavigate();
@@ -582,10 +583,14 @@ const Users = () => {
       return;
     }
 
-    if (changePasswordModal.newPassword.length < 6) {
+    const passwordError = validatePasswordInput(changePasswordModal.newPassword, [
+      changePasswordModal.displayUserId,
+      changePasswordModal.userName,
+    ]);
+    if (passwordError) {
       setChangePasswordModal((prev) => ({
         ...prev,
-        passwordError: "Password must be at least 6 characters",
+        passwordError,
       }));
       return;
     }
@@ -1791,7 +1796,7 @@ const Users = () => {
                         passwordError: "",
                       }))
                     }
-                    placeholder="Enter new password (min 6 characters)"
+                    placeholder="Min 8 with upper, lower, number, special"
                     disabled={changePasswordModal.isSubmitting}
                     style={{
                       width: "100%",

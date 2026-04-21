@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { authAPI } from "../../services/api";
+import { validatePasswordInput } from "../../utils/passwordPolicy";
 import Modal from "../Modal/Modal";
 import Input from "../Input/Input";
 import Button from "../Button/Button";
@@ -16,7 +17,7 @@ import Button from "../Button/Button";
  */
 const ChangePasswordModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const [formData, setFormData] = useState({
     oldPassword: "",
@@ -47,8 +48,10 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       return false;
     }
 
-    if (formData.newPassword.length < 8) {
-      setFormData(prev => ({ ...prev, error: "Password must be at least 8 characters" }));
+    const identityCandidates = [user?.userId, user?.name, user?.email].filter(Boolean);
+    const passwordError = validatePasswordInput(formData.newPassword, identityCandidates);
+    if (passwordError) {
+      setFormData(prev => ({ ...prev, error: passwordError }));
       return false;
     }
 
@@ -112,7 +115,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         <Input
           type="password"
           label="New Password"
-          placeholder="Enter new password (min 8 characters)"
+          placeholder="Min 8 with upper, lower, number, special"
           value={formData.newPassword}
           onChange={(e) => handleInputChange("newPassword", e.target.value)}
           required

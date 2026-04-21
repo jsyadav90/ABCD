@@ -28,6 +28,7 @@ import { UserLogin } from "../models/userLogin.model.js";
 import { User } from "../models/user.model.js";
 import { Organization } from "../models/organization.model.js";
 import { apiError } from "../utils/apiError.js";
+import { validatePasswordPolicy } from "../utils/passwordPolicy.js";
 
 /**
  * Auth Service - Handles all authentication business logic
@@ -737,37 +738,36 @@ export const authService = {
         throw new apiError(401, "Current password is incorrect");
       }
 
-      const user = await User.findById(userId).select("organizationId").lean();
+      const user = await User.findById(userId).select("organizationId userId name email personalEmail").lean();
+      let orgPolicy = null;
       if (user?.organizationId) {
         const org = await Organization.findById(user.organizationId).select("enabledFeatures settings").lean();
         const enabled = Array.isArray(org?.enabledFeatures) ? org.enabledFeatures : [];
         const policy = org?.settings?.passwordPolicy;
         if (enabled.includes("PASSWORD_POLICY") && policy?.enabled) {
-          const pwd = String(newPassword || "");
-          const minLength = Number(policy.minLength);
-          if (Number.isFinite(minLength) && pwd.length < minLength) {
-            throw new apiError(400, `Password must be at least ${minLength} characters long`);
-          }
-          if (policy.requireUppercase && !/[A-Z]/.test(pwd)) {
-            throw new apiError(400, "Password must contain at least one uppercase letter");
-          }
-          if (policy.requireLowercase && !/[a-z]/.test(pwd)) {
-            throw new apiError(400, "Password must contain at least one lowercase letter");
-          }
-          if (policy.requireNumber && !/[0-9]/.test(pwd)) {
-            throw new apiError(400, "Password must contain at least one number");
-          }
-          if (policy.requireSpecial && !/[^A-Za-z0-9]/.test(pwd)) {
-            throw new apiError(400, "Password must contain at least one special character");
-          }
+          orgPolicy = policy;
         }
+      }
+
+      let normalizedPassword = "";
+      try {
+        const policyResult = await validatePasswordPolicy({
+          password: newPassword,
+          user,
+          userLogin,
+          orgPolicy,
+          enforceCooldown: true,
+        });
+        normalizedPassword = policyResult.normalizedPassword;
+      } catch (err) {
+        throw new apiError(400, err.message);
       }
 
       // Store previous password hash for audit
       const previousPasswordHash = userLogin.password;
 
       // Update password and reset PIN
-      userLogin.password = String(newPassword);
+      userLogin.password = normalizedPassword;
       userLogin.pin = null; // Reset PIN when password is changed
       await userLogin.save();
 
