@@ -312,7 +312,8 @@ const EditUser = () => {
 
   return (
     <div className="add-user-page">
-      <SetPageTitle title="Edit User" />
+      {/* <SetPageTitle title="Edit User" /> */}
+      <SetPageTitle title={`Edit User | ${import.meta.env.VITE_APP_NAME || "ABCD"}`} />
 
       <div className="form-container">
         <div className="form-header">

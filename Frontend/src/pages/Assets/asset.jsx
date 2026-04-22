@@ -24,8 +24,9 @@ import { authAPI } from "../../services/api.js";
 import { fetchBranchesForDropdown } from "../../services/userApi.js";
 import { getTooltipDetails, highlightText } from "./utils/assetUtils.jsx";
 import { toCapitalizedCase } from "../../utils/string.jsx";
+import { SetPageTitle } from "../../components/SetPageTitle";
 import { hasPermission } from "../../utils/permissionHelper.js";
-const pageSize = Number(import.meta.env.VITE_PAGE_SIZE) || 20;
+const pageSize = Number(import.meta.env.VITE_PAGE_SIZE) || 25;
 
 const tabs = ["ALL", "FIXED", "PERIPHERAL", "CONSUMABLE", "INTANGIBLE"];
 
@@ -738,6 +739,9 @@ const AssetPage = () => {
   if (error) return <ErrorNotification error={error} onClose={() => setError(null)} />;
 
   return (
+
+    <>
+      <SetPageTitle title={`Assets | ${import.meta.env.VITE_APP_NAME || "ABCD"}`} />
     <div className="asset-page">
       <StatusChangeModal
         isOpen={statusChangeModal.isOpen}
@@ -863,6 +867,7 @@ const AssetPage = () => {
       </div>
       </div>
     </div>
+    </>
   );
 };
 

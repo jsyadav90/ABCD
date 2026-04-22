@@ -11,6 +11,7 @@ import RoleRightsTab from "./components/RoleRightsTab";
 import BranchesTab from "./components/BranchesTab";
 import OrganizationTab from "./components/OrganizationTab";
 import { isSuperAdmin, canAccessPage } from "../../utils/permissionHelper";
+import { SetPageTitle } from "../../components/SetPageTitle";
 import "./Setup.css";
 
 const Setup = () => {
@@ -44,6 +45,13 @@ const Setup = () => {
     return allowedTabs[0].key;
   }, [allowedTabs, activeTab]);
 
+  const activeLabel = useMemo(() => {
+    const found = allowedTabs.find((t) => t.key === effectiveActiveTab);
+    return found ? found.label : effectiveActiveTab || "";
+  }, [allowedTabs, effectiveActiveTab]);
+
+  const pageTitle = `${activeLabel.toUpperCase()} | ${import.meta.env.VITE_APP_NAME || "ABCD"}`;
+
   if (allowedTabs.length === 0) {
     return (
       <div className="setup-page">
@@ -63,8 +71,12 @@ const Setup = () => {
       </div>
     );
   }
+  
 
+  
   return (
+    <>
+      <SetPageTitle title={pageTitle} /> 
     <div className="setup-page">
       <div className="setup-header">
         <div>
@@ -113,6 +125,7 @@ const Setup = () => {
         <BranchesTab toast={toast} setToast={setToast} />
       )}
     </div>
+  </>
   );
 };
 
