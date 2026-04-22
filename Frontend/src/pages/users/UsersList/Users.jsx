@@ -127,50 +127,47 @@ const Users = () => {
   const pageSize = Number(import.meta.env.VITE_PAGE_SIZE || import.meta.env.page_size) || 20;
   const [selectedBranch, setSelectedBranch] = useState(getSelectedBranch() || "");
   const [visibleUsers, setVisibleUsers] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    let usersLoaded = false;
+    let profileLoaded = false;
+    let rolesLoaded = false;
+
+    const checkAllLoaded = () => {
+      if (isMounted && usersLoaded && profileLoaded && rolesLoaded) {
+        setInitialLoading(false);
+      }
+    };
+
     const loadUsers = async () => {
       try {
         setLoading(true);
         setError(null);
-        // Fetch all users by paging until complete
         const data = await fetchAllUsers(Number(import.meta.env.VITE_API_TABLE_SIZE) || 100000);
-        setAllUsers(data);
+        if (isMounted) {
+          setAllUsers(data);
+          usersLoaded = true;
+          checkAllLoaded();
+        }
       } catch (error) {
         console.error("Failed to fetch users", error);
-        setError(error.message || "Failed to load users");
+        if (isMounted) {
+          setError(error.message || "Failed to load users");
+          usersLoaded = true;
+          checkAllLoaded();
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-    loadUsers();
-  }, []);
 
-  useEffect(() => {
-    const off = onBranchChange((branchId) => {
-      setSelectedBranch(branchId || "");
-    });
-    return off;
-  }, []);
-
-  // Load branches and sync pending filters when filter opens
-  useEffect(() => {
-    if (isFilterOpen) {
-      setPendingFilterStatus(appliedFilterStatus);
-      setPendingFilterBranch(appliedFilterBranch);
-      setPendingFilterRole(appliedFilterRole);
-      setPendingFilterCanLogin(appliedFilterCanLogin);
-    }
-  }, [isFilterOpen, appliedFilterStatus, appliedFilterBranch, appliedFilterRole, appliedFilterCanLogin]);
-
-  // Load branches and user profile
-  useEffect(() => {
     const loadUserProfile = async () => {
       try {
         const resp = await authAPI.getProfile();
         const userInfo = resp.data?.data?.user || {};
-        
-        // Get user's assigned branches
+
         const rawBranchList = Array.isArray(userInfo.branchId)
           ? userInfo.branchId
           : Array.isArray(userInfo.branchIds)
@@ -185,36 +182,71 @@ const Users = () => {
           }
           return String(b);
         }).filter(Boolean);
-        setUserBranchIds(branchIds);
-        
-        // Load branches for this organization
+        if (isMounted) setUserBranchIds(branchIds);
+
         if (userInfo.organizationId) {
           const branchesData = await fetchBranchesForDropdown(userInfo.organizationId);
-          setBranches(branchesData && branchesData.length > 0 ? branchesData : []);
+          if (isMounted) {
+            setBranches(branchesData && branchesData.length > 0 ? branchesData : []);
+            profileLoaded = true;
+            checkAllLoaded();
+          }
         } else {
-          console.warn("No organizationId found in user profile");
+          if (isMounted) {
+            console.warn("No organizationId found in user profile");
+            profileLoaded = true;
+            checkAllLoaded();
+          }
         }
       } catch (err) {
         console.error("Failed to load user profile or branches", err);
-        setBranches([]);
-        setUserBranchIds([]);
+        if (isMounted) {
+          setBranches([]);
+          setUserBranchIds([]);
+          profileLoaded = true;
+          checkAllLoaded();
+        }
       }
     };
-    
-    loadUserProfile();
-  }, []);
 
-  // Load roles on component mount
-  useEffect(() => {
     const loadRoles = async () => {
       try {
         const rolesData = await fetchRolesForDropdown();
-        setRoles(rolesData);
+        if (isMounted) {
+          setRoles(rolesData);
+          rolesLoaded = true;
+          checkAllLoaded();
+        }
       } catch (err) {
         console.error("Failed to fetch roles", err);
+        if (isMounted) {
+          rolesLoaded = true;
+          checkAllLoaded();
+        }
       }
     };
+
+    loadUsers();
+    loadUserProfile();
     loadRoles();
+
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (isFilterOpen) {
+      setPendingFilterStatus(appliedFilterStatus);
+      setPendingFilterBranch(appliedFilterBranch);
+      setPendingFilterRole(appliedFilterRole);
+      setPendingFilterCanLogin(appliedFilterCanLogin);
+    }
+  }, [isFilterOpen, appliedFilterStatus, appliedFilterBranch, appliedFilterRole, appliedFilterCanLogin]);
+
+  useEffect(() => {
+    const off = onBranchChange((branchId) => {
+      setSelectedBranch(branchId || "");
+    });
+    return off;
   }, []);
 
   useEffect(() => {
@@ -1493,6 +1525,8 @@ const Users = () => {
   if (loading && allUsers.length === 0) {
     return <PageLoader message="Loading users..." />;
   }
+
+  if (initialLoading) return <PageLoader />;
 
   // Table handles paging/searching/sorting internally; pass full data and pageSize
 

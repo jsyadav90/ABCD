@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Page: Assets List
  * Description: Assets ka industry-standard dashboard view with summary cards aur filtered table.
  * Logics:
@@ -38,6 +38,7 @@ const AssetPage = () => {
   const [selectedBranch, setSelectedBranch] = useState(getSelectedBranch() || "");
   const [visibleAssets, setVisibleAssets] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilterStatus, setAppliedFilterStatus] = useState("ACTIVE");
@@ -71,34 +72,42 @@ const AssetPage = () => {
   }, [isFilterOpen]);
 
   useEffect(() => {
+    let isMounted = true;
+    let assetsLoaded = false;
+    let profileLoaded = false;
+    let categoriesLoaded = false;
+
+    const checkAllLoaded = () => {
+      if (isMounted && assetsLoaded && profileLoaded && categoriesLoaded) {
+        setInitialLoading(false);
+      }
+    };
+
     const loadAssets = async () => {
       try {
         setLoading(true);
         setError(null);
         const data = await fetchAllAssets();
-        // Remove duplicates based on _id
-        const uniqueData = data.filter((asset, index, self) => 
+        const uniqueData = data.filter((asset, index, self) =>
           self.findIndex(a => a._id === asset._id) === index
         );
-        setAssets(uniqueData);
-        // Debug: log sample monitor rows so we can verify available fields
-        try {
-          console.debug('Fetched assets sample (first 5 monitors):', uniqueData.filter(a => String(a.assetType || '').toUpperCase() === 'MONITOR').slice(0,5));
-        } catch {
-          console.debug('Fetched assets (first 5):', uniqueData.slice(0,5));
+        if (isMounted) {
+          setAssets(uniqueData);
+          assetsLoaded = true;
+          checkAllLoaded();
         }
       } catch (err) {
         console.error("Failed to fetch assets", err);
-        setError(err.message || "Failed to load assets");
+        if (isMounted) {
+          setError(err.message || "Failed to load assets");
+          assetsLoaded = true;
+          checkAllLoaded();
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-    loadAssets();
-  }, []);
 
-  // Fetch user profile to get their assigned branches
-  useEffect(() => {
     const loadUserProfile = async () => {
       try {
         const resp = await authAPI.getProfile();
@@ -121,44 +130,57 @@ const AssetPage = () => {
           return String(b);
         }).filter(Boolean);
 
-        setUserBranchIds(branchIds);
+        if (isMounted) setUserBranchIds(branchIds);
 
-        // Also load branches for this organization (same as dashboard logic)
         const branchesData = await fetchBranchesForDropdown(userInfo.organizationId);
-        setBranches(branchesData);
-
-        // Set default branch filter
-        if (branchIds.length === 0) {
-          setAppliedFilterBranch("ALL");
-          setPendingFilterBranch("ALL");
-        } else if (branchIds.length === 1) {
-          // Single branch - default to that branch
-          setAppliedFilterBranch(branchIds[0]);
-          setPendingFilterBranch(branchIds[0]);
-        } else {
-          // Multiple branches - default to "All"
-          setAppliedFilterBranch("ALL");
-          setPendingFilterBranch("ALL");
+        if (isMounted) {
+          setBranches(branchesData);
+          if (branchIds.length === 0) {
+            setAppliedFilterBranch("ALL");
+            setPendingFilterBranch("ALL");
+          } else if (branchIds.length === 1) {
+            setAppliedFilterBranch(branchIds[0]);
+            setPendingFilterBranch(branchIds[0]);
+          } else {
+            setAppliedFilterBranch("ALL");
+            setPendingFilterBranch("ALL");
+          }
+          profileLoaded = true;
+          checkAllLoaded();
         }
       } catch (err) {
         console.error("Failed to fetch user profile", err);
-        setAppliedFilterBranch("ALL");
-        setPendingFilterBranch("ALL");
+        if (isMounted) {
+          setAppliedFilterBranch("ALL");
+          setPendingFilterBranch("ALL");
+          profileLoaded = true;
+          checkAllLoaded();
+        }
       }
     };
-    loadUserProfile();
-  }, []);
 
-  useEffect(() => {
     const loadCategories = async () => {
       try {
         const data = await fetchAssetCategories();
-        setAssetCategories(data);
+        if (isMounted) {
+          setAssetCategories(data);
+          categoriesLoaded = true;
+          checkAllLoaded();
+        }
       } catch (err) {
         console.error("Failed to fetch asset categories", err);
+        if (isMounted) {
+          categoriesLoaded = true;
+          checkAllLoaded();
+        }
       }
     };
+
+    loadAssets();
+    loadUserProfile();
     loadCategories();
+
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -712,7 +734,7 @@ const AssetPage = () => {
     },
   ];
 
-  if (loading) return <PageLoader />;
+  if (initialLoading) return <PageLoader />;
   if (error) return <ErrorNotification error={error} onClose={() => setError(null)} />;
 
   return (

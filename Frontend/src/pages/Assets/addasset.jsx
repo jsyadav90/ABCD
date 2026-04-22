@@ -94,6 +94,7 @@ const AddAsset = () => {
   const [branches, setBranches] = useState([]);
   const [userSelectedBranch, setUserSelectedBranch] = useState(''); // from dashboard
   const [isBranchFieldDisabled, setIsBranchFieldDisabled] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const selectedCategoryName = useMemo(() => {
     const category = categories.find((c) => c._id === selectedCategory);
@@ -132,50 +133,85 @@ const AddAsset = () => {
 
   // Load categories and branches on mount
   useEffect(() => {
+    let isMounted = true;
+    let categoriesLoaded = false;
+    let branchesLoaded = false;
+    let assetIdLoaded = false;
+
+    const checkAllLoaded = () => {
+      if (isMounted && categoriesLoaded && branchesLoaded && assetIdLoaded) {
+        setInitialLoading(false);
+      }
+    };
+
     const loadCategoriesAndBranches = async () => {
       try {
         const categoryData = await fetchAssetCategories();
-        setCategories(categoryData);
+        if (isMounted) {
+          setCategories(categoryData);
+          categoriesLoaded = true;
+          checkAllLoaded();
+        }
       } catch (error) {
         console.error('Failed to load categories:', error);
-        setCategories([]);
-        setErrorMessage('Unable to load asset categories. Please refresh the page.');
+        if (isMounted) {
+          setCategories([]);
+          setErrorMessage('Unable to load asset categories. Please refresh the page.');
+          categoriesLoaded = true;
+          checkAllLoaded();
+        }
       }
 
-      // Load branches for dropdown
       try {
         const branchData = await fetchBranchesForDropdown();
-        setBranches(branchData);
+        if (isMounted) {
+          setBranches(branchData);
+          branchesLoaded = true;
+          checkAllLoaded();
+        }
       } catch (error) {
         console.error('Failed to load branches:', error);
-        setBranches([]);
+        if (isMounted) {
+          setBranches([]);
+          branchesLoaded = true;
+          checkAllLoaded();
+        }
       }
 
-      // Load next asset ID preview
       try {
         const nextAssetId = await getNextAssetId();
-        setFormData((prev) => ({
-          ...prev,
-          assetId: nextAssetId,
-        }));
+        if (isMounted) {
+          setFormData((prev) => ({
+            ...prev,
+            assetId: nextAssetId,
+          }));
+          assetIdLoaded = true;
+          checkAllLoaded();
+        }
       } catch (error) {
         console.error('Failed to load next asset ID:', error);
+        if (isMounted) {
+          assetIdLoaded = true;
+          checkAllLoaded();
+        }
       }
 
-      // Get user's selected branch from dashboard
-      const dashboardBranch = getSelectedBranch();
-      if (dashboardBranch && dashboardBranch !== '') {
-        setUserSelectedBranch(dashboardBranch); // Store the selected branch
-        setIsBranchFieldDisabled(dashboardBranch !== '__ALL__'); // Disable if specific branch selected
-        // Auto-populate branch field in formData
-        setFormData((prev) => ({
-          ...prev,
-          branch: dashboardBranch,
-          branchId: dashboardBranch,
-        }));
+      if (isMounted) {
+        const dashboardBranch = getSelectedBranch();
+        if (dashboardBranch && dashboardBranch !== '') {
+          setUserSelectedBranch(dashboardBranch);
+          setIsBranchFieldDisabled(dashboardBranch !== '__ALL__');
+          setFormData((prev) => ({
+            ...prev,
+            branch: dashboardBranch,
+            branchId: dashboardBranch,
+          }));
+        }
       }
     };
     loadCategoriesAndBranches();
+
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -496,6 +532,35 @@ const AddAsset = () => {
     setFormData(cancelData);
     setErrors({});
   };
+
+  if (initialLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60vh',
+        gap: '1rem'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #3498db',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <p style={{ color: '#666', fontSize: '1rem' }}>Loading...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="add-item-page">
