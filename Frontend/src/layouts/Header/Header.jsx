@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { fetchBranchesForDropdown } from "../../services/userApi";
-import { getSelectedBranch, getSelectedBranchName, onBranchChange, setSelectedBranch, getSelectedOrgCode, onOrgChange } from "../../utils/scope";
+import { getSelectedBranch, getSelectedBranchName, onBranchChange, setSelectedBranch, getSelectedOrgCode, getSelectedOrgName, onOrgChange } from "../../utils/scope";
 import "./Header.css";
 
 const Header = ({ onToggleSidebar }) => {
@@ -13,6 +13,7 @@ const Header = ({ onToggleSidebar }) => {
   const [selectedBranch, setSelectedBranchState] = useState(getSelectedBranch());
   const [selectedBranchLabel, setSelectedBranchLabelState] = useState(getSelectedBranchName());
   const [organizationCode, setOrganizationCode] = useState(getSelectedOrgCode());
+  const [organizationName, setOrganizationName] = useState(getSelectedOrgName());
 
   const getBranchLabel = (branch) => {
     if (!branch) return "";
@@ -24,6 +25,13 @@ const Header = ({ onToggleSidebar }) => {
       (item) => String(item._id) === String(branchId) || String(item.id) === String(branchId) || String(item.branchId) === String(branchId)
     );
     return getBranchLabel(branch);
+  };
+
+  const findBranchCode = (branchId) => {
+    const branch = branches.find(
+      (item) => String(item._id) === String(branchId) || String(item.id) === String(branchId) || String(item.branchId) === String(branchId)
+    );
+    return branch?.branchCode || "";
   };
 
   useEffect(() => {
@@ -43,6 +51,7 @@ const Header = ({ onToggleSidebar }) => {
   useEffect(() => {
     const unsubscribe = onOrgChange((orgId, orgName, orgCode) => {
       setOrganizationCode(orgCode);
+      setOrganizationName(orgName);
     });
     return unsubscribe;
   }, []);
@@ -64,15 +73,35 @@ const Header = ({ onToggleSidebar }) => {
     }
   }, [branches, selectedBranch, selectedBranchLabel]);
 
-  const getLogoText = () => {
-    if (selectedBranch === "__ALL__") {
-      return organizationCode || "ABCD";
-    }
+  const getLogoContent = () => {
+    const branchCode = findBranchCode(selectedBranch);
+    const firstLetter = (organizationCode || "A").charAt(0).toUpperCase();
 
-    const branchLabel = selectedBranchLabel || findBranchLabel(selectedBranch);
-    if (branchLabel) return branchLabel;
-    if (selectedBranch && selectedBranch !== "__ALL__") return selectedBranch;
-    return organizationCode || "ABCD";
+    if (selectedBranch === "__ALL__" || !selectedBranch || selectedBranch === "") {
+      return (
+        <>
+          <div className="logo-icon">{firstLetter}</div>
+          <div className="logo-text">
+            <div className="logo-title">
+              <span className="org-code">{organizationCode || "ABCD"}</span>
+            </div>
+          </div>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <div className="logo-icon">{firstLetter}</div>
+          <div className="logo-text">
+            <div className="logo-title">
+              <span className="org-code">{organizationCode || "ABCD"}</span>
+              {branchCode && <span className="branch-code-badge">{branchCode}</span>}
+            </div>
+            <div className="logo-subtitle">{selectedBranchLabel || "Branch Name"}</div>
+          </div>
+        </>
+      );
+    }
   };
 
   const handleSearchToggle = () => {
@@ -124,8 +153,9 @@ const Header = ({ onToggleSidebar }) => {
         </button>
 
         <div className="logo">
-          {/* <Link to="/">ABCD</Link> */}
-          <Link to="/">{getLogoText()}</Link>
+          <Link to="/" className="logo-link">
+            {getLogoContent()}
+          </Link>
         </div>
       </div>
 
