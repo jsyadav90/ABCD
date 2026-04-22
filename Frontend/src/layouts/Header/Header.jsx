@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { fetchBranchesForDropdown } from "../../services/userApi";
-import { getSelectedBranch, getSelectedBranchName, onBranchChange, setSelectedBranch } from "../../utils/scope";
+import { getSelectedBranch, getSelectedBranchName, onBranchChange, setSelectedBranch, getSelectedOrgCode, onOrgChange } from "../../utils/scope";
 import "./Header.css";
 
 const Header = ({ onToggleSidebar }) => {
@@ -12,6 +12,7 @@ const Header = ({ onToggleSidebar }) => {
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranchState] = useState(getSelectedBranch());
   const [selectedBranchLabel, setSelectedBranchLabelState] = useState(getSelectedBranchName());
+  const [organizationCode, setOrganizationCode] = useState(getSelectedOrgCode());
 
   const getBranchLabel = (branch) => {
     if (!branch) return "";
@@ -40,6 +41,13 @@ const Header = ({ onToggleSidebar }) => {
   }, [user?.organizationId]);
 
   useEffect(() => {
+    const unsubscribe = onOrgChange((orgId, orgName, orgCode) => {
+      setOrganizationCode(orgCode);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = onBranchChange((branchId, branchName) => {
       setSelectedBranchState(branchId);
       setSelectedBranchLabelState(branchName);
@@ -58,13 +66,13 @@ const Header = ({ onToggleSidebar }) => {
 
   const getLogoText = () => {
     if (selectedBranch === "__ALL__") {
-      return "A";
+      return organizationCode || "ABCD";
     }
 
     const branchLabel = selectedBranchLabel || findBranchLabel(selectedBranch);
     if (branchLabel) return branchLabel;
     if (selectedBranch && selectedBranch !== "__ALL__") return selectedBranch;
-    return "A";
+    return organizationCode || "ABCD";
   };
 
   const handleSearchToggle = () => {

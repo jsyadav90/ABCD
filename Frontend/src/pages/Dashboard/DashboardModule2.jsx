@@ -6,9 +6,9 @@
 import React from "react";
 import ProfileCard from "../../layouts/ProfileCard";
 import { useAuth } from "../../hooks/useAuth";
-import { getSelectedBranch, setSelectedBranch } from "../../utils/scope";
+import { getSelectedBranch, setSelectedBranch, setSelectedOrg } from "../../utils/scope";
 import { getSelectedAppModule, setSelectedAppModule, MODULES } from "../../utils/appModule";
-import { authAPI } from "../../services/api";
+import { authAPI, organizationAPI } from "../../services/api";
 import { fetchBranchesForDropdown } from "../../services/userApi";
 import "./Dashboard.css";
 
@@ -85,6 +85,19 @@ const DashboardModule2 = () => {
 
         setSelectedAppModuleLocal(selectedAppModuleValue);
         setSelectedAppModule(selectedAppModuleValue);
+
+        // Fetch organization details and set in scope
+        if (userInfo.organizationId) {
+          try {
+            const orgResp = await organizationAPI.getById(userInfo.organizationId);
+            const orgData = orgResp.data?.data || orgResp.data;
+            if (orgData) {
+              setSelectedOrg(userInfo.organizationId, orgData.name || "", orgData.code || "");
+            }
+          } catch (err) {
+            console.error("Failed to fetch organization details:", err);
+          }
+        }
 
         // Fetch branches for the organization - THIS IS THE KEY FIX!
         const branches = await fetchBranchesForDropdown(userInfo.organizationId);

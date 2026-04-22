@@ -10,10 +10,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { Button, Card, Badge, Table, Select } from "../../components";
 import ProfileCard from "../../layouts/ProfileCard";
 import { useNavigate } from "react-router-dom";
-import { authAPI } from "../../services/api";
+import { authAPI, organizationAPI } from "../../services/api";
 import { fetchBranchesForDropdown, fetchUsersCount, fetchAllUsers } from "../../services/userApi";
 import { fetchAssetsCount } from "../../services/assetApi";
-import { getSelectedBranch, setSelectedBranch, getSelectedModule, setSelectedModule } from "../../utils/scope";
+import { getSelectedBranch, setSelectedBranch, getSelectedModule, setSelectedModule, setSelectedOrg } from "../../utils/scope";
 import { useAuth } from "../../hooks/useAuth";
 import { getSelectedAppModule, setSelectedAppModule, MODULES } from "../../utils/appModule";
 import "./Dashboard.css";
@@ -146,6 +146,19 @@ const Dashboard = () => {
 
         setSelectedAppModuleLocal(selectedAppModuleValue);
         setSelectedAppModule(selectedAppModuleValue);
+
+        // Fetch organization details and set in scope
+        if (userInfo.organizationId) {
+          try {
+            const orgResp = await organizationAPI.getById(userInfo.organizationId);
+            const orgData = orgResp.data?.data || orgResp.data;
+            if (orgData) {
+              setSelectedOrg(userInfo.organizationId, orgData.name || "", orgData.code || "");
+            }
+          } catch (err) {
+            console.error("Failed to fetch organization details:", err);
+          }
+        }
 
         const branches = await fetchBranchesForDropdown(userInfo.organizationId);
         if (!isMounted) return;
