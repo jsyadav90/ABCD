@@ -133,7 +133,7 @@ const MainLayout = ({ children }) => {
         </main>
       </div>
       {/* <footer className="main-footer">
-        <p>&copy; 2026 ABCD. All rights reserved.</p>
+        <p>&copy; 2026 {import.meta.env.VITE_APP_NAME || "ABCD"}. All rights reserved.</p>
       </footer> */}
     </div>
   )

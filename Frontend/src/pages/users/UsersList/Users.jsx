@@ -1533,7 +1533,7 @@ const Users = () => {
   return (
     <div className="user-details-page" style={{ padding: "1rem 1rem" }}>
       <div className="users-page">
-        <SetPageTitle title="Users | ABCD" />
+        <SetPageTitle title={`Users | ${import.meta.env.VITE_APP_NAME || "ABCD"}`} />
 
         <div className="users-header">
           <h2>Users</h2>

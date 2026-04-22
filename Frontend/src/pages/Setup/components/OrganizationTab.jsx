@@ -757,7 +757,7 @@ const OrganizationTab = ({ setToast }) => {
                         onChange={(e) => setSetting("confirmationEmail.subject", e.target.value)}
                         error={rulesValidation.confirmationSubject || ""}
                         disabled={!settingsDraft.confirmationEmail.sendOnUserCreate}
-                        placeholder="e.g., Welcome to ABCD"
+                        placeholder={`e.g., Welcome to ${import.meta.env.VITE_APP_NAME || "ABCD"}`}
                       />
                     </div>
 
@@ -809,7 +809,7 @@ const OrganizationTab = ({ setToast }) => {
               label="Organization Name"
               value={organizationForm.name}
               onChange={handleOrganizationInputChange}
-              placeholder="e.g., ABCD Pvt Ltd"
+              placeholder={`e.g., ${import.meta.env.VITE_APP_NAME || "ABCD"} Pvt Ltd`}
               required
             />
             <Input
@@ -817,7 +817,7 @@ const OrganizationTab = ({ setToast }) => {
               label="Organization Code"
               value={organizationForm.code}
               onChange={handleOrganizationInputChange}
-              placeholder="e.g., abcd"
+              placeholder={`e.g., ${(import.meta.env.VITE_APP_NAME || "ABCD").toLowerCase()}`}
               required
             />
             <Input
@@ -826,7 +826,7 @@ const OrganizationTab = ({ setToast }) => {
               type="email"
               value={organizationForm.contactEmail}
               onChange={handleOrganizationInputChange}
-              placeholder="e.g., support@abcd.com"
+              placeholder={`e.g., support@${(import.meta.env.VITE_APP_NAME || "ABCD").toLowerCase()}.com`}
             />
             <Input
               name="contactPhone"

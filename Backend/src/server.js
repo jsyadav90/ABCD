@@ -24,9 +24,10 @@ connectDB()
     const PORT = envConfig.port;
     app.listen(PORT, () => {
       console.log(`[OK] Server started successfully`);
+      const appName = process.env.APP_NAME || "ABCD";
       console.log(`
         ================================================================================
-        =     ABCD2 Backend Server Running       =
+        =     ${appName} Backend Server Running       =
         ================================================================================
         = Environment: ${envConfig.nodeEnv.padEnd(25)} =
         = Port: ${PORT.toString().padEnd(31)}  =

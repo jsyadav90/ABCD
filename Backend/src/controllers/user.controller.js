@@ -764,13 +764,14 @@ export const getRolesForDropdown = asyncHandler(async (req, res) => {
         const UserModel = (await import("../models/user.model.js")).User;
 
         // Ensure organization exists
-        let org = await Organization.findOne({ code: "ABCD" });
+        const appName = process.env.APP_NAME || "ABCD";
+        let org = await Organization.findOne({ code: appName });
         if (!org) {
           org = await Organization.create({
-            name: "ABCD",
-            code: "ABCD",
-            sortName: "ABCD",
-            contactInfo: { primaryEmail: "abcd@local" },
+            name: appName,
+            code: appName,
+            sortName: appName,
+            contactInfo: { primaryEmail: `${appName.toLowerCase()}@local` },
             status: "ACTIVE",
           });
         }

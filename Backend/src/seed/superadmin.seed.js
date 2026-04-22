@@ -28,20 +28,21 @@ async function seedSuperAdmin() {
 
     await connectDB();
 
-    // Fetch organization by name 'ABCD' (create if missing)
-    let org = await Organization.findOne({ name: "ABCD" });
+    // Fetch organization by name (create if missing)
+    const appName = process.env.APP_NAME || "ABCD";
+    let org = await Organization.findOne({ name: appName });
     if (!org) {
       org = await Organization.create({
-        name: "ABCD",
-        code: "abcd",
-        contactEmail: "abcd@local",
+        name: appName,
+        code: appName.toLowerCase(),
+        contactEmail: `${appName.toLowerCase()}@local`,
         isActive: true,
       });
       console.log("Created organization:", org._id.toString());
     } else {
-      org.name = "ABCD";
-      org.code = "abcd";
-      org.contactEmail = "abcd@local";
+      org.name = appName;
+      org.code = appName.toLowerCase();
+      org.contactEmail = `${appName.toLowerCase()}@local`;
       org.isActive = true;
       await org.save();
       console.log("Using existing organization:", org._id.toString());

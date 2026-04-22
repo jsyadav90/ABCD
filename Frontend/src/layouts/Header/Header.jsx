@@ -75,7 +75,8 @@ const Header = ({ onToggleSidebar }) => {
 
   const getLogoContent = () => {
     const branchCode = findBranchCode(selectedBranch);
-    const firstLetter = (organizationCode || "A").charAt(0).toUpperCase();
+    const appName = import.meta.env.VITE_APP_NAME || "ABCD";
+    const firstLetter = (organizationCode || appName).charAt(0).toUpperCase();
 
     if (selectedBranch === "__ALL__" || !selectedBranch || selectedBranch === "") {
       return (
@@ -83,7 +84,7 @@ const Header = ({ onToggleSidebar }) => {
           <div className="logo-icon">{firstLetter}</div>
           <div className="logo-text">
             <div className="logo-title">
-              <span className="org-code">{organizationCode || "ABCD"}</span>
+              <span className="org-code">{organizationCode || appName}</span>
             </div>
           </div>
         </>
@@ -94,7 +95,7 @@ const Header = ({ onToggleSidebar }) => {
           <div className="logo-icon">{firstLetter}</div>
           <div className="logo-text">
             <div className="logo-title">
-              <span className="org-code">{organizationCode || "ABCD"}</span>
+              <span className="org-code">{organizationCode || appName}</span>
               {branchCode && <span className="branch-code-badge">{branchCode}</span>}
             </div>
             <div className="logo-subtitle">{selectedBranchLabel || "Branch Name"}</div>

@@ -1,4 +1,4 @@
-﻿import dotenv from "dotenv";
+import dotenv from "dotenv";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import { getEnvConfig, validateEnv } from "./config/env.js";
@@ -24,9 +24,10 @@ connectDB()
     const PORT = envConfig.port;
     app.listen(PORT, () => {
       console.log(`[rocket] Server started successfully`);
+      const appName = process.env.APP_NAME || "ABCD";
       console.log(`
-        â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
-        â•‘     ABCD2 Backend Server Running       â•‘
+        â•”â•â•â•â•â•â•â•â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        â•‘     ${appName} Backend Server Running       â•‘
         â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£
         â•‘ Environment: ${envConfig.nodeEnv.padEnd(25)} â•‘
         â•‘ Port: ${PORT.toString().padEnd(31)}  â•‘

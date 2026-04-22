@@ -14,7 +14,8 @@ dotenv.config();
 const main = async () => {
   try {
     console.log('🔗 Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ABCD');
+    const appName = process.env.APP_NAME || "ABCD";
+    await mongoose.connect(process.env.MONGODB_URI || `mongodb://localhost:27017/${appName}`);
     console.log('✅ Connected');
 
     console.log('\n📋 Checking all roles...');

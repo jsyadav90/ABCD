@@ -30,11 +30,12 @@ async function seedBranches() {
     console.log(`Using organization: ${org.name} (${orgId})`);
 
     // Define branches to seed
+    const appName = process.env.APP_NAME || "ABCD";
     const branchesToSeed = [
-      { branchName: "ABCD East", branchCode: "ABCD-EAST" },
-      { branchName: "ABCD West", branchCode: "ABCD-WEST" },
-      { branchName: "ABCD North", branchCode: "ABCD-NORTH" },
-      { branchName: "ABCD South", branchCode: "ABCD-SOUTH" },
+      { branchName: `${appName} East`, branchCode: `${appName.toUpperCase()}-EAST` },
+      { branchName: `${appName} West`, branchCode: `${appName.toUpperCase()}-WEST` },
+      { branchName: `${appName} North`, branchCode: `${appName.toUpperCase()}-NORTH` },
+      { branchName: `${appName} South`, branchCode: `${appName.toUpperCase()}-SOUTH` },
       { branchName: "Center", branchCode: "CENTER" },
     ];
 

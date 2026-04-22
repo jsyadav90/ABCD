@@ -20,12 +20,13 @@ async function testCanLoginFlow() {
     console.log("✓ Connected to MongoDB");
 
     // Find or create test organization
-    let org = await Organization.findOne({ name: "ABCD" });
+    const appName = process.env.APP_NAME || "ABCD";
+    let org = await Organization.findOne({ name: appName });
     if (!org) {
       org = await Organization.create({
-        name: "ABCD",
-        code: "abcd",
-        contactEmail: "abcd@local",
+        name: appName,
+        code: appName.toLowerCase(),
+        contactEmail: `${appName.toLowerCase()}@local`,
         isActive: true,
       });
     }

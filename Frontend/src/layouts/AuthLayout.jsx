@@ -7,7 +7,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
     <div className="auth-layout">
       <div className="auth-container">
         <div className="auth-logo">
-          <h1>ABCD</h1>
+          <h1>{import.meta.env.VITE_APP_NAME || "ABCD"}</h1>
           <p>Manage Your Organization</p>
         </div>
 
@@ -18,7 +18,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
         </Card>
 
         <div className="auth-footer">
-          <p>&copy; 2026 ABCD. All rights reserved.</p>
+          <p>&copy; 2026 {import.meta.env.VITE_APP_NAME || "ABCD"}. All rights reserved.</p>
         </div>
       </div>
     </div>

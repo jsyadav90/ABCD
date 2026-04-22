@@ -387,7 +387,7 @@ const AddUser = () => {
                 name="organization"
                 label="Organization"
                 type="text"
-                value="ABCD Corporation"
+                value={`${import.meta.env.VITE_APP_NAME || "ABCD"} Corporation`}
                 disabled
               />
               <MultiSelectBranch

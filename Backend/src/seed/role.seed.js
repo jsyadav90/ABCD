@@ -15,12 +15,13 @@ async function seedRoles() {
     await connectDB();
 
     // 1) Ensure an organization exists for the seed user
+    const appName = process.env.APP_NAME || "ABCD";
     let org = await Organization.findOne({ code: "seed_org" });
     if (!org) {
       org = await Organization.create({
-        name: "ABCD",
-        code: "abcd",
-        contactEmail: "abcd@local",
+        name: appName,
+        code: appName.toLowerCase(),
+        contactEmail: `${appName.toLowerCase()}@local`,
       });
       console.log("Created organization:", org._id.toString());
     } else {
