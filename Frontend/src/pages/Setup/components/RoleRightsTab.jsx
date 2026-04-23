@@ -548,8 +548,7 @@ const RoleRightsTab = ({ setToast }) => {
 
   return (
     <div className="setup-section">
-      <div className="setup-section-header">
-        <h2>Roles & User Management Rights</h2>
+      <div className="setup-section-header" style={{ justifyContent: 'flex-end' }}>
         {hasPermission("setup:roles:add_role") && (
           <Button variant="primary" onClick={openCreateRoleModal}>
             Add Role

@@ -40,7 +40,7 @@ import { validatePasswordInput } from "../../../utils/passwordPolicy";
 
 const Users = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, orgSettings } = useAuth();
 
   const [allUsers, setAllUsers] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -615,10 +615,11 @@ const Users = () => {
       return;
     }
 
-    const passwordError = validatePasswordInput(changePasswordModal.newPassword, [
-      changePasswordModal.displayUserId,
-      changePasswordModal.userName,
-    ]);
+    const passwordError = validatePasswordInput(
+      changePasswordModal.newPassword, 
+      [changePasswordModal.displayUserId, changePasswordModal.userName],
+      orgSettings?.passwordPolicy || null
+    );
     if (passwordError) {
       setChangePasswordModal((prev) => ({
         ...prev,

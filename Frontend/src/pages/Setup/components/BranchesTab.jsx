@@ -209,8 +209,7 @@ const BranchesTab = ({ setToast }) => {
 
   return (
     <div className="setup-section">
-      <div className="setup-section-header">
-        <h2>Branches</h2>
+      <div className="setup-section-header" style={{ justifyContent: 'flex-end' }}>
         <Button variant="primary" onClick={openCreateBranchModal}>
           Add Branch
         </Button>

@@ -18,7 +18,7 @@ import Button from "../Button/Button";
  */
 const ChangePasswordModal = ({ isOpen, onClose, isForceChange = false }) => {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user, orgSettings } = useAuth();
 
   const [formData, setFormData] = useState({
     oldPassword: "",
@@ -50,7 +50,8 @@ const ChangePasswordModal = ({ isOpen, onClose, isForceChange = false }) => {
     }
 
     const identityCandidates = [user?.userId, user?.name, user?.email].filter(Boolean);
-    const passwordError = validatePasswordInput(formData.newPassword, identityCandidates);
+    const policy = orgSettings?.passwordPolicy || null;
+    const passwordError = validatePasswordInput(formData.newPassword, identityCandidates, policy);
     if (passwordError) {
       setFormData(prev => ({ ...prev, error: passwordError }));
       return false;

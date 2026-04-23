@@ -348,7 +348,7 @@ const UnifiedUserProfilePage = () => {
             left: `${btnPosition.x}px`, 
             top: `${btnPosition.y}px`,
             position: 'fixed',
-            zIndex: 1000,
+            zIndex: 10,
             touchAction: 'none' // Prevent scrolling while dragging
           }}
           onMouseDown={handleDragStart}

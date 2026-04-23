@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useEffect } from 'react'
-import { authAPI, clearAuthHeaders } from '../services/api'
+import { authAPI, organizationAPI, clearAuthHeaders } from '../services/api'
 import { clearAllAuthStorage } from '../utils/permissionHelper'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -11,6 +11,7 @@ const AuthContext = createContext({
   deviceId: null,
   needsReauth: false,
   forcePasswordChange: false,
+  orgSettings: null,
   login: async () => ({ success: false }),
   reauth: async () => ({ success: false }),
   register: async () => ({ success: false }),
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [needsReauth, setNeedsReauth] = useState(false)
   const [forcePasswordChange, setForcePasswordChange] = useState(false)
+  const [orgSettings, setOrgSettings] = useState(null)
   const generateValidDeviceId = () => {
     const stored = localStorage.getItem('deviceId')
 
@@ -518,7 +520,9 @@ export const AuthProvider = ({ children }) => {
       if (currentDeviceId && currentDeviceId !== 'undefined' && currentDeviceId !== 'null') {
         localStorage.setItem('deviceId', currentDeviceId)
       }
+      localStorage.removeItem('orgSettings')
       setUser(null)
+      setOrgSettings(null)
       setIsAuthenticated(false)
       // IMPORTANT: Do NOT reset deviceId state - it should persist!
     }
@@ -533,10 +537,12 @@ export const AuthProvider = ({ children }) => {
     } finally {
       clearAuthHeaders()
       clearAllAuthStorage()
+      localStorage.removeItem('orgSettings')
       if (currentDeviceId && currentDeviceId !== 'undefined' && currentDeviceId !== 'null') {
         localStorage.setItem('deviceId', currentDeviceId)
       }
       setUser(null)
+      setOrgSettings(null)
       setIsAuthenticated(false)
       // IMPORTANT: Do NOT reset deviceId state - it should persist!
     }
@@ -559,6 +565,40 @@ export const AuthProvider = ({ children }) => {
     setError('')
   }, [])
 
+  const fetchOrgSettings = useCallback(async (orgId) => {
+    if (!orgId) return
+    try {
+      const response = await organizationAPI.getById(orgId)
+      const data = response.data?.data || response.data
+      if (data) {
+        const settings = {
+          ...data.settings,
+          enabledFeatures: data.enabledFeatures || []
+        }
+        setOrgSettings(settings)
+        localStorage.setItem('orgSettings', JSON.stringify(settings))
+      }
+    } catch (err) {
+      console.warn('[AUTH] Failed to fetch organization settings:', err?.message)
+    }
+  }, [])
+
+  // Update org settings when user changes or on mount
+  useEffect(() => {
+    if (isAuthenticated && user?.organizationId && !orgSettings) {
+      const stored = localStorage.getItem('orgSettings')
+      if (stored) {
+        try {
+          setOrgSettings(JSON.parse(stored))
+        } catch (e) {
+          fetchOrgSettings(user.organizationId)
+        }
+      } else {
+        fetchOrgSettings(user.organizationId)
+      }
+    }
+  }, [isAuthenticated, user?.organizationId, orgSettings, fetchOrgSettings])
+
   const value = {
     user,
     loading,
@@ -567,6 +607,7 @@ export const AuthProvider = ({ children }) => {
     deviceId,
     needsReauth,
     forcePasswordChange,
+    orgSettings,
     login,
     reauth,
     register,

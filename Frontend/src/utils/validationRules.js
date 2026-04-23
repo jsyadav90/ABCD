@@ -112,21 +112,32 @@ export const validatePINInput = (pin) => {
  * Validate Password
  * @param {string} password - Password to validate
  * @param {Array<string>} identities - User identities (username, email, name) to check against
+ * @param {Object} policy - Optional organization password policy
  * @returns {string} - Empty string if valid, error message if invalid
  */
-export const validatePasswordInput = (password, identities = []) => {
+export const validatePasswordInput = (password, identities = [], policy = null) => {
   const raw = normalize(password);
   const trimmed = raw.trim();
 
+  // Use policy values or defaults
+  const minLength = policy?.minLength || 8;
+  const maxLength = policy?.maxLength || 128;
+  const requireUppercase = policy?.requireUppercase ?? true;
+  const requireLowercase = policy?.requireLowercase ?? true;
+  const requireNumber = policy?.requireNumber ?? true;
+  const requireSpecial = policy?.requireSpecial ?? true;
+  const allowSpaces = policy?.allowSpaces ?? false;
+
   if (!trimmed) return "Password is required";
   if (raw !== trimmed) return "Password must not include leading or trailing spaces";
-  if (/\s/.test(trimmed)) return "Password must not contain spaces";
-  if (trimmed.length < 8) return "Password must be at least 8 characters";
-  if (trimmed.length > 128) return "Password must not exceed 128 characters";
-  if (!/[A-Z]/.test(trimmed)) return "Password must contain at least one uppercase letter";
-  if (!/[a-z]/.test(trimmed)) return "Password must contain at least one lowercase letter";
-  if (!/[0-9]/.test(trimmed)) return "Password must contain at least one number";
-  if (!/[^A-Za-z0-9]/.test(trimmed)) return "Password must contain at least one special character";
+  if (!allowSpaces && /\s/.test(trimmed)) return "Password must not contain spaces";
+  if (trimmed.length < minLength) return `Password must be at least ${minLength} characters`;
+  if (trimmed.length > maxLength) return `Password must not exceed ${maxLength} characters`;
+  if (requireUppercase && !/[A-Z]/.test(trimmed)) return "Password must contain at least one uppercase letter";
+  if (requireLowercase && !/[a-z]/.test(trimmed)) return "Password must contain at least one lowercase letter";
+  if (requireNumber && !/[0-9]/.test(trimmed)) return "Password must contain at least one number";
+  if (requireSpecial && !/[^A-Za-z0-9]/.test(trimmed)) return "Password must contain at least one special character";
+  
   if (COMMON_PASSWORDS.has(toComparable(trimmed))) return "Password is too common";
   if (hasPasswordSequentialPattern(trimmed)) return "Password must not include easy sequential patterns";
   if (/(.)\1{3,}/.test(trimmed)) return "Password must not include repeated characters like aaaa or 1111";

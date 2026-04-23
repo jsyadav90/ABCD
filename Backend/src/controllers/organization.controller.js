@@ -208,6 +208,7 @@ export const updateOrganization = asyncHandler(async (req, res) => {
     "status",
     "metadata",
     "enabledFeatures",
+    "settings",
   ];
   for (const key of allowed) {
     if (req.body[key] === undefined) continue;
