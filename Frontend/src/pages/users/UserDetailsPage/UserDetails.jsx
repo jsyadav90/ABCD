@@ -1,8 +1,9 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchUserById } from "../../../services/userApi";
 import { PageLoader } from "../../../components/Loader/Loader.jsx";
 import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle.jsx";
+import PageSidebar from "../../../components/PageSidebar/PageSidebar";
 import "./UserDetails.css";
 
 const UserDetails = () => {
@@ -12,101 +13,7 @@ const UserDetails = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeSection, setActiveSection] = useState("basic");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [btnPosition, setBtnPosition] = useState({ x: 18, y: 65 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartPos = useRef({ x: 0, y: 0 });
-  const [wasDragged, setWasDragged] = useState(false);
-
-  // Load saved position from localStorage
-  useEffect(() => {
-    const savedPos = localStorage.getItem("user-details-hamburger-pos");
-    if (savedPos) {
-      try {
-        setBtnPosition(JSON.parse(savedPos));
-      } catch (e) {
-        console.error("Failed to parse saved position", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setBtnPosition((prev) => {
-        const padding = 10;
-        const btnSize = 48;
-        const newX = Math.max(padding, Math.min(window.innerWidth - btnSize - padding, prev.x));
-        const newY = Math.max(padding, Math.min(window.innerHeight - btnSize - padding, prev.y));
-        return { x: newX, y: newY };
-      });
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Draggable Handlers
-  const handleDragStart = (e) => {
-    const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
-
-    dragStartPos.current = {
-      x: clientX - btnPosition.x,
-      y: clientY - btnPosition.y,
-    };
-
-    setIsDragging(true);
-    setWasDragged(false);
-  };
-
-  const handleDragMove = (e) => {
-    if (!isDragging) return;
-
-    const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-
-    let newX = clientX - dragStartPos.current.x;
-    let newY = clientY - dragStartPos.current.y;
-
-    // Boundary checks
-    const padding = 10;
-    const btnSize = 48;
-    newX = Math.max(padding, Math.min(window.innerWidth - btnSize - padding, newX));
-    newY = Math.max(padding, Math.min(window.innerHeight - btnSize - padding, newY));
-
-    if (Math.abs(newX - btnPosition.x) > 5 || Math.abs(newY - btnPosition.y) > 5) {
-      setWasDragged(true);
-    }
-
-    setBtnPosition({ x: newX, y: newY });
-  };
-
-  const handleDragEnd = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      localStorage.setItem("user-details-hamburger-pos", JSON.stringify(btnPosition));
-    }
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener("mousemove", handleDragMove);
-      window.addEventListener("mouseup", handleDragEnd);
-      window.addEventListener("touchmove", handleDragMove, { passive: false });
-      window.addEventListener("touchend", handleDragEnd);
-    } else {
-      window.removeEventListener("mousemove", handleDragMove);
-      window.removeEventListener("mouseup", handleDragEnd);
-      window.removeEventListener("touchmove", handleDragMove);
-      window.removeEventListener("touchend", handleDragEnd);
-    }
-    return () => {
-      window.removeEventListener("mousemove", handleDragMove);
-      window.removeEventListener("mouseup", handleDragEnd);
-      window.removeEventListener("touchmove", handleDragMove);
-      window.removeEventListener("touchend", handleDragEnd);
-    };
-  }, [isDragging, btnPosition]);
+  const [activeTab, setActiveTab] = useState("basic");
 
   useEffect(() => {
     const loadUser = async () => {
@@ -193,133 +100,55 @@ const UserDetails = () => {
     },
   ];
 
+  const menuItems = [
+    { key: "basic", label: "Basic Information" },
+    { key: "items", label: "Assigned Items" },
+    { key: "timeline", label: "User Timeline" },
+    { key: "audit", label: "Audit & Login" },
+  ];
+
+  const sidebarHeader = (
+    <div className="ud-sidebar-top">
+      <div className="ud-sidebar-avatar">{getInitials(user?.name || "User")}</div>
+      <div>
+        <h2>{user?.name || "User"}</h2>
+        <p><span>ID : </span> {user?.userId || "--"} | {user?.role || "User"}</p>
+      </div>
+    </div>
+  );
+
+  const sidebarFooter = (
+    <div className="ud-quick-stats">
+      <div className="ud-card-title">Quick Stats</div>
+      <div className="ud-stats-grid">
+        <div className="ud-stat-card">
+          <span>Items</span>
+          <strong>{mockAssignedItems.length}</strong>
+        </div>
+        <div className="ud-stat-card">
+          <span>Logs</span>
+          <strong>{mockAuditLog.length}</strong>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <SetPageTitle title={user ? `${user.name} | User Details` : "User Details"} />
-      <div className="user-details-view" onClick={(e) => {
-        if (sidebarOpen && e.target === e.currentTarget) {
-          setSidebarOpen(false);
-        }
-      }}>
-        {/* Mobile Toggle Button */}
-        <div 
-          className={`ud-sidebar-toggle ${sidebarOpen ? 'hidden' : ''}`}
-          style={{ 
-            left: `${btnPosition.x}px`, 
-            top: `${btnPosition.y}px`,
-            position: 'fixed',
-            zIndex: 10,
-            touchAction: 'none'
-          }}
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-        >
-          <button 
-            className={`ud-hamburger-btn ${isDragging ? 'dragging' : ''}`}
-            onClick={() => {
-              if (!wasDragged) {
-                setSidebarOpen(true);
-              }
-            }}
-            aria-label="Open sidebar"
-            title="Open sidebar"
-            style={{ 
-              cursor: isDragging ? 'grabbing' : 'grab',
-              userSelect: 'none'
-            }}
-          >
-            {user?.name && <span>{getInitials(user.name)}</span>}
-          </button>
-        </div>
+      <div className="user-details-view">
+        <PageSidebar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          menuItems={menuItems}
+          header={sidebarHeader}
+          footer={sidebarFooter}
+          title="User Details"
+          initials={getInitials(user?.name)}
+          storageKey="user-details-hamburger-pos"
+          idPrefix="ud"
+        />
 
-        {/* Mobile Sidebar Overlay */}
-        {sidebarOpen && (
-          <div 
-            className="ud-sidebar-overlay"
-            onClick={() => setSidebarOpen(false)}
-          ></div>
-        )}
-
-        {/* Sidebar */}
-        <aside className={`ud-sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-          <div className="ud-sidebar-panel">
-            {/* Close button - visible when sidebar is open */}
-            <button 
-              className="ud-sidebar-close-btn"
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Close sidebar"
-              title="Close sidebar"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-
-            <div className="ud-sidebar-top">
-              <div className="ud-sidebar-avatar">{getInitials(user?.name || "User")}</div>
-              <div>
-                <h2>{user?.name || "User"}</h2>
-                <p><span>ID : </span> {user?.userId || "--"} | {user?.role || "User"}</p>
-              </div>
-            </div>
-
-            <div className="ud-menu">
-              <button
-                className={`ud-menu-item ${activeSection === "basic" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveSection("basic");
-                  setSidebarOpen(false);
-                }}
-              >
-                Basic Information
-              </button>
-              <button
-                className={`ud-menu-item ${activeSection === "items" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveSection("items");
-                  setSidebarOpen(false);
-                }}
-              >
-                Assigned Items
-              </button>
-              <button
-                className={`ud-menu-item ${activeSection === "timeline" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveSection("timeline");
-                  setSidebarOpen(false);
-                }}
-              >
-                User Timeline
-              </button>
-              <button
-                className={`ud-menu-item ${activeSection === "audit" ? "active" : ""}`}
-                onClick={() => {
-                  setActiveSection("audit");
-                  setSidebarOpen(false);
-                }}
-              >
-                Audit & Login
-              </button>
-            </div>
-
-            <div className="ud-quick-stats">
-              <div className="ud-card-title">Quick Stats</div>
-              <div className="ud-stats-grid">
-                <div className="ud-stat-card">
-                  <span>Items</span>
-                  <strong>{mockAssignedItems.length}</strong>
-                </div>
-                <div className="ud-stat-card">
-                  <span>Logs</span>
-                  <strong>{mockAuditLog.length}</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
         <main className="ud-main">
           {error && (
             <div className="error-banner">
@@ -341,7 +170,7 @@ const UserDetails = () => {
           </section>
 
           {/* Basic Information */}
-          <div className={`ud-section ${activeSection === "basic" ? "active" : ""}`}>
+          <div className={`ud-section ${activeTab === "basic" ? "active" : ""}`}>
             <div className="ud-card">
               <div className="ud-card-title">Basic Information</div>
               <div className="ud-info-grid">
@@ -359,7 +188,7 @@ const UserDetails = () => {
           </div>
 
           {/* Assigned Items */}
-          <div className={`ud-section ${activeSection === "items" ? "active" : ""}`}>
+          <div className={`ud-section ${activeTab === "items" ? "active" : ""}`}>
             <div className="ud-card">
               <div className="ud-card-title">Assigned Items</div>
               <div className="ud-table-wrap">
@@ -388,7 +217,7 @@ const UserDetails = () => {
           </div>
 
           {/* User Timeline */}
-          <div className={`ud-section ${activeSection === "timeline" ? "active" : ""}`}>
+          <div className={`ud-section ${activeTab === "timeline" ? "active" : ""}`}>
             <div className="ud-card">
               <div className="ud-card-title">User Timeline</div>
               <ul className="ud-timeline-list">
@@ -405,7 +234,7 @@ const UserDetails = () => {
           </div>
 
           {/* Audit & Login */}
-          <div className={`ud-section ${activeSection === "audit" ? "active" : ""}`}>
+          <div className={`ud-section ${activeTab === "audit" ? "active" : ""}`}>
             <div className="ud-card">
               <div className="ud-card-title">Audit & Login History</div>
               <div className="ud-table-wrap">

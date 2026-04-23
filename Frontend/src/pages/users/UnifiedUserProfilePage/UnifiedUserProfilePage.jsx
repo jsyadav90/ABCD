@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { fetchUserById } from "../../../services/userApi";
@@ -7,6 +7,7 @@ import { SetPageTitle } from "../../../components/SetPageTitle/SetPageTitle";
 import { PageLoader } from "../../../components/Loader/Loader";
 import { ChangePasswordModal } from "../../../components";
 import SetPinModal from "../../../components/SetPinModal/SetPinModal";
+import PageSidebar from "../../../components/PageSidebar/PageSidebar";
 import "./UnifiedUserProfilePage.css";
 
 const UnifiedUserProfilePage = () => {
@@ -21,108 +22,14 @@ const UnifiedUserProfilePage = () => {
   const [recentActivity, setRecentActivity] = useState(/** @type {string[]} */ ([]));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(/** @type {string | null} */ (null));
-  const [profileSidebarOpen, setProfileSidebarOpen] = useState(false);
   const [isChangePwdModalOpen, setIsChangePwdModalOpen] = useState(false);
   const [isSetPinModalOpen, setIsSetPinModalOpen] = useState(false);
   const [lastPasswordChangeDate, setLastPasswordChangeDate] = useState(/** @type {string | null} */ (null));
   const [isPinSet, setIsPinSet] = useState(/** @type {boolean | null} */ (null));
   const [showPinNotification, setShowPinNotification] = useState(false);
-  const [btnPosition, setBtnPosition] = useState({ x: 18, y: 65 }); // Default position
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartPos = useRef({ x: 0, y: 0 });
-  const [wasDragged, setWasDragged] = useState(false);
+  const [profileSidebarOpen, setProfileSidebarOpen] = useState(false);
   
   const isOwnProfile = !routeUserId;
-
-  // Load saved position from localStorage
-  useEffect(() => {
-    const savedPos = localStorage.getItem("profile-hamburger-pos");
-    if (savedPos) {
-      try {
-        setBtnPosition(JSON.parse(savedPos));
-      } catch (e) {
-        console.error("Failed to parse saved position", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setBtnPosition(prev => {
-        const padding = 10;
-        const btnSize = 48;
-        const newX = Math.max(padding, Math.min(window.innerWidth - btnSize - padding, prev.x));
-        const newY = Math.max(padding, Math.min(window.innerHeight - btnSize - padding, prev.y));
-        return { x: newX, y: newY };
-      });
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Draggable Handlers
-   const handleDragStart = (e) => {
-     const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-     const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
-     
-     dragStartPos.current = {
-       x: clientX - btnPosition.x,
-       y: clientY - btnPosition.y
-     };
-     
-     setIsDragging(true);
-     setWasDragged(false);
-   };
-
-   const handleDragMove = (e) => {
-     if (!isDragging) return;
-
-     const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-     const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-
-     let newX = clientX - dragStartPos.current.x;
-     let newY = clientY - dragStartPos.current.y;
-
-    // Boundary checks
-    const padding = 10;
-    const btnSize = 48;
-    newX = Math.max(padding, Math.min(window.innerWidth - btnSize - padding, newX));
-    newY = Math.max(padding, Math.min(window.innerHeight - btnSize - padding, newY));
-
-    // Check if movement is significant enough to be called a drag
-    if (Math.abs(newX - btnPosition.x) > 5 || Math.abs(newY - btnPosition.y) > 5) {
-      setWasDragged(true);
-    }
-
-    setBtnPosition({ x: newX, y: newY });
-  };
-
-  const handleDragEnd = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      localStorage.setItem("profile-hamburger-pos", JSON.stringify(btnPosition));
-    }
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener("mousemove", handleDragMove);
-      window.addEventListener("mouseup", handleDragEnd);
-      window.addEventListener("touchmove", handleDragMove, { passive: false });
-      window.addEventListener("touchend", handleDragEnd);
-    } else {
-      window.removeEventListener("mousemove", handleDragMove);
-      window.removeEventListener("mouseup", handleDragEnd);
-      window.removeEventListener("touchmove", handleDragMove);
-      window.removeEventListener("touchend", handleDragEnd);
-    }
-    return () => {
-      window.removeEventListener("mousemove", handleDragMove);
-      window.removeEventListener("mouseup", handleDragEnd);
-      window.removeEventListener("touchmove", handleDragMove);
-      window.removeEventListener("touchend", handleDragEnd);
-    };
-  }, [isDragging, btnPosition]);
 
   // Derived ID to use as a stable dependency
   const authUserId = authUser?._id || authUser?.id;
@@ -332,124 +239,80 @@ const UnifiedUserProfilePage = () => {
     }
   };
 
+
+  const sidebarMenuItems = [
+    {
+      key: "edit",
+      label: "Edit Profile",
+      icon: null,
+      onClick: () => {} // Logic to be added if needed
+    },
+    {
+      key: "password",
+      label: "Change Password",
+      onClick: () => setIsChangePwdModalOpen(true)
+    },
+    {
+      key: "pin",
+      label: isPinSet ? "Update PIN" : "Set PIN",
+      onClick: () => setIsSetPinModalOpen(true)
+    },
+    {
+      key: "logout-all",
+      label: "Logout All Devices",
+      onClick: handleLogoutAllDevices
+    }
+  ];
+
+  const sidebarHeader = (
+    <div className="sidebar-top">
+      <div className="sidebar-avatar">{getInitials(user.name)}</div>
+      <div>
+        <h2>{user.name}</h2>
+        <p><span>ID : </span> {user.roleId?.name || user.role || "NA"}</p>
+      </div>
+    </div>
+  );
+
+  const sidebarFooter = (
+    <div className="permission-block quick-stats-block">
+      <div className="card-title">Quick Stats</div>
+      <div className="quick-stats-grid">
+        <div className="quick-stat-card">
+          <span>Assets</span>
+          <strong>{assignedAssets.length}</strong>
+        </div>
+        <div className="quick-stat-card">
+          <span>Tickets</span>
+          <strong>3</strong>
+        </div>
+        <div className="quick-stat-card">
+          <span>Approvals</span>
+          <strong>2</strong>
+        </div>
+        <div className="quick-stat-card">
+          <span>Alerts</span>
+          <strong>{user.isBlocked ? 1 : 0}</strong>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <SetPageTitle title={`${user.name} - User Profile`} />
-      <div className="unified-profile-page" onClick={(e) => {
-        // Close sidebar if clicking outside on mobile
-        if (profileSidebarOpen && e.target === e.currentTarget) {
-          setProfileSidebarOpen(false);
-        }
-      }}>
-        {/* Toggle Button - Shows user initials to open sidebar (only visible on mobile) */}
-        <div 
-          className={`profile-sidebar-toggle ${profileSidebarOpen ? 'hidden' : ''}`}
-          style={{ 
-            left: `${btnPosition.x}px`, 
-            top: `${btnPosition.y}px`,
-            position: 'fixed',
-            zIndex: 10,
-            touchAction: 'none' // Prevent scrolling while dragging
-          }}
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-        >
-          <button 
-            className={`profile-hamburger-btn ${isDragging ? 'dragging' : ''}`}
-            onClick={() => {
-              if (!wasDragged) {
-                setProfileSidebarOpen(true);
-              }
-            }}
-            aria-label="Open profile sidebar"
-            title="Open profile sidebar"
-            style={{ 
-              cursor: isDragging ? 'grabbing' : 'grab',
-              userSelect: 'none'
-            }}
-          >
-            {user.name && <span>{getInitials(user.name)}</span>}
-          </button>
-        </div>
-
-        {/* Mobile Sidebar Overlay */}
-        {profileSidebarOpen && (
-          <div 
-            className="profile-sidebar-overlay"
-            onClick={() => setProfileSidebarOpen(false)}
-          ></div>
-        )}
-
-        <aside className={`profile-sidebar ${profileSidebarOpen ? 'sidebar-open' : ''}`}>
-          <div className="profile-card profile-sidebar-panel">
-            {/* Close button - visible when sidebar is open */}
-            <button 
-              className="profile-sidebar-close-btn"
-              onClick={() => setProfileSidebarOpen(false)}
-              aria-label="Close profile sidebar"
-              title="Close profile sidebar"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-
-            <div className="sidebar-top">
-              <div className="sidebar-avatar">{getInitials(user.name)}</div>
-              <div>
-              <h2>{user.name}</h2>
-              <p><span>ID : </span> {user.roleId?.name || user.role || "NA"}</p>
-              </div>
-              {/* <span className="status-badge status-active">Active</span> */}
-            </div>
-
-            <div className="sidebar-actions">
-              <button className="sidebar-btn sidebar-btn-primary">Edit Profile</button>
-              <button 
-                className="sidebar-btn sidebar-btn-outline"
-                onClick={() => setIsChangePwdModalOpen(true)}
-              >
-                Change Password
-              </button>
-              <button 
-                className="sidebar-btn sidebar-btn-outline"
-                onClick={() => setIsSetPinModalOpen(true)}
-              >
-                {isPinSet ? "Update PIN" : "Set PIN"}
-              </button>
-              
-              <button 
-                className="sidebar-btn sidebar-btn-danger"
-                onClick={handleLogoutAllDevices}
-              >
-                Logout All Devices
-              </button>
-            </div>
-
-            <div className="permission-block quick-stats-block">
-              <div className="card-title">Quick Stats</div>
-              <div className="quick-stats-grid">
-                <div className="quick-stat-card">
-                  <span>Assets</span>
-                  <strong>{assignedAssets.length}</strong>
-                </div>
-                <div className="quick-stat-card">
-                  <span>Tickets</span>
-                  <strong>3</strong>
-                </div>
-                <div className="quick-stat-card">
-                  <span>Approvals</span>
-                  <strong>2</strong>
-                </div>
-                <div className="quick-stat-card">
-                  <span>Alerts</span>
-                  <strong>{user.isBlocked ? 1 : 0}</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
+      <div className="unified-profile-page">
+        <PageSidebar
+          activeTab=""
+          onTabChange={() => {}}
+          menuItems={sidebarMenuItems}
+          header={sidebarHeader}
+          footer={sidebarFooter}
+          title="Profile"
+          initials={getInitials(user.name)}
+          storageKey="profile-hamburger-pos"
+          idPrefix="profile"
+        />
 
         <main className="profile-main">
             {/* PIN Not Set Notification */}
